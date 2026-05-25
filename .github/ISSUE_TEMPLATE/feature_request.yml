@@ -1,0 +1,23 @@
+---
+name: Feature request
+description: Suggest a new device type or capability
+labels:
+  - enhancement
+body:
+  - type: textarea
+    attributes:
+      label: Device or feature
+      description: e.g. Inspire fan, Equation radiator, DIO shutter
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Home Assistant entities
+      description: fan, light, climate, cover, switch, sensor, etc.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context
+    validations:
+      required: false

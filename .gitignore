@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.env
+.venv/
+venv/
+dist/
+*.egg-info/
+.DS_Store
+custom_components/enki/enki.zip
+.idea/
+.vscode/

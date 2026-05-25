@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Enki support (official)
+    url: https://support.enki-home.com/
+    about: Product help, pairing, and hardware issues
+  - name: Home Assistant community
+    url: https://community.home-assistant.io/
+    about: Questions about Home Assistant usage

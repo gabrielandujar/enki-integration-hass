@@ -1,0 +1,25 @@
+[project]
+name = "enki-integration-hass"
+version = "0.1.0"
+description = "Home Assistant custom integration for Enki (Leroy Merlin / Adeo)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: tests that call the live Enki cloud API",
+]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["SIM117"]

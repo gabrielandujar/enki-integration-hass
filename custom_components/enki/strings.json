@@ -1,0 +1,54 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Enki",
+        "description": "Use the same email and password as the Enki mobile app (Leroy Merlin).",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Enki",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach the Enki cloud. Check your network and try again.",
+      "invalid_auth": "Invalid credentials. Verify your Enki app email and password.",
+      "unknown": "Unexpected error. Check Home Assistant logs."
+    },
+    "abort": {
+      "already_configured": "This Enki account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Enki options",
+        "data": {
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "fan": {
+      "ceiling_fan": {
+        "name": "Fan"
+      }
+    },
+    "light": {
+      "fan_light": {
+        "name": "Light"
+      },
+      "light": {
+        "name": "Light"
+      }
+    }
+  }
+}
