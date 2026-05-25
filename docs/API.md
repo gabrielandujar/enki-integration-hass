@@ -55,14 +55,17 @@ State is split across services:
 |-------|----------|-------|
 | `fan_speed` | `GET …/check-fan-speed` | `0` = off, `1–6` = speed levels |
 | `airflow_mode` | `GET …/check-airflow-mode` | `MANUAL`, `BREEZE` |
-| Light on/off (`light_power`) | `api-enki-power-prod` endpoint `2` | `check-electrical-power` / `switch-electrical-power` |
-| Light `brightness`, `colorTemperature` | `api-enki-lighting-prod` | `change-light-state` (lighting `power` field is not the relay) |
+| `airflow_rotation` | `GET …/check-airflow-rotation` (or `check-fan-rotation`, `check-airflow-state`) | `SUMMER` / `WINTER` (été / hiver) when supported |
+| Light on/off (`light_power`) | `api-enki-lighting-prod` | `check-light-state` → `lastReportedValue.power` |
+| Light `brightness`, `colorTemperature` | `api-enki-lighting-prod` | `change-light-state` (full `lastReportedValue` payload) |
 
 Commands:
 
 - `POST …/change-fan-speed` — body `{"value": <0-6>}`, expect `202`
+- `POST …/change-airflow-rotation` — body `{"value": "SUMMER"|"WINTER"}`, expect `202` (Inspire; enables `fan.set_direction` in HA)
 - `POST …/change-light-state` — full `lastReportedValue` object, expect `202`
-- `POST …/switch-electrical-power?endpoints=1|2` — optional direct power switch per endpoint
+- `POST …/change-light-state` — body is the full lighting state object; `power` ON/OFF for the fan light kit
+- `POST …/switch-electrical-power?endpoints=1|2` — fan motor only in practice; light kit uses lighting `power`
 
 Fan motor and light kit are **independent** (turning the fan on does not switch the light on).
 

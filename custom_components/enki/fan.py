@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,13 +41,21 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
     """Ceiling fan motor controlled via api-enki-airflow-prod."""
 
     _attr_translation_key = "ceiling_fan"
-    _attr_supported_features = (
-        FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
-    )
 
     def __init__(self, coordinator: EnkiCoordinator, device: EnkiDevice) -> None:
         super().__init__(coordinator, device)
         self._attr_unique_id = f"{DOMAIN}-{device.node_id}-fan"
+
+    @property
+    def supported_features(self) -> FanEntityFeature:
+        features = (
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+        )
+        if self._device.last_reported_value.get("airflow_rotation_supported"):
+            features |= FanEntityFeature.DIRECTION
+        return features
 
     @property
     def is_on(self) -> bool:
@@ -59,6 +72,19 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
     def speed_count(self) -> int:
         """Six discrete speeds; HA UI shows a stepped slider (≈17 % per step)."""
         return FAN_SPEED_MAX
+
+    @property
+    def current_direction(self) -> str | None:
+        """forward = été (brise descendante), reverse = hiver (déstratification)."""
+        return self._device.last_reported_value.get("airflow_rotation")
+
+    async def async_set_direction(self, direction: str) -> None:
+        if direction not in {DIRECTION_FORWARD, DIRECTION_REVERSE}:
+            return
+        home_id = self._device.home_id
+        node_id = self._device.node_id
+        await self.coordinator.api.async_set_fan_rotation(home_id, node_id, direction)
+        self.coordinator.update_cached_value(node_id, "airflow_rotation", direction)
 
     async def async_turn_on(
         self,

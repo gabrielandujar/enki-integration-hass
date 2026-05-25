@@ -4,7 +4,30 @@ from __future__ import annotations
 
 from typing import Any
 
-from .const import FAN_SPEED_MAX
+from .const import (
+    AIRFLOW_ROTATION_SUMMER,
+    AIRFLOW_ROTATION_WINTER,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+    FAN_SPEED_MAX,
+)
+
+_ENKI_ROTATION_TO_DIRECTION: dict[str, str] = {
+    AIRFLOW_ROTATION_SUMMER: DIRECTION_FORWARD,
+    AIRFLOW_ROTATION_WINTER: DIRECTION_REVERSE,
+    "COUNTER_CLOCKWISE": DIRECTION_FORWARD,
+    "COUNTERCLOCKWISE": DIRECTION_FORWARD,
+    "CCW": DIRECTION_FORWARD,
+    "CLOCKWISE": DIRECTION_REVERSE,
+    "CW": DIRECTION_REVERSE,
+    "FORWARD": DIRECTION_FORWARD,
+    "REVERSE": DIRECTION_REVERSE,
+}
+
+_DIRECTION_TO_ENKI_ROTATION: dict[str, str] = {
+    DIRECTION_FORWARD: AIRFLOW_ROTATION_SUMMER,
+    DIRECTION_REVERSE: AIRFLOW_ROTATION_WINTER,
+}
 
 # Home Assistant treats speed_count as the number of non-off speed steps.
 # Percentage steps are 100 / speed_count (≈ 17 % per step for 6 speeds).
@@ -40,3 +63,28 @@ def normalize_power_state(last_reported: Any, endpoint: int) -> str:
             if isinstance(value, str):
                 return value
     return "OFF"
+
+
+def enki_rotation_to_direction(value: Any) -> str | None:
+    """Map Enki rotation / season value to a Home Assistant fan direction."""
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        for key in ("rotation", "rotationDirection", "bladeDirection", "direction", "mode"):
+            if key in value:
+                value = value[key]
+                break
+        else:
+            return None
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip().upper()
+    return _ENKI_ROTATION_TO_DIRECTION.get(normalized)
+
+
+def direction_to_enki_rotation(direction: str) -> str:
+    """Map Home Assistant fan direction to an Enki rotation value."""
+    mapped = _DIRECTION_TO_ENKI_ROTATION.get(direction)
+    if mapped is None:
+        raise ValueError(f"Unsupported fan direction: {direction}")
+    return mapped

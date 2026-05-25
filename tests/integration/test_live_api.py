@@ -10,7 +10,7 @@ import os
 
 import pytest
 from enki.api import EnkiAPI
-from enki.const import DEVICE_TYPE_FANS, LIGHT_ENDPOINT
+from enki.const import DEVICE_TYPE_FANS
 from enki.exceptions import EnkiAuthError
 
 pytestmark = pytest.mark.integration
@@ -78,8 +78,9 @@ async def test_light_power_independent(api: EnkiAPI) -> None:
     state = await api._get_light_state(HOME_ID, NODE_ID)
     assert state["lastReportedValue"]["power"] == "OFF"
 
-    await api.async_set_light_power(HOME_ID, NODE_ID, True)
+    await api.async_change_light_state(HOME_ID, NODE_ID, "power", "ON")
     await asyncio.sleep(2)
-    assert await api._get_power_state(HOME_ID, NODE_ID, LIGHT_ENDPOINT) == "ON"
+    state = await api._get_light_state(HOME_ID, NODE_ID)
+    assert state["lastReportedValue"]["power"] == "ON"
     speed = await api._get_fan_speed(HOME_ID, NODE_ID)
     assert speed > 0

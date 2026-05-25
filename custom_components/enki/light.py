@@ -37,11 +37,7 @@ async def async_setup_entry(
 
 
 class EnkiFanLightEntity(EnkiEntity, LightEntity):
-    """Light kit on an ESDK ceiling fan.
-
-    On/off: api-enki-power-prod (endpoint 2).
-    Brightness / colour temperature: api-enki-lighting-prod.
-    """
+    """Light kit on an ESDK ceiling fan (api-enki-lighting-prod)."""
 
     _attr_translation_key = "fan_light"
     _attr_color_mode = ColorMode.COLOR_TEMP
@@ -70,8 +66,6 @@ class EnkiFanLightEntity(EnkiEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         home_id = self._device.home_id
         node_id = self._device.node_id
-        await self.coordinator.api.async_set_light_power(home_id, node_id, True)
-        self.coordinator.update_cached_value(node_id, "light_power", "ON")
 
         if ATTR_BRIGHTNESS in kwargs:
             value = round(kwargs[ATTR_BRIGHTNESS] / 255, 2)
@@ -80,9 +74,9 @@ class EnkiFanLightEntity(EnkiEntity, LightEntity):
                 node_id,
                 "brightness",
                 value,
-                fan_light_kit=True,
             )
             self.coordinator.update_cached_value(node_id, "brightness", value)
+            self._cache_light_on(node_id)
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             value = f"T{kwargs[ATTR_COLOR_TEMP_KELVIN]}K"
             await self.coordinator.api.async_change_light_state(
@@ -90,15 +84,26 @@ class EnkiFanLightEntity(EnkiEntity, LightEntity):
                 node_id,
                 "colorTemperature",
                 value,
-                fan_light_kit=True,
             )
             self.coordinator.update_cached_value(node_id, "colorTemperature", value)
+            self._cache_light_on(node_id)
+        else:
+            await self.coordinator.api.async_change_light_state(home_id, node_id, "power", "ON")
+            self._cache_light_on(node_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         home_id = self._device.home_id
         node_id = self._device.node_id
-        await self.coordinator.api.async_set_light_power(home_id, node_id, False)
+        await self.coordinator.api.async_change_light_state(home_id, node_id, "power", "OFF")
+        self._cache_light_off(node_id)
+
+    def _cache_light_on(self, node_id: str) -> None:
+        self.coordinator.update_cached_value(node_id, "light_power", "ON")
+        self.coordinator.update_cached_value(node_id, "power", "ON")
+
+    def _cache_light_off(self, node_id: str) -> None:
         self.coordinator.update_cached_value(node_id, "light_power", "OFF")
+        self.coordinator.update_cached_value(node_id, "power", "OFF")
 
 
 class EnkiLightEntity(EnkiEntity, LightEntity):
