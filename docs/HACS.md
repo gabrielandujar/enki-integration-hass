@@ -52,7 +52,7 @@ Prérequis supplémentaires :
 - Au moins **une release** publiée
 - PR sur [hacs/default](https://github.com/hacs/default) (fichier `integration`), entrée **alphabétique**
 - `country` dans `hacs.json` si le produit est limité géographiquement (déjà `FR`)
-- Brand : [`custom_components/enki/brands/icon.png`](../custom_components/enki/brands/icon.png) ou PR vers [home-assistant/brands](https://github.com/home-assistant/brands) pour le domaine `enki`
+- Brand : [`custom_components/enki/brand/icon.png`](../custom_components/enki/brand/icon.png) (chemin requis par HACS) ou PR vers [home-assistant/brands](https://github.com/home-assistant/brands) pour le domaine `enki`
 
 ## Validation locale
 
