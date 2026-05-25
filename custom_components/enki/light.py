@@ -45,7 +45,7 @@ class EnkiFanLightEntity(EnkiEntity, LightEntity):
 
     _attr_translation_key = "fan_light"
     _attr_color_mode = ColorMode.COLOR_TEMP
-    _attr_supported_color_modes = {ColorMode.ONOFF, ColorMode.COLOR_TEMP}
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
     _attr_min_color_temp_kelvin = 2748
     _attr_max_color_temp_kelvin = 6500
 

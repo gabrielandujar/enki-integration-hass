@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enki.const import FAN_SPEED_MAX, ORDERED_FAN_SPEEDS
 from enki.helpers import percentage_to_speed, speed_to_percentage
 
 
@@ -21,3 +22,9 @@ def test_percentage_round_trip() -> None:
 
 def test_percentage_zero_is_off() -> None:
     assert percentage_to_speed(0) == 0
+
+
+def test_ordered_fan_speeds_matches_enki_levels() -> None:
+    assert ORDERED_FAN_SPEEDS == list(range(1, FAN_SPEED_MAX + 1))
+    for speed in ORDERED_FAN_SPEEDS:
+        assert speed_to_percentage(speed) == round(speed * 100 / FAN_SPEED_MAX)

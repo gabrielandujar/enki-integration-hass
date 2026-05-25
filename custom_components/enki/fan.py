@@ -13,7 +13,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .const import DEVICE_TYPE_FANS, DOMAIN, FAN_SPEED_MAX
+from .const import DEVICE_TYPE_FANS, DOMAIN, FAN_SPEED_MAX, ORDERED_FAN_SPEEDS
 from .coordinator import EnkiCoordinator
 from .entity import EnkiEntity
 from .models import EnkiDevice
@@ -53,7 +53,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         speed = self._device.last_reported_value.get("fan_speed", 0)
         if speed <= 0:
             return 0
-        return ordered_list_item_to_percentage(self.speed_count, speed)
+        return ordered_list_item_to_percentage(ORDERED_FAN_SPEEDS, speed)
 
     @property
     def speed_count(self) -> int:
@@ -67,7 +67,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         if percentage is not None and percentage > 0:
-            speed = percentage_to_ordered_list_item(self.speed_count, percentage)
+            speed = percentage_to_ordered_list_item(ORDERED_FAN_SPEEDS, percentage)
         else:
             speed = max(1, self._device.last_reported_value.get("fan_speed", 0) or 1)
         await self._set_speed(speed)
@@ -79,7 +79,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        await self._set_speed(percentage_to_ordered_list_item(self.speed_count, percentage))
+        await self._set_speed(percentage_to_ordered_list_item(ORDERED_FAN_SPEEDS, percentage))
 
     async def _set_speed(self, speed: int) -> None:
         home_id = self._device.home_id
