@@ -202,16 +202,36 @@ class EnkiAPI:
     async def _get_fan_full_state(self, home_id: str, node_id: str) -> dict[str, Any]:
         speed = await self._get_fan_speed(home_id, node_id)
         mode = await self._get_airflow_mode(home_id, node_id)
+        light_power = await self._get_power_state(home_id, node_id, LIGHT_ENDPOINT)
         light_state = await self._get_light_state(home_id, node_id)
         last_reported = light_state.get("lastReportedValue", {})
         return {
             "fan_speed": speed,
             "airflow_mode": mode,
-            "light_power": last_reported.get("power", "OFF"),
+            "light_power": light_power,
             "brightness": last_reported.get("brightness"),
             "colorTemperature": last_reported.get("colorTemperature"),
             "power": last_reported.get("power"),
         }
+
+    async def _get_power_state(self, home_id: str, node_id: str, endpoint: int) -> str:
+        session = await self._get_session()
+        async with session.get(
+            (
+                f"{ENKI_BASE_URL}/api-enki-power-prod/v1/power/{node_id}/"
+                f"check-electrical-power?endpoints={endpoint}"
+            ),
+            headers=self._auth_headers(
+                {
+                    "X-Gateway-APIKey": ENKI_POWER_API_KEY,
+                    "homeId": home_id,
+                }
+            ),
+        ) as response:
+            if response.status != 200:
+                raise EnkiConnectionError(f"check-electrical-power failed: HTTP {response.status}")
+            data = await response.json()
+            return data["lastReportedValue"]
 
     async def _get_fan_speed(self, home_id: str, node_id: str) -> int:
         session = await self._get_session()
@@ -315,10 +335,15 @@ class EnkiAPI:
         node_id: str,
         parameter: str,
         value: Any,
+        *,
+        fan_light_kit: bool = False,
     ) -> None:
         await self._ensure_token()
         current = await self._get_light_state(home_id, node_id)
         payload = dict(current.get("lastReportedValue", {}))
+        if fan_light_kit:
+            # ESDK fan: relay on/off uses api-enki-power-prod; lighting API keeps power ON.
+            payload["power"] = "ON"
         payload[parameter] = value
         session = await self._get_session()
         async with session.post(
