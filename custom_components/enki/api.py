@@ -296,6 +296,24 @@ class EnkiAPI:
         data = await self._airflow_get(home_id, node_id, "check-airflow-mode")
         return data["lastReportedValue"]
 
+    async def _try_airflow_get(
+        self,
+        home_id: str,
+        node_id: str,
+        action: str,
+    ) -> dict[str, Any] | None:
+        """Best-effort airflow read; never fails discovery (404/500 on optional probes)."""
+        try:
+            return await self._airflow_get(home_id, node_id, action)
+        except (EnkiApiNotFoundError, EnkiConnectionError) as err:
+            LOGGER.debug(
+                "Optional airflow %s for node %s skipped: %s",
+                action,
+                node_id,
+                err,
+            )
+            return None
+
     async def _get_fan_rotation(
         self,
         home_id: str,
@@ -304,18 +322,14 @@ class EnkiAPI:
     ) -> tuple[str | None, bool]:
         """Return (HA direction, supported). Probes rotation endpoints when present."""
         for action in ("check-airflow-rotation", "check-fan-rotation"):
-            try:
-                data = await self._airflow_get(home_id, node_id, action)
-            except EnkiApiNotFoundError:
+            data = await self._try_airflow_get(home_id, node_id, action)
+            if data is None:
                 continue
             direction = enki_rotation_to_direction(data.get("lastReportedValue"))
             if direction is not None:
                 return direction, True
 
-        try:
-            data = await self._airflow_get(home_id, node_id, "check-airflow-state")
-        except EnkiApiNotFoundError:
-            data = None
+        data = await self._try_airflow_get(home_id, node_id, "check-airflow-state")
         if data is not None:
             direction = enki_rotation_to_direction(data.get("lastReportedValue"))
             if direction is not None:
