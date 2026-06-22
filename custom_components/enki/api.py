@@ -8,8 +8,6 @@ from typing import Any
 import aiohttp
 
 from .const import (
-    AIRFLOW_ROTATION_SUMMER,
-    AIRFLOW_ROTATION_WINTER,
     DEVICE_TYPE_FANS,
     DEVICE_TYPE_LIGHTS,
     ENKI_AIRFLOW_API_KEY,
@@ -25,7 +23,7 @@ from .const import (
     REFERENTIEL_VERSION,
 )
 from .exceptions import EnkiApiNotFoundError, EnkiAuthError, EnkiConnectionError
-from .helpers import enki_rotation_to_direction, direction_to_enki_rotation, normalize_power_state
+from .helpers import direction_to_enki_rotation, enki_rotation_to_direction, normalize_power_state
 from .models import EnkiDevice
 
 
@@ -204,7 +202,7 @@ class EnkiAPI:
     async def _get_fan_full_state(self, home_id: str, node_id: str) -> dict[str, Any]:
         speed = await self._get_fan_speed(home_id, node_id)
         mode = await self._get_airflow_mode(home_id, node_id)
-        rotation, rotation_supported = await self._get_fan_rotation(home_id, node_id, mode)
+        rotation, rotation_supported = await self._get_fan_rotation(home_id, node_id)
         light_state = await self._get_light_state(home_id, node_id)
         last_reported = light_state.get("lastReportedValue", {})
         # ESDK fan kit on/off is reported by api-enki-lighting-prod (`power`), not power-prod.
@@ -282,7 +280,7 @@ class EnkiAPI:
         ) as response:
             if response.status == 404:
                 raise EnkiApiNotFoundError(f"{action} not found", status=404)
-            if response.status != 202:
+            if response.status != 202 and response.status != 204:
                 raise EnkiConnectionError(
                     f"{action} failed: HTTP {response.status}",
                     status=response.status,
@@ -318,30 +316,13 @@ class EnkiAPI:
         self,
         home_id: str,
         node_id: str,
-        airflow_mode: str | None = None,
     ) -> tuple[str | None, bool]:
-        """Return (HA direction, supported). Probes rotation endpoints when present."""
-        for action in ("check-airflow-rotation", "check-fan-rotation"):
-            data = await self._try_airflow_get(home_id, node_id, action)
-            if data is None:
-                continue
-            direction = enki_rotation_to_direction(data.get("lastReportedValue"))
-            if direction is not None:
-                return direction, True
-
-        data = await self._try_airflow_get(home_id, node_id, "check-airflow-state")
-        if data is not None:
-            direction = enki_rotation_to_direction(data.get("lastReportedValue"))
-            if direction is not None:
-                return direction, True
-
-        mode = (airflow_mode or "").upper()
-        if mode in {AIRFLOW_ROTATION_SUMMER, AIRFLOW_ROTATION_WINTER}:
-            direction = enki_rotation_to_direction(mode)
-            if direction is not None:
-                return direction, True
-
-        return None, False
+        """Return (HA direction, supported) via check-fan-rotation-direction."""
+        data = await self._try_airflow_get(home_id, node_id, "check-fan-rotation-direction")
+        if data is None:
+            return None, False
+        direction = enki_rotation_to_direction(data.get("lastReportedValue"))
+        return direction, True
 
     async def async_set_fan_rotation(
         self,
@@ -349,22 +330,15 @@ class EnkiAPI:
         node_id: str,
         direction: str,
     ) -> None:
-        """Set blade rotation (été / hiver) via api-enki-airflow-prod."""
+        """Set blade rotation via change-fan-rotation-direction (été / hiver)."""
         await self._ensure_token()
         enki_value = direction_to_enki_rotation(direction)
-        last_error: EnkiConnectionError | None = None
-        for action in ("change-airflow-rotation", "change-fan-rotation"):
-            try:
-                await self._airflow_post(home_id, node_id, action, enki_value)
-                return
-            except EnkiApiNotFoundError as err:
-                last_error = err
-        if last_error is not None:
-            raise EnkiConnectionError(
-                "Fan rotation is not supported by the Enki API for this node "
-                f"(tried change-airflow-rotation / change-fan-rotation): {last_error}"
-            ) from last_error
-        raise EnkiConnectionError("Fan rotation command failed")
+        await self._airflow_post(home_id, node_id, "change-fan-rotation-direction", enki_value)
+
+    async def async_set_airflow_mode(self, home_id: str, node_id: str, mode: str) -> None:
+        """Set ventilation mode (MANUAL / BREEZE)."""
+        await self._ensure_token()
+        await self._airflow_post(home_id, node_id, "change-airflow-mode", mode)
 
     async def async_set_fan_speed(self, home_id: str, node_id: str, speed: int) -> None:
         """Set fan speed (0 = off, 1–6 = levels)."""

@@ -32,9 +32,12 @@ LIGHT_ENDPOINT = 2
 AIRFLOW_MODE_MANUAL = "MANUAL"
 AIRFLOW_MODE_BREEZE = "BREEZE"
 
-# Blade rotation / season (api-enki-airflow-prod; Inspire ceiling fans).
-AIRFLOW_ROTATION_SUMMER = "SUMMER"
-AIRFLOW_ROTATION_WINTER = "WINTER"
+PRESET_MODE_MANUAL = "manual"
+PRESET_MODE_BREEZE = "breeze"
+
+# Blade rotation (check-fan-rotation-direction / change-fan-rotation-direction).
+AIRFLOW_ROTATION_CLOCKWISE = "CLOCKWISE"
+AIRFLOW_ROTATION_COUNTERCLOCKWISE = "COUNTERCLOCKWISE"
 
 DIRECTION_FORWARD = "forward"
 DIRECTION_REVERSE = "reverse"
