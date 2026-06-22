@@ -56,11 +56,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
 
     @property
     def supported_features(self) -> FanEntityFeature:
-        features = (
-            FanEntityFeature.SET_SPEED
-            | FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
-        )
+        features = FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
         if self._supports_direction():
             features |= FanEntityFeature.DIRECTION
         if self._supports_preset_mode():
@@ -77,9 +73,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
     def preset_mode(self) -> str | None:
         if not self._supports_preset_mode():
             return None
-        return enki_airflow_mode_to_preset(
-            self._device.last_reported_value.get("airflow_mode")
-        )
+        return enki_airflow_mode_to_preset(self._device.last_reported_value.get("airflow_mode"))
 
     @property
     def is_on(self) -> bool:
