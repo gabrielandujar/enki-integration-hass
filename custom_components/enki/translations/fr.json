@@ -31,7 +31,8 @@
       "init": {
         "title": "Options Enki",
         "data": {
-          "scan_interval": "Intervalle de rafraîchissement (secondes)"
+          "scan_interval": "Intervalle de rafraîchissement (secondes)",
+          "telemetry": "Partager des métadonnées anonymisées (issues GitHub pour améliorer le support)"
         }
       }
     }

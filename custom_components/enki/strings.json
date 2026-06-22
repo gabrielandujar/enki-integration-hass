@@ -31,7 +31,8 @@
       "init": {
         "title": "Enki options",
         "data": {
-          "scan_interval": "Polling interval (seconds)"
+          "scan_interval": "Polling interval (seconds)",
+          "telemetry": "Share anonymized device metadata (creates GitHub issues to improve support)"
         }
       }
     }
