@@ -25,6 +25,6 @@ def test_percentage_zero_is_off() -> None:
 
 
 def test_ordered_fan_speeds_matches_enki_levels() -> None:
-    assert ORDERED_FAN_SPEEDS == list(range(1, FAN_SPEED_MAX + 1))
+    assert list(range(1, FAN_SPEED_MAX + 1)) == ORDERED_FAN_SPEEDS
     for speed in ORDERED_FAN_SPEEDS:
         assert speed_to_percentage(speed) == round(speed * 100 / FAN_SPEED_MAX)
