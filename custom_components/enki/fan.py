@@ -21,6 +21,7 @@ from homeassistant.util.percentage import (
 from .const import DEVICE_TYPE_FANS, DOMAIN, FAN_SPEED_MAX, ORDERED_FAN_SPEEDS
 from .coordinator import EnkiCoordinator
 from .entity import EnkiEntity
+from .fan_rotation_helpers import device_supports_fan_rotation
 from .models import EnkiDevice
 
 
@@ -53,7 +54,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
             | FanEntityFeature.TURN_ON
             | FanEntityFeature.TURN_OFF
         )
-        if self._device.last_reported_value.get("airflow_rotation_supported"):
+        if self._supports_direction():
             features |= FanEntityFeature.DIRECTION
         return features
 
@@ -112,3 +113,8 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         node_id = self._device.node_id
         await self.coordinator.api.async_set_fan_speed(home_id, node_id, speed)
         self.coordinator.update_cached_value(node_id, "fan_speed", speed)
+
+    def _supports_direction(self) -> bool:
+        if self._device.last_reported_value.get("airflow_rotation_supported"):
+            return True
+        return device_supports_fan_rotation(self._device)
