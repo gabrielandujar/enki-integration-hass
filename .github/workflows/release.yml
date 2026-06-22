@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set manifest version from tag
         shell: bash
@@ -36,6 +36,6 @@ jobs:
           zip -r enki.zip .
 
       - name: Upload ZIP to GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ github.workspace }}/custom_components/enki/enki.zip
