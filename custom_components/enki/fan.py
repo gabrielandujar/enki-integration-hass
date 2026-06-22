@@ -21,6 +21,13 @@ from homeassistant.util.percentage import (
 from .const import DEVICE_TYPE_FANS, DOMAIN, FAN_SPEED_MAX, ORDERED_FAN_SPEEDS
 from .coordinator import EnkiCoordinator
 from .entity import EnkiEntity
+from .fan_helpers import (
+    airflow_modes_from_metadata,
+    enki_airflow_mode_to_preset,
+    infer_airflow_mode_supported,
+    preset_to_enki_airflow_mode,
+)
+from .fan_rotation_helpers import device_supports_fan_rotation
 from .models import EnkiDevice
 
 
@@ -45,17 +52,28 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
     def __init__(self, coordinator: EnkiCoordinator, device: EnkiDevice) -> None:
         super().__init__(coordinator, device)
         self._attr_unique_id = f"{DOMAIN}-{device.node_id}-fan"
+        self._preset_modes = airflow_modes_from_metadata(device)
 
     @property
     def supported_features(self) -> FanEntityFeature:
-        features = (
-            FanEntityFeature.SET_SPEED
-            | FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
-        )
-        if self._device.last_reported_value.get("airflow_rotation_supported"):
+        features = FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+        if self._supports_direction():
             features |= FanEntityFeature.DIRECTION
+        if self._supports_preset_mode():
+            features |= FanEntityFeature.PRESET_MODE
         return features
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        if not self._supports_preset_mode():
+            return None
+        return self._preset_modes
+
+    @property
+    def preset_mode(self) -> str | None:
+        if not self._supports_preset_mode():
+            return None
+        return enki_airflow_mode_to_preset(self._device.last_reported_value.get("airflow_mode"))
 
     @property
     def is_on(self) -> bool:
@@ -86,12 +104,26 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         await self.coordinator.api.async_set_fan_rotation(home_id, node_id, direction)
         self.coordinator.update_cached_value(node_id, "airflow_rotation", direction)
 
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        if not self._supports_preset_mode():
+            return
+        if preset_mode not in self._preset_modes:
+            raise ValueError(f"Unsupported preset mode: {preset_mode}")
+        home_id = self._device.home_id
+        node_id = self._device.node_id
+        enki_mode = preset_to_enki_airflow_mode(preset_mode)
+        await self.coordinator.api.async_set_airflow_mode(home_id, node_id, enki_mode)
+        self.coordinator.update_cached_value(node_id, "airflow_mode", enki_mode)
+
     async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
+        if preset_mode is not None and self._supports_preset_mode():
+            await self.async_set_preset_mode(preset_mode)
+
         if percentage is not None and percentage > 0:
             speed = percentage_to_ordered_list_item(ORDERED_FAN_SPEEDS, percentage)
         else:
@@ -112,3 +144,14 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         node_id = self._device.node_id
         await self.coordinator.api.async_set_fan_speed(home_id, node_id, speed)
         self.coordinator.update_cached_value(node_id, "fan_speed", speed)
+
+    def _supports_direction(self) -> bool:
+        if self._device.last_reported_value.get("airflow_rotation_supported"):
+            return True
+        return device_supports_fan_rotation(self._device)
+
+    def _supports_preset_mode(self) -> bool:
+        return infer_airflow_mode_supported(
+            self._device,
+            self._device.last_reported_value.get("airflow_mode"),
+        )
