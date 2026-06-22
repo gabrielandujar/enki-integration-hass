@@ -62,6 +62,7 @@ State is split across services:
 Commands:
 
 - `POST …/change-fan-speed` — body `{"value": <0-6>}`, expect `202`
+- `POST …/change-airflow-mode` — body `{"value": "MANUAL"|"BREEZE"}`, expect `202` or `204` (mode brise)
 - `POST …/change-fan-rotation-direction` — body `{"value": "CLOCKWISE"|"COUNTERCLOCKWISE"}`, expect `202` or `204` (Inspire; enables `fan.set_direction` in HA)
 - `POST …/change-light-state` — full `lastReportedValue` object, expect `202`
 - `POST …/change-light-state` — body is the full lighting state object; `power` ON/OFF for the fan light kit

@@ -335,6 +335,11 @@ class EnkiAPI:
         enki_value = direction_to_enki_rotation(direction)
         await self._airflow_post(home_id, node_id, "change-fan-rotation-direction", enki_value)
 
+    async def async_set_airflow_mode(self, home_id: str, node_id: str, mode: str) -> None:
+        """Set ventilation mode (MANUAL / BREEZE)."""
+        await self._ensure_token()
+        await self._airflow_post(home_id, node_id, "change-airflow-mode", mode)
+
     async def async_set_fan_speed(self, home_id: str, node_id: str, speed: int) -> None:
         """Set fan speed (0 = off, 1–6 = levels)."""
         await self._ensure_token()
