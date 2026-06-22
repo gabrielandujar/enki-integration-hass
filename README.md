@@ -1,157 +1,121 @@
 # Enki pour Home Assistant
 
-<p align="center">
-  <a href="https://github.com/cyrilcolinet/enki-integration-hass/actions/workflows/ci.yml"><img src="https://github.com/cyrilcolinet/enki-integration-hass/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5?style=flat-square&logo=home-assistant&logoColor=white" alt="Home Assistant" />
-  <img src="https://img.shields.io/badge/HACS-Custom-orange?style=flat-square" alt="HACS" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT" />
-</p>
-
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cyrilcolinet&repository=enki-integration-hass&category=integration)
 
-Intégration personnalisée [Home Assistant](https://www.home-assistant.io/) pour piloter les appareils **Enki** (Leroy Merlin / Adeo) depuis votre instance locale — ventilateurs de plafond **Inspire**, luminaires, kits lumière associés.
+Contrôlez vos appareils **Enki** (Leroy Merlin) depuis Home Assistant : ventilateurs de plafond **Inspire**, luminaires, lumière du kit ventilo.
 
-> Fork maintenu de [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component) — API cloud Enki, support ventilateurs ESDK, tests unitaires, CI.
+Mêmes identifiants que l’**application mobile Enki**. Pas de box supplémentaire à configurer dans Home Assistant — la box Enki doit déjà fonctionner avec l’app.
 
-## Sommaire
+## Ce qui est supporté
 
-- [Appareils supportés](#appareils-supportés)
-- [Fonctionnalités](#fonctionnalités)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Développement](#développement)
-- [Contribuer](#contribuer)
-- [Crédits](#crédits)
+| Appareil | Dans Home Assistant |
+|----------|---------------------|
+| Ventilateur Inspire (Siroco+, Aruba+, etc.) | Un ventilateur + une lumière (kit LED) |
+| Luminaires Enki (Eglo, Lexman, …) | Une lumière |
 
-## Appareils supportés
+**Pas encore disponible** : radiateurs, volets, prises, alarme. Vous pouvez [demander le support d’un appareil](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) via GitHub.
 
-| Famille | Exemples | Entités HA |
-|---------|----------|------------|
-| Ventilateur de plafond ESDK | Inspire Siroco+, Aruba+ | `fan` + `light` (kit LED) |
-| Luminaires Enki | Eglo V-Link, Lexman | `light` |
+### Ventilateur
 
-Radiateurs, volets, prises, alarmes : **pas encore** exposés. Pour aider au support, voir [Contribuer](#contribuer).
+- Allumer / éteindre
+- Régler la vitesse (6 niveaux)
+- Changer le sens (été / hiver)
+- Mode manuel ou mode brise
 
-## Fonctionnalités
+### Lumière
 
-**Ventilateur**
+- Allumer / éteindre
+- Luminosité et blanc variable (selon le modèle)
 
-- Marche / arrêt, 6 vitesses (slider HA)
-- Sens de rotation été / hiver (`fan.set_direction`)
-- Mode manuel / brise (`fan.set_preset_mode`)
+Le ventilateur et sa lumière sont **indépendants** : allumer l’un n’allume pas l’autre.
 
-**Lumière** (kit ventilo ou lampe)
+## Prérequis
 
-- ON/OFF, luminosité, température de couleur selon capacités
+- Home Assistant **2024.12** ou plus récent
+- [HACS](https://hacs.xyz/) installé (méthode recommandée)
+- Compte Enki / Leroy Merlin (e-mail + mot de passe de l’app)
+- Box Enki configurée et appareils visibles dans l’app mobile
 
-**Intégration**
+## Installation avec HACS
 
-- Connexion via identifiants app Enki (e-mail + mot de passe)
-- Découverte multi-foyers
-- Polling configurable (10–300 s)
-- Reconfiguration depuis l’UI
-- FR / EN
+1. Ouvrez **HACS** → **Intégrations**
+2. Menu **⋮** (en haut à droite) → **Dépôts personnalisés**
+3. Collez l’URL : `https://github.com/cyrilcolinet/enki-integration-hass`
+4. Catégorie : **Integration** → **Ajouter**
+5. **HACS** → **Intégrations** → **Explorer et télécharger des dépôts**
+6. Recherchez **Enki** → **Télécharger**
+7. **Redémarrez** Home Assistant
 
-## Installation
+Vous pouvez aussi cliquer sur le badge **Open in HACS** en haut de cette page.
 
-### HACS (recommandé)
+## Ajouter l’intégration
 
-1. **HACS** → Intégrations → ⋮ → **Dépôts personnalisés**
-2. URL : `https://github.com/cyrilcolinet/enki-integration-hass` — catégorie **Integration**
-3. Rechercher **Enki** → **Télécharger** → redémarrer Home Assistant
-4. **Paramètres** → **Appareils et services** → **Ajouter une intégration** → **Enki**
+1. **Paramètres** → **Appareils et services**
+2. **Ajouter une intégration** (en bas à droite)
+3. Cherchez **Enki**
+4. Saisissez l’**e-mail** et le **mot de passe** de votre compte Enki (les mêmes que l’app Leroy Merlin)
+5. Validez — vos appareils apparaissent après quelques secondes
 
-Ou le badge **Open in HACS** en haut de page.
+## Options
 
-Guide publication HACS : [docs/HACS.md](docs/HACS.md)
+**Paramètres** → **Appareils et services** → **Enki** → **Configurer**
 
-### Manuelle
+| Option | Description |
+|--------|-------------|
+| Intervalle de rafraîchissement | Fréquence de mise à jour depuis le cloud (défaut : 30 secondes). Augmentez si vous voulez moins solliciter l’API. |
 
-Copier `custom_components/enki/` dans `config/custom_components/`, redémarrer HA.
+Pour **changer le mot de passe** : même menu → **Reconfigurer**.
 
-## Configuration
+## Utilisation dans Home Assistant
 
-| Champ | Description |
-|-------|-------------|
-| E-mail | Compte Enki / Leroy Merlin (même que l’app mobile) |
-| Mot de passe | Mot de passe du compte |
+Chaque ventilateur crée deux entités :
 
-**Options** : intervalle de polling (défaut 30 s).
+- **Ventilateur** — vitesse, sens, mode brise
+- **Lumière** — kit LED du plafonnier
 
-> Box Enki requise pour la plupart des appareils Zigbee/ESDK. L’intégration passe par l’API cloud comme l’app officielle.
+Les lampes seules n’ont qu’une entité lumière.
 
-## Développement
+Vous pouvez les ajouter au tableau de bord, aux automatisations et à Alexa/Google si elles passent par Home Assistant.
 
-### Prérequis
+## Problèmes fréquents
 
-- Python 3.12+
-- Home Assistant 2024.12+
+**« Identifiants invalides »**  
+Vérifiez e-mail et mot de passe sur l’app Enki. Testez une connexion sur le téléphone avant.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-dev.txt
-```
+**Aucun appareil détecté**  
+L’appareil doit être actif dans l’app Enki (même foyer). Seuls ventilateurs Inspire et luminaires sont pris en charge pour l’instant.
 
-### Commandes
+**Le ventilateur ne réagit pas / erreur dans les journaux**  
+Redémarrez Home Assistant après une mise à jour HACS. Vérifiez que la box Enki est en ligne.
 
-```bash
-ruff check . && ruff format --check .   # lint
-pytest tests/unit -v                     # tests unitaires
-```
+**La lumière du ventilo ne correspond pas à l’app**  
+Mettez à jour l’intégration via HACS — les corrections d’état lumière sont régulières.
 
-Tests live (API réelle, optionnels) :
+Pour un bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) avec la version HA, la version de l’intégration et un extrait des journaux (`enki`).
 
-```bash
-cp .env.example .env   # renseigner ENKI_* 
-set -a && source .env && set +a
-pytest tests/integration -v -m integration
-```
+## Installation manuelle (sans HACS)
 
-Découverte des appareils sur votre compte :
+1. Téléchargez ce dépôt (ou la dernière [release](https://github.com/cyrilcolinet/enki-integration-hass/releases))
+2. Copiez le dossier `custom_components/enki/` dans le dossier `custom_components/` de votre configuration Home Assistant
+3. Redémarrez Home Assistant
+4. Ajoutez l’intégration comme ci-dessus
 
-```bash
-python3 scripts/discover_devices.py <email> <password>
-```
+## Aide et contribution
 
-### CI
+| Sujet | Lien |
+|-------|------|
+| Signaler un bug | [Issues](https://github.com/cyrilcolinet/enki-integration-hass/issues) |
+| Demander un appareil | [Feature request](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) |
+| Contribuer au code | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Développement / tests locaux | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
+| Support produit Enki (box, appairage) | [support.enki-home.com](https://support.enki-home.com/) |
 
-Chaque push sur `main` et chaque pull request déclenche :
+## Avertissement
 
-- Ruff (lint + format)
-- Pytest (tests unitaires)
-- Hassfest
-- Validation HACS
+Intégration communautaire, **non affiliée** à Leroy Merlin, Adeo ou Enki. Elle utilise la même API cloud que l’app mobile, qui peut évoluer sans préavis.
 
-Workflow : [.github/workflows/ci.yml](.github/workflows/ci.yml)
-
-### Release
-
-```bash
-git tag v1.0.6
-git push origin v1.0.6
-```
-
-Puis publier la release sur GitHub — le workflow `release.yml` attache le ZIP HACS.
-
-## Contribuer
-
-- [CONTRIBUTING.md](CONTRIBUTING.md) — setup, tests, PR
-- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-- [SECURITY.md](SECURITY.md) — signalement vulnérabilité
-- Issues : bug, feature request, ou profil appareil via les templates GitHub
-
-Documentation API (reverse engineering) : [docs/API.md](docs/API.md)
-
-## Crédits
-
-| Projet | Rôle |
-|--------|------|
-| [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component) | Base auth OIDC, API lighting |
-| Communauté | Microservices airflow / power pour ventilateurs ESDK |
-
-Ce dépôt n’est **pas** affilié à Leroy Merlin, Adeo ou Enki. API non officielle — peut changer sans préavis.
+Projet dérivé de [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component).
 
 ## Licence
 
-[MIT](LICENSE) — Copyright (c) 2026 Cyril Colinet
+[MIT](LICENSE)
