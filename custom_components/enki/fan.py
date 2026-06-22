@@ -49,11 +49,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
 
     @property
     def supported_features(self) -> FanEntityFeature:
-        features = (
-            FanEntityFeature.SET_SPEED
-            | FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
-        )
+        features = FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
         if self._supports_direction():
             features |= FanEntityFeature.DIRECTION
         return features
