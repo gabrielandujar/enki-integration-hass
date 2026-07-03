@@ -82,6 +82,42 @@
     "sensor": {
       "power_production": {
         "name": "Production"
+      },
+      "temperature": {
+        "name": "Température"
+      },
+      "humidity": {
+        "name": "Humidité"
+      },
+      "battery": {
+        "name": "Batterie"
+      }
+    },
+    "binary_sensor": {
+      "motion": {
+        "name": "Mouvement"
+      },
+      "vibration": {
+        "name": "Vibration"
+      },
+      "contact": {
+        "name": "Contact"
+      }
+    },
+    "switch": {
+      "vibration_detection": {
+        "name": "Détection vibration"
+      },
+      "contact_detection": {
+        "name": "Détection contact"
+      },
+      "siren": {
+        "name": "Sirène"
+      }
+    },
+    "number": {
+      "vibration_sensibility": {
+        "name": "Sensibilité vibration"
       }
     },
     "cover": {

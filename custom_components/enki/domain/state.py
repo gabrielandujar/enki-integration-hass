@@ -5,6 +5,17 @@ from __future__ import annotations
 from typing import Any
 
 
+def _as_float(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
 class EnkiDeviceState:
     """Read-only view of ``EnkiDevice.last_reported_value``.
 
@@ -88,6 +99,53 @@ class EnkiDeviceState:
     def shutter_opening(self) -> str | None:
         value = self._data.get("shutter_opening")
         return str(value).upper() if isinstance(value, str) else None
+
+    @property
+    def current_temperature(self) -> float | None:
+        return _as_float(self._data.get("current_temperature"))
+
+    @property
+    def current_humidity(self) -> float | None:
+        return _as_float(self._data.get("current_humidity"))
+
+    @property
+    def battery_health(self) -> str | None:
+        value = self._data.get("battery_health")
+        return str(value) if isinstance(value, str) else None
+
+    @property
+    def motion_detection(self) -> str | None:
+        value = self._data.get("motion_detection") or self._data.get("motion_detector_state")
+        return str(value) if isinstance(value, str) else None
+
+    @property
+    def vibration_detection(self) -> str | None:
+        value = self._data.get("vibration_detection")
+        return str(value) if isinstance(value, str) else None
+
+    @property
+    def contact_sensor_state(self) -> str | None:
+        value = self._data.get("contact_sensor_state")
+        return str(value) if isinstance(value, str) else None
+
+    @property
+    def vibration_detection_activation(self) -> str | None:
+        value = self._data.get("vibration_detection_activation")
+        return str(value) if isinstance(value, str) else None
+
+    @property
+    def contact_detection_activation(self) -> str | None:
+        value = self._data.get("contact_detection_activation")
+        return str(value) if isinstance(value, str) else None
+
+    @property
+    def vibration_sensibility_level(self) -> float | None:
+        return _as_float(self._data.get("vibration_sensibility_level"))
+
+    @property
+    def siren_global_state(self) -> str | None:
+        value = self._data.get("siren_global_state")
+        return str(value) if isinstance(value, str) else None
 
     @property
     def electrical_endpoints(self) -> list[dict[str, Any]]:

@@ -21,8 +21,12 @@ Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà
 | ✅ Supporté | Luminaires Enki (Eglo, Lexman, …) | ON/OFF, luminosité, blanc variable |
 | ✅ Supporté | Prises / interrupteurs (Edisio, …) | ON/OFF |
 | ✅ Supporté | Panneaux solaires Envertech-Lexman | production (W) |
+| ✅ Supporté | Capteurs mouvement / ouverture (Lexman, …) | binary_sensor |
+| ✅ Supporté | Thermomètres connectés (Sedea, …) | température, humidité, batterie |
+| ✅ Supporté | Sirènes Lexman | ON/OFF |
 | 🔬 Beta | Volets roulants (Evology, …) | ouverture, fermeture, position 0–100 % |
 | 🔜 Bientôt | Radiateurs ACOVA ARLAN | — |
+| 🔜 Bientôt | Scénarios Enki (« Ouvrir Salon », …) | — |
 | ⏳ Pas prévu | Alarme Enki | — |
 | ⏳ Pas prévu | Store HACS global | dépôt custom pour l’instant |
 
@@ -102,7 +106,7 @@ Bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/i
 
 Intégration communautaire, **non affiliée** à Leroy Merlin, Adeo ou Enki. API cloud non officielle, susceptible d’évoluer sans préavis.
 
-Projet dérivé de [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component). Oui, on s’appelle tous les deux **Cyril** — non, ce n’est pas la même personne : **CyrilP** est l’auteur du repo d’origine ; **moi** ([cyrilcolinet](https://github.com/cyrilcolinet)), je maintiens ce fork à part. Même prénom, deux comptes GitHub, zéro télépathie.
+Projet dérivé de [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component). Capteurs et sirènes : portage partiel depuis [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki). Oui, on s’appelle tous les deux **Cyril** avec [CyrilP](https://github.com/CyrilP) — ce n’est pas la même personne : **CyrilP** est l’auteur du repo d’origine ; **moi** ([cyrilcolinet](https://github.com/cyrilcolinet)), je maintiens ce fork à part. Même prénom, deux comptes GitHub, zéro télépathie.
 
 ## Licence
 

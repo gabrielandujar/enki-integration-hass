@@ -51,6 +51,9 @@ Detection is **capability-based** (referentiel metadata + BFF dashboard), not li
 | Switches / outlets (Edisio, …) | `light` (ON/OFF) | `api-enki-power-prod` (`switch-electrical-power`) |
 | `inverters` (Envertech-Lexman solar) | `sensor` (power W) | BFF dashboard `description.value` |
 | `access_and_motorizations` (Evology, Nodon, …) | `cover` (beta) | `api-enki-access-and-motorizations-prod` |
+| `sensors` (motion, contact, temperature, …) | `binary_sensor`, `sensor`, `switch`, `number` | `api-enki-presence-detector-prod`, `api-enki-contact-sensor-prod`, `api-enki-temperature-humidity-sensor-prod`, `api-enki-battery-health-prod`, `api-enki-siren-prod` |
+
+Sensor capability paths follow the same pattern as [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki): `GET/POST …/v1/sensors/{node_id}/{kebab-case-capability}` (siren uses `/v1/siren/`).
 
 Multi-endpoint lights (several circuits on one node) create one HA light entity per BFF `mainChangeCapability` endpoint.
 

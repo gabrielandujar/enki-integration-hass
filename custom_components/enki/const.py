@@ -27,6 +27,11 @@ ENKI_REFERENTIEL_API_KEY = "MiodFO5my5FR5U1aWHfiGMgFSuL6eOmB"
 ENKI_LIGHTS_API_KEY = "9UO9gla4t7rJqkYgJNS0PzGFIWh9t9B5"
 ENKI_POWER_API_KEY = "HaFUU0N7dDj1jIgMnrMAEdTWgKCH3Fhs"
 ENKI_AIRFLOW_API_KEY = "6ex5WlshxPnnNsqHGoyN5u6dCIIdbFYG"
+ENKI_TEMPERATURE_HUMIDITY_API_KEY = "V6mMQHQAGNNVwjhuBXlVhQNYzZOxARJ3"
+ENKI_BATTERY_HEALTH_API_KEY = "WcydJ76nQUo8AiwkV05kn3kiNyM31b3M"
+ENKI_PRESENCE_DETECTOR_API_KEY = "bHEwVewJI2aNUiDX6KXt9ErzazfkarYp"
+ENKI_CONTACT_SENSOR_API_KEY = "B2K2xlXnpVGEPylKq0Xn79LRuBG60w30"
+ENKI_SIREN_API_KEY = "9jDuso0Im0tTAvj6Ecf0B1HWENeOykZa"
 
 FAN_ENDPOINT = 1
 LIGHT_ENDPOINT = 2
@@ -48,6 +53,7 @@ DEVICE_TYPE_LIGHTS = "lights"
 DEVICE_TYPE_FANS = "ceiling_fans"
 DEVICE_TYPE_INVERTERS = "inverters"
 DEVICE_TYPE_ACCESS_MOTORIZATION = "access_and_motorizations"
+DEVICE_TYPE_SENSORS = "sensors"
 
 # api-enki-access-motorizations-prod (Evology/Nodon roller shutters, …).
 # Capture with mitmproxy when controlling a shutter in the Enki app (see docs/API.md).

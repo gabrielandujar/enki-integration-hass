@@ -2,7 +2,7 @@
 
 Détail par type d’appareil et entités Home Assistant créées. L’intégration détecte les appareils via leurs **capabilities** API (comme l’app mobile), pas seulement par modèle.
 
-Version de référence : **1.2.0**
+Version de référence : **1.3.0**
 
 ## Ventilateurs Inspire (Siroco+, Aruba+, Cadix, Radix, …)
 
@@ -44,6 +44,38 @@ Les nœuds multi-circuits peuvent créer **une entité par circuit** (endpoint B
 | Fonction | Détail |
 |----------|--------|
 | Production instantanée | Valeur lue sur le dashboard BFF |
+
+## Capteurs Enki (Lexman, Sedea, …)
+
+Portage des micro-services documentés par [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki).
+
+### Mouvement / ouverture / vibration
+
+**Entités HA :** `binary_sensor`
+
+| Capabilité API | Entité |
+|----------------|--------|
+| `check_motion_detection` | Mouvement |
+| `check_contact_sensor_state` | Contact (ouvert / fermé) |
+| `check_vibration_detection` | Vibration |
+
+### Température / humidité / batterie
+
+**Entités HA :** `sensor`
+
+| Capabilité API | Entité |
+|----------------|--------|
+| `check_current_temperature` | Température (°C) |
+| `check_current_humidity` | Humidité (%) |
+| `check_battery_health` | Batterie (%, mapping Enki) |
+
+### Sirène Lexman
+
+**Entité HA :** `switch` (ON/OFF via `switch_siren_status`)
+
+### Réglages capteur contact
+
+**Entités HA :** `switch` (activation détection), `number` (sensibilité vibration 1–5)
 
 ## Volets roulants — beta (Evology, Nodon, …)
 

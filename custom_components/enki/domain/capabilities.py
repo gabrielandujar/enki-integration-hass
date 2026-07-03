@@ -139,6 +139,91 @@ class EnkiCapabilityProfile:
             "check_shutter_opening",
         )
 
+    @property
+    def supports_current_temperature(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_current_temperature",
+        )
+
+    @property
+    def supports_current_humidity(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_current_humidity",
+        )
+
+    @property
+    def supports_battery_health(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_battery_health",
+        )
+
+    @property
+    def supports_motion_detection(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_motion_detection",
+            "check_motion_detector_state",
+        )
+
+    @property
+    def supports_vibration_detection(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_vibration_detection",
+        )
+
+    @property
+    def supports_contact_sensor(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_contact_sensor_state",
+        )
+
+    @property
+    def supports_vibration_detection_activation(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "activate_vibration_detection",
+            "check_vibration_detection_activation",
+        )
+
+    @property
+    def supports_contact_detection_activation(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "activate_contact_detection",
+            "check_contact_detection_activation",
+        )
+
+    @property
+    def supports_vibration_sensibility(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "change_vibration_sensibility_level",
+            "check_vibration_sensibility_level",
+        )
+
+    @property
+    def supports_siren(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "switch_siren_status",
+            "check_siren_global_state",
+        )
+
     # --- HA platform classification ----------------------------------------
 
     @property
@@ -172,8 +257,44 @@ class EnkiCapabilityProfile:
         return self.supports_shutter_position
 
     @property
+    def is_environment_sensor(self) -> bool:
+        """Temperature, humidity, or battery level sensors."""
+        return (
+            self.supports_current_temperature
+            or self.supports_current_humidity
+            or self.supports_battery_health
+        )
+
+    @property
+    def is_binary_sensor(self) -> bool:
+        """Motion, contact, or vibration detectors."""
+        return (
+            self.supports_motion_detection
+            or self.supports_contact_sensor
+            or self.supports_vibration_detection
+        )
+
+    @property
+    def is_config_switch(self) -> bool:
+        """Detection activation toggles and sirens (not power outlets)."""
+        return (
+            self.supports_vibration_detection_activation
+            or self.supports_contact_detection_activation
+            or self.supports_siren
+        )
+
+    @property
     def is_supported(self) -> bool:
-        return self.is_fan or self.is_light_controllable or self.is_inverter or self.is_cover
+        return (
+            self.is_fan
+            or self.is_light_controllable
+            or self.is_inverter
+            or self.is_cover
+            or self.is_environment_sensor
+            or self.is_binary_sensor
+            or self.is_config_switch
+            or self.supports_vibration_sensibility
+        )
 
     @property
     def uses_power_api_only(self) -> bool:

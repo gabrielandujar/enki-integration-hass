@@ -7,6 +7,7 @@ from typing import Any
 import aiohttp
 
 from ..const import DEVICE_TYPE_LIGHTS, LOGGER
+from ..domain.capabilities import EnkiCapabilityProfile
 from ..domain.models import EnkiDevice, EnkiDiscoveryRecord
 from ..domain.profile import build_discovery_record, integration_supports_device
 from ..exceptions import EnkiApiNotFoundError, EnkiConnectionError
@@ -20,6 +21,32 @@ from ..lib.conversion import (
 from ..lib.shutter import normalize_shutter_position
 from .auth import EnkiAuthSession
 from .transport import EnkiHttpClient
+
+_SENSOR_CAPABILITY_READS: tuple[tuple[str, str, str], ...] = (
+    ("temperature_humidity", "check_current_temperature", "current_temperature"),
+    ("temperature_humidity", "check_current_humidity", "current_humidity"),
+    ("battery_health", "check_battery_health", "battery_health"),
+    ("presence_detector", "check_motion_detection", "motion_detection"),
+    ("presence_detector", "check_motion_detector_state", "motion_detector_state"),
+    ("contact_sensor", "check_contact_sensor_state", "contact_sensor_state"),
+    ("contact_sensor", "check_vibration_detection", "vibration_detection"),
+    (
+        "contact_sensor",
+        "check_vibration_detection_activation",
+        "vibration_detection_activation",
+    ),
+    (
+        "contact_sensor",
+        "check_contact_detection_activation",
+        "contact_detection_activation",
+    ),
+    (
+        "contact_sensor",
+        "check_vibration_sensibility_level",
+        "vibration_sensibility_level",
+    ),
+    ("siren", "check_siren_global_state", "siren_global_state"),
+)
 
 
 class EnkiAPI:
@@ -246,7 +273,33 @@ class EnkiAPI:
         if profile.is_inverter:
             state["power_production"] = device.power_production
 
+        await self._append_sensor_capability_states(http, home_id, node_id, profile, state)
         return state
+
+    async def _append_sensor_capability_states(
+        self,
+        http: EnkiHttpClient,
+        home_id: str,
+        node_id: str,
+        profile: EnkiCapabilityProfile,
+        state: dict[str, Any],
+    ) -> None:
+        """Best-effort reads for sensor / detector micro-services."""
+        caps = profile.capabilities
+        for service, capability, state_key in _SENSOR_CAPABILITY_READS:
+            if capability not in caps:
+                continue
+            try:
+                data = await http.capability_get(service, home_id, node_id, capability)
+                if data and "lastReportedValue" in data:
+                    state[state_key] = data["lastReportedValue"]
+            except EnkiConnectionError as err:
+                LOGGER.debug(
+                    "Capability %s skipped for node %s: %s",
+                    capability,
+                    node_id,
+                    err,
+                )
 
     async def _read_fan_state(
         self,
@@ -346,6 +399,13 @@ class EnkiAPI:
             except EnkiConnectionError as err:
                 LOGGER.debug("Shutter opening skipped for node %s: %s", node_id, err)
 
+        await self._append_sensor_capability_states(
+            http,
+            home_id,
+            node_id,
+            profile,
+            state,
+        )
         return state
 
     # --- public command API --------------------------------------------------
@@ -395,6 +455,18 @@ class EnkiAPI:
             "change-shutter-position",
             max(0, min(100, position)),
         )
+
+    async def async_set_capability_value(
+        self,
+        home_id: str,
+        node_id: str,
+        service: str,
+        capability: str,
+        value: Any,
+    ) -> None:
+        """POST a change/switch/activate capability on a sensor micro-service."""
+        http = await self._get_http()
+        await http.capability_post(service, home_id, node_id, capability, value)
 
     async def async_set_light_power(self, home_id: str, node_id: str, on: bool) -> None:
         """Turn the ESDK fan light kit on or off (lighting API)."""

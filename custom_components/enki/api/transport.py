@@ -10,15 +10,21 @@ from ..const import (
     ENKI_ACCESS_MOTORIZATION_API_KEY,
     ENKI_AIRFLOW_API_KEY,
     ENKI_BASE_URL,
+    ENKI_BATTERY_HEALTH_API_KEY,
     ENKI_BFF_API_KEY,
+    ENKI_CONTACT_SENSOR_API_KEY,
     ENKI_HOME_API_KEY,
     ENKI_LIGHTS_API_KEY,
     ENKI_NODE_API_KEY,
     ENKI_POWER_API_KEY,
+    ENKI_PRESENCE_DETECTOR_API_KEY,
     ENKI_REFERENTIEL_API_KEY,
+    ENKI_SIREN_API_KEY,
+    ENKI_TEMPERATURE_HUMIDITY_API_KEY,
     REFERENTIEL_VERSION,
 )
 from ..exceptions import EnkiApiNotFoundError, EnkiConnectionError
+from ..lib.capability_path import capability_to_path_segment
 from ..lib.conversion import is_command_success_status
 from .auth import EnkiAuthSession
 
@@ -39,6 +45,19 @@ class EnkiHttpClient:
         "airflow": ENKI_AIRFLOW_API_KEY,
         "power": ENKI_POWER_API_KEY,
         "motorization": ENKI_ACCESS_MOTORIZATION_API_KEY,
+        "temperature_humidity": ENKI_TEMPERATURE_HUMIDITY_API_KEY,
+        "battery_health": ENKI_BATTERY_HEALTH_API_KEY,
+        "presence_detector": ENKI_PRESENCE_DETECTOR_API_KEY,
+        "contact_sensor": ENKI_CONTACT_SENSOR_API_KEY,
+        "siren": ENKI_SIREN_API_KEY,
+    }
+
+    _SERVICE_PATH_PREFIX = {
+        "temperature_humidity": "/api-enki-temperature-humidity-sensor-prod/v1/sensors",
+        "battery_health": "/api-enki-battery-health-prod/v1/sensors",
+        "presence_detector": "/api-enki-presence-detector-prod/v1/sensors",
+        "contact_sensor": "/api-enki-contact-sensor-prod/v1/sensors",
+        "siren": "/api-enki-siren-prod/v1/siren",
     }
 
     def __init__(self, auth: EnkiAuthSession, session: aiohttp.ClientSession) -> None:
@@ -245,6 +264,41 @@ class EnkiHttpClient:
         await self.post_command(
             "motorization",
             f"/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/{node_id}/{action}",
+            home_id=home_id,
+            json={"value": value},
+        )
+
+    async def capability_get(
+        self,
+        service: str,
+        home_id: str,
+        node_id: str,
+        capability: str,
+    ) -> dict[str, Any]:
+        """GET a check_* capability on a sensor micro-service."""
+        prefix = self._SERVICE_PATH_PREFIX[service]
+        action = capability_to_path_segment(capability)
+        return await self.get_json(
+            service,
+            f"{prefix}/{node_id}/{action}",
+            home_id=home_id,
+            not_found_ok=True,
+        )
+
+    async def capability_post(
+        self,
+        service: str,
+        home_id: str,
+        node_id: str,
+        capability: str,
+        value: Any,
+    ) -> None:
+        """POST a change_*/switch_*/activate_* capability."""
+        prefix = self._SERVICE_PATH_PREFIX[service]
+        action = capability_to_path_segment(capability)
+        await self.post_command(
+            service,
+            f"{prefix}/{node_id}/{action}",
             home_id=home_id,
             json={"value": value},
         )
