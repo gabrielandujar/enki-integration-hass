@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enki.capabilities import (
+from enki.domain.capabilities import (
     device_is_supported,
     device_uses_power_api_only,
     fan_max_speed,
@@ -10,9 +10,9 @@ from enki.capabilities import (
     is_inverter_device,
     is_light_controllable,
     main_change_capability_endpoints,
-    parse_bff_power,
 )
-from enki.models import EnkiDevice
+from enki.domain.models import EnkiDevice
+from enki.lib.bff import parse_bff_power
 
 
 def _device(**kwargs) -> EnkiDevice:

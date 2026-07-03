@@ -20,6 +20,17 @@ pytest tests/unit -v
 
 La CI fait la même chose + Hassfest + HACS.
 
+## Organisation du code
+
+- **`api/`** — auth, transport HTTP, client REST Enki
+- **`domain/`** — modèles et capacités (aucun import Home Assistant)
+- **`lib/`** — conversion et parsing purs, testables sans HA
+- **`platforms/`** — logique partagée des plateformes (pas les fichiers loader HA)
+- **`telemetry/`** — opt-in profils appareils et nudge legacy
+- **Racine** — `fan.py`, `light.py`, `sensor.py`, `config_flow.py` (exigé par HA)
+
+Imports publics via les `__init__.py` de chaque package (`from enki.api import EnkiAPI`, etc.).
+
 ## Pull requests
 
 - Une PR = un sujet

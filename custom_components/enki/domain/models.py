@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .capabilities import EnkiCapabilityProfile
-    from .device_state import EnkiDeviceState
+    from .state import EnkiDeviceState
 
 
 @dataclass(slots=True)
@@ -44,7 +44,7 @@ class EnkiDevice:
     @property
     def reported(self) -> EnkiDeviceState:
         """Typed accessor for live API fields cached on the coordinator."""
-        from .device_state import EnkiDeviceState
+        from .state import EnkiDeviceState
 
         return EnkiDeviceState(self.last_reported_value)
 

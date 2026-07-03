@@ -6,19 +6,19 @@ from typing import Any
 
 import aiohttp
 
-from .auth import EnkiAuthSession
-from .capabilities import parse_bff_power
-from .const import DEVICE_TYPE_LIGHTS, LOGGER
-from .device_profile import build_discovery_record, integration_supports_device
-from .exceptions import EnkiApiNotFoundError, EnkiConnectionError
-from .helpers import (
+from ..const import DEVICE_TYPE_LIGHTS, LOGGER
+from ..domain.models import EnkiDevice, EnkiDiscoveryRecord
+from ..domain.profile import build_discovery_record, integration_supports_device
+from ..exceptions import EnkiApiNotFoundError, EnkiConnectionError
+from ..lib.bff import parse_bff_power
+from ..lib.conversion import (
     direction_to_enki_rotation,
     enki_rotation_to_direction,
     merge_light_state_payload,
     normalize_power_state,
 )
-from .http_client import EnkiHttpClient
-from .models import EnkiDevice, EnkiDiscoveryRecord
+from .auth import EnkiAuthSession
+from .transport import EnkiHttpClient
 
 
 class EnkiAPI:

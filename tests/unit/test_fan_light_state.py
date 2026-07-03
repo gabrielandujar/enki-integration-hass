@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enki.helpers import merge_light_state_payload
+from enki.lib.conversion import merge_light_state_payload
 
 
 def test_merge_light_state_payload_power_off_wins() -> None:

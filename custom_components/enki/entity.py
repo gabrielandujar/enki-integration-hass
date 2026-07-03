@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EnkiCoordinator
-from .models import EnkiDevice
+from .domain.models import EnkiDevice
 
 
 class EnkiEntity(CoordinatorEntity[EnkiCoordinator]):

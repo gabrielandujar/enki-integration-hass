@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from enki.const import CONF_TELEMETRY, CONF_TELEMETRY_ONBOARDING
-from enki.telemetry_nudge import (
+from enki.telemetry.nudge import (
     EnkiTelemetryNudge,
     parse_version,
     version_is_before,
@@ -37,11 +37,11 @@ async def test_nudge_skipped_when_telemetry_enabled() -> None:
 
     with (
         patch(
-            "enki.telemetry_nudge.persistent_notification.async_create",
+            "enki.telemetry.nudge.persistent_notification.async_create",
             new_callable=AsyncMock,
         ) as notify,
         patch(
-            "enki.telemetry_nudge.persistent_notification.async_dismiss",
+            "enki.telemetry.nudge.persistent_notification.async_dismiss",
             new_callable=AsyncMock,
         ),
     ):
@@ -62,7 +62,7 @@ async def test_nudge_skipped_after_onboarding_step() -> None:
     nudge._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
     with patch(
-        "enki.telemetry_nudge.persistent_notification.async_create",
+        "enki.telemetry.nudge.persistent_notification.async_create",
         new_callable=AsyncMock,
     ) as notify:
         await nudge.async_handle_setup()
@@ -83,7 +83,7 @@ async def test_nudge_shown_once_for_legacy_install() -> None:
     nudge._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
     with patch(
-        "enki.telemetry_nudge.persistent_notification.async_create",
+        "enki.telemetry.nudge.persistent_notification.async_create",
         new_callable=AsyncMock,
     ) as notify:
         await nudge.async_handle_setup()
@@ -111,7 +111,7 @@ async def test_nudge_dismissed_when_telemetry_turned_on() -> None:
     nudge._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
     with patch(
-        "enki.telemetry_nudge.persistent_notification.async_dismiss",
+        "enki.telemetry.nudge.persistent_notification.async_dismiss",
         new_callable=AsyncMock,
     ) as dismiss:
         await nudge.async_handle_setup()

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .const import DEVICE_TYPE_FANS, DEVICE_TYPE_INVERTERS, DEVICE_TYPE_LIGHTS
+from ..const import DEVICE_TYPE_FANS, DEVICE_TYPE_INVERTERS, DEVICE_TYPE_LIGHTS
 from .models import EnkiDevice
 
 
@@ -171,19 +171,6 @@ class EnkiCapabilityProfile:
         if self.main_change_capability_id != "switch_electrical_power":
             return []
         return list(self.main_change_capability_endpoints)
-
-
-def parse_bff_power(description: dict[str, Any] | None) -> float | None:
-    """Parse power production from BFF description.value (e.g. '109 W' -> 109.0)."""
-    if not description or not isinstance(description, dict):
-        return None
-    value_str = description.get("value")
-    if not isinstance(value_str, str):
-        return None
-    try:
-        return float(value_str.split()[0])
-    except (ValueError, IndexError):
-        return None
 
 
 # --- Backward-compatible module functions (used by tests and legacy imports) ---

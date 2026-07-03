@@ -47,7 +47,25 @@
   "entity": {
     "fan": {
       "ceiling_fan": {
-        "name": "Ventilateur"
+        "name": "Ventilateur",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manuel",
+              "breeze": "Brise",
+              "ventilation": "Ventilation",
+              "boost": "Boost",
+              "auto": "Automatique",
+              "sleep": "Nuit"
+            }
+          },
+          "direction": {
+            "state": {
+              "forward": "Été (brise descendante)",
+              "reverse": "Hiver (déstratification)"
+            }
+          }
+        }
       }
     },
     "light": {

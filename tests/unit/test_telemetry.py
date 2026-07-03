@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from enki.const import CONF_TELEMETRY
-from enki.device_profile import build_discovery_record
-from enki.telemetry import EnkiTelemetryReporter
+from enki.domain.profile import build_discovery_record
+from enki.telemetry.reporter import EnkiTelemetryReporter
 
 
 def _record():
@@ -33,7 +33,7 @@ async def test_telemetry_skipped_when_disabled() -> None:
 
     reporter = EnkiTelemetryReporter(hass, entry)
     with patch(
-        "enki.telemetry.persistent_notification.async_create",
+        "enki.telemetry.reporter.persistent_notification.async_create",
         new_callable=AsyncMock,
     ) as notify:
         await reporter.async_report([_record()])
@@ -53,12 +53,12 @@ async def test_telemetry_notifies_new_profile() -> None:
     reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
     version_patch = patch(
-        "enki.telemetry.EnkiTelemetryReporter._integration_version",
+        "enki.telemetry.reporter.EnkiTelemetryReporter._integration_version",
         AsyncMock(return_value="1.0.7"),
     )
     with (
         patch(
-            "enki.telemetry.persistent_notification.async_create",
+            "enki.telemetry.reporter.persistent_notification.async_create",
             new_callable=AsyncMock,
         ) as notify,
         version_patch,
@@ -83,12 +83,12 @@ async def test_telemetry_dedupes_fingerprint() -> None:
     reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
     version_patch = patch(
-        "enki.telemetry.EnkiTelemetryReporter._integration_version",
+        "enki.telemetry.reporter.EnkiTelemetryReporter._integration_version",
         AsyncMock(return_value="1.0.7"),
     )
     with (
         patch(
-            "enki.telemetry.persistent_notification.async_create",
+            "enki.telemetry.reporter.persistent_notification.async_create",
             new_callable=AsyncMock,
         ) as notify,
         version_patch,

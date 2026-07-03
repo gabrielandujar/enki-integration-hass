@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enki.helpers import is_command_success_status
+from enki.lib.conversion import is_command_success_status
 
 
 def test_is_command_success_status() -> None:

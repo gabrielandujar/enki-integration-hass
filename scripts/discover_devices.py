@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "custom_components"))
 
 from enki.api import EnkiAPI  # noqa: E402
-from enki.device_profile import profile_fingerprint, profile_to_export_dict  # noqa: E402
+from enki.domain.profile import profile_fingerprint, profile_to_export_dict  # noqa: E402
 
 
 async def main(username: str, password: str, export: bool) -> None:

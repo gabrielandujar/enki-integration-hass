@@ -47,7 +47,25 @@
   "entity": {
     "fan": {
       "ceiling_fan": {
-        "name": "Fan"
+        "name": "Fan",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manual",
+              "breeze": "Breeze",
+              "ventilation": "Ventilation",
+              "boost": "Boost",
+              "auto": "Auto",
+              "sleep": "Sleep"
+            }
+          },
+          "direction": {
+            "state": {
+              "forward": "Summer (downward breeze)",
+              "reverse": "Winter (destratification)"
+            }
+          }
+        }
       }
     },
     "light": {

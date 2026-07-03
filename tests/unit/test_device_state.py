@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enki.device_state import EnkiDeviceState
+from enki.domain.state import EnkiDeviceState
 
 
 def test_endpoint_power_reads_string_value() -> None:

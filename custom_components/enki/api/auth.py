@@ -7,8 +7,8 @@ from typing import Any
 
 import aiohttp
 
-from .const import ENKI_OIDC_URL, LOGGER
-from .exceptions import EnkiAuthError, EnkiConnectionError
+from ..const import ENKI_OIDC_URL, LOGGER
+from ..exceptions import EnkiAuthError, EnkiConnectionError
 
 
 class EnkiAuthSession:

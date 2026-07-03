@@ -9,13 +9,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import CONF_TELEMETRY, DOMAIN, LOGGER
-from .device_profile import (
+from ..const import CONF_TELEMETRY, DOMAIN, LOGGER
+from ..domain.models import EnkiDiscoveryRecord
+from ..domain.profile import (
     build_github_new_issue_url,
     profile_fingerprint,
     profile_to_export_dict,
 )
-from .models import EnkiDiscoveryRecord
 
 STORAGE_VERSION = 1
 
@@ -107,6 +107,6 @@ class EnkiTelemetryReporter:
         await self._store.async_save({"fingerprints": sorted(reported)})
 
     async def _integration_version(self) -> str:
-        from . import __version__
+        from .. import __version__
 
         return __version__

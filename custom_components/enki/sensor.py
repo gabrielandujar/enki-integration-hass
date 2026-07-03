@@ -14,8 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnkiCoordinator
+from .domain.models import EnkiDevice
 from .entity import EnkiEntity
-from .models import EnkiDevice
 
 
 async def async_setup_entry(

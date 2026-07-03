@@ -7,8 +7,8 @@ import json
 from typing import Any
 from urllib.parse import quote
 
+from ..const import TELEMETRY_GITHUB_REPO, TELEMETRY_ISSUE_LABELS
 from .capabilities import device_is_supported
-from .const import TELEMETRY_GITHUB_REPO, TELEMETRY_ISSUE_LABELS
 from .models import EnkiDevice, EnkiDiscoveryRecord
 
 

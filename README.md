@@ -6,7 +6,9 @@ Contrôlez vos appareils **Enki** (Leroy Merlin) depuis Home Assistant : ventila
 
 Mêmes identifiants que l’**application mobile Enki**. Pas de box supplémentaire à configurer dans Home Assistant — la box Enki doit déjà fonctionner avec l’app.
 
-## Ce qui est supporté
+## Feuille de route
+
+### ✅ Supporté (v1.1.3)
 
 | Appareil | Dans Home Assistant |
 |----------|---------------------|
@@ -15,9 +17,36 @@ Mêmes identifiants que l’**application mobile Enki**. Pas de box supplémenta
 | Prises et interrupteurs connectés (Edisio, …) | Lumière ON/OFF (API power) |
 | Panneaux solaires Envertech-Lexman | Capteur de production (W) |
 
-**Pas encore disponible** : radiateurs, volets, alarme. Vous pouvez [demander le support d’un appareil](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) via GitHub.
+| Fonctionnalité | Détail |
+|----------------|--------|
+| Détection par capabilities | Nouveaux appareils compatibles API pris en charge sans mise à jour de l’intégration |
+| Auth OAuth | Refresh token (sessions plus stables) |
+| Télémétrie opt-in | Onboarding à l’installation + notification unique pour les installs legacy ; profils anonymisés via issue GitHub |
 
-L’intégration détecte les appareils via leurs **capabilities** API (comme l’app mobile), pas seulement par modèle — les nouveaux ventilateurs Inspire ou luminaires compatibles sont pris en charge automatiquement.
+L’intégration détecte les appareils via leurs **capabilities** API (comme l’app mobile), pas seulement par modèle.
+
+### 🔜 Bientôt
+
+| Appareil / sujet | Statut | Issue |
+|------------------|--------|-------|
+| Radiateurs ACOVA ARLAN | API identifiée, implémentation à venir | [#75](https://github.com/CyrilP/hass-enki-component/issues/75) (upstream) |
+| Volets roulants Evology (EnOcean) | En étude (capabilities + scénarios) | [#53](https://github.com/CyrilP/hass-enki-component/issues/53) (upstream) |
+
+Priorisation selon retours et contributions — [ouvrir une feature request](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) pour voter un appareil.
+
+### ⏳ En attente / non planifié
+
+| Sujet | Détail |
+|-------|--------|
+| Alarme Enki | Pas d’API exposée identifiée pour l’instant |
+| Store HACS par défaut | Dépôt custom pour l’instant ; inclusion au store global en attente de critères HACS |
+
+### ❌ Hors périmètre
+
+- Box Enki, appairage, compte Leroy Merlin → [support Enki](https://support.enki-home.com/)
+- Appareils sans capabilities compatibles dans l’API cloud Enki
+
+## Ce qui est supporté — détail
 
 ### Ventilateur
 
@@ -67,6 +96,7 @@ Vous pouvez aussi cliquer sur le badge **Open in HACS** en haut de cette page.
 | Option | Description |
 |--------|-------------|
 | Intervalle de rafraîchissement | Fréquence de mise à jour depuis le cloud (défaut : 30 secondes). Augmentez si vous voulez moins solliciter l’API. |
+| Télémétrie (opt-in) | Notification quand un appareil inconnu ou non supporté est détecté ; lien GitHub pré-rempli, rien n’est envoyé sans votre clic. |
 
 Pour **changer le mot de passe** : même menu → **Reconfigurer**.
 

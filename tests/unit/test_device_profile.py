@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from enki.device_profile import (
+from enki.domain.models import EnkiDiscoveryRecord
+from enki.domain.profile import (
     build_discovery_record,
     build_github_new_issue_url,
     format_github_issue_title,
     profile_fingerprint,
     profile_to_export_dict,
 )
-from enki.models import EnkiDiscoveryRecord
 
 
 def _sample_record(*, supported: bool = False) -> EnkiDiscoveryRecord:

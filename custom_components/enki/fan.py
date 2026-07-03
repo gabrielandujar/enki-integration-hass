@@ -20,14 +20,16 @@ from homeassistant.util.percentage import (
 
 from .const import DOMAIN, FAN_SPEED_MAX
 from .coordinator import EnkiCoordinator
+from .domain.models import EnkiDevice
 from .entity import EnkiEntity
-from .fan_helpers import (
+from .platforms.fan.airflow import (
     airflow_modes_from_metadata,
+    device_supports_fan_rotation,
+    enki_airflow_mode_to_preset,
     infer_airflow_mode_supported,
+    preset_mode_icon,
     preset_to_enki_airflow_mode,
 )
-from .fan_rotation_helpers import device_supports_fan_rotation
-from .models import EnkiDevice
 
 
 async def async_setup_entry(
@@ -77,10 +79,20 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
     def preset_mode(self) -> str | None:
         if not self._supports_preset_mode():
             return None
-        mode = self._device.reported.airflow_mode
-        if mode in self._preset_modes:
-            return mode
+        slug = enki_airflow_mode_to_preset(self._device.reported.airflow_mode)
+        if slug is not None and slug in self._preset_modes:
+            return slug
         return None
+
+    @property
+    def icon(self) -> str:
+        if (
+            self._supports_preset_mode()
+            and (preset := self.preset_mode)
+            and (preset_icon := preset_mode_icon(preset))
+        ):
+            return preset_icon
+        return "mdi:fan-ceiling"
 
     @property
     def is_on(self) -> bool:

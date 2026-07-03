@@ -12,8 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import EnkiAPI
 from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .domain.models import EnkiDevice
 from .exceptions import EnkiAuthError, EnkiConnectionError
-from .models import EnkiDevice
 from .telemetry import EnkiTelemetryReporter
 
 

@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnkiConfigEntry) -> bool
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    from .telemetry_nudge import async_handle_telemetry_nudge
+    from .telemetry import async_handle_telemetry_nudge
 
     await async_handle_telemetry_nudge(hass, entry)
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enki.helpers import normalize_power_state
+from enki.lib.conversion import normalize_power_state
 
 
 def test_normalize_power_state_string() -> None:

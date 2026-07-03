@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from . import __version__
 from .const import CONF_TELEMETRY, CONF_USERNAME
-from .device_profile import profile_to_export_dict
+from .domain.profile import profile_to_export_dict
 
 TO_REDACT = {CONF_USERNAME, "username", "password", "home_id", "node_id", "device_id"}
 

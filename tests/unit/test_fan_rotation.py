@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enki.const import DIRECTION_FORWARD, DIRECTION_REVERSE
-from enki.helpers import direction_to_enki_rotation, enki_rotation_to_direction
+from enki.lib.conversion import direction_to_enki_rotation, enki_rotation_to_direction
 
 
 def test_enki_rotation_to_direction_clockwise() -> None:

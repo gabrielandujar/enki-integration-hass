@@ -86,14 +86,46 @@ Créer la release sur GitHub — le workflow `release.yml` génère le ZIP HACS 
 
 ## Structure du code
 
+Home Assistant exige que les plateformes (`fan.py`, `light.py`, `sensor.py`) et `config_flow.py` restent à la racine de `custom_components/enki/`. Le reste est organisé par couche :
+
 ```
 custom_components/enki/
-├── api.py              # Client REST Enki
-├── coordinator.py      # Polling
-├── fan.py / light.py   # Plateformes HA
-├── helpers.py          # Mapping pur (testable sans HA)
-├── config_flow.py      # UI
-└── translations/       # FR + EN
+├── __init__.py, manifest.json, config_flow.py
+├── coordinator.py, entity.py, diagnostics.py, const.py, exceptions.py
+├── fan.py, light.py, sensor.py          # plateformes HA (loader)
+├── strings.json, translations/, brand/
+│
+├── api/                                 # couche cloud
+│   ├── client.py                        # discovery + commandes REST
+│   ├── auth.py                          # OAuth Keycloak
+│   └── transport.py                     # HTTP par micro-service
+│
+├── domain/                              # modèle métier (sans import HA)
+│   ├── models.py, capabilities.py
+│   ├── state.py                         # champs last_reported_value
+│   └── profile.py                       # profils anonymisés (télémétrie)
+│
+├── platforms/                           # logique interne des plateformes
+│   ├── light/behavior.py                # mixin lumière partagé
+│   └── fan/airflow.py                   # presets, rotation, airflow mode
+│
+├── telemetry/
+│   ├── reporter.py                      # notification profil appareil
+│   └── nudge.py                         # opt-in legacy
+│
+└── lib/                                 # fonctions pures (0 import HA)
+    ├── conversion.py                    # vitesses, rotation, payloads lumière
+    └── bff.py                           # parse champs dashboard BFF
 ```
+
+### Conventions d’import
+
+| Package | Rôle | Exemple |
+|---------|------|---------|
+| `enki.api` | Client cloud public | `from enki.api import EnkiAPI` |
+| `enki.domain` | Modèle et capacités | `from enki.domain.models import EnkiDevice` |
+| `enki.lib` | Helpers testables sans HA | `from enki.lib.conversion import speed_to_percentage` |
+| `enki.platforms.fan` | Logique ventilateur | `from enki.platforms.fan.airflow import preset_to_enki_airflow_mode` |
+| `enki.telemetry` | Opt-in télémétrie | `from enki.telemetry import EnkiTelemetryReporter` |
 
 Voir aussi [CONTRIBUTING.md](../CONTRIBUTING.md) pour les conventions de PR.

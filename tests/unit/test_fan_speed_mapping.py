@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enki.const import FAN_SPEED_MAX, ORDERED_FAN_SPEEDS
-from enki.helpers import percentage_to_speed, speed_to_percentage
+from enki.lib.conversion import percentage_to_speed, speed_to_percentage
 
 
 def test_speed_to_percentage_levels() -> None:

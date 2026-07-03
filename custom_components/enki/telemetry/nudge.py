@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import CONF_TELEMETRY, CONF_TELEMETRY_ONBOARDING, DOMAIN, LOGGER
+from ..const import CONF_TELEMETRY, CONF_TELEMETRY_ONBOARDING, DOMAIN, LOGGER
 
 STORAGE_VERSION = 1
 TELEMETRY_NUDGE_LEGACY_VERSION = "1.0.6"
@@ -110,7 +110,7 @@ class EnkiTelemetryNudge:
         await self._store.async_save(meta)
 
     async def _integration_version(self) -> str:
-        from . import __version__
+        from .. import __version__
 
         return __version__
 
