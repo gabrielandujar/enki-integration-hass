@@ -38,9 +38,9 @@ Configurer sur la page **Settings** du dépôt GitHub :
 
 HACS affiche les 5 dernières releases si elles existent.
 
-1. Créer un tag sémantique (`v1.0.0`)
+1. Créer un tag sémantique (`v1.5.0`) aligné sur `custom_components/enki/manifest.json`
 2. Publier une **GitHub Release** (pas seulement un tag)
-3. Le workflow [`release.yml`](../.github/workflows/release.yml) met à jour `manifest.json` et attache `enki.zip`
+3. Le workflow [`release.yml`](../.github/workflows/release.yml) injecte la version du tag dans le ZIP HACS attaché (`enki.zip`) — le fichier `manifest.json` du dépôt git doit être mis à jour manuellement avant le tag
 
 ## Store HACS par défaut
 
@@ -60,9 +60,4 @@ Procédure : [Include default repositories](https://www.hacs.xyz/docs/publish/in
 
 ## Validation locale
 
-```bash
-# Identique à l’action GitHub (nécessite Docker sur certaines machines)
-# En CI : workflow Validate sur chaque push/PR
-```
-
-Sur GitHub : onglet **Actions** → workflow **Validate**.
+Les mêmes vérifications que le workflow **CI** (ruff, pytest, Hassfest, HACS action) tournent sur chaque push/PR. Sur GitHub : onglet **Actions** → workflow **CI**.

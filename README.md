@@ -15,28 +15,32 @@ Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà
 
 ## Feuille de route
 
+Dernière release GitHub : **[v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest)** — version du dépôt (`manifest.json`) : **1.5.0** (prochaine release).
+
+**Non publié dans v1.3.3 :** couleur RGB (HS) — présent sur `main` (manifest 1.4.0). Chauffage / fuite / filtre fabricant Enki — présent sur cette branche (1.5.0).
+
 | Statut | Appareil | Fonctionnalités |
 |--------|----------|-------------------|
-| ✅ Supporté | Ventilateurs Inspire (Siroco+, Cadix, …) | ventilateur, lumière kit, vitesse, sens, modes |
-| ✅ Supporté | Luminaires Enki (Eglo, Lexman, …) | ON/OFF, luminosité, blanc variable, couleur RGB (HS) |
-| ✅ Supporté | Prises / interrupteurs (Edisio, …) | ON/OFF |
-| ✅ Supporté | Panneaux solaires Envertech-Lexman | production (W) |
-| ✅ Supporté | Capteurs mouvement / ouverture (Lexman, …) | binary_sensor |
+| ✅ Supporté | Ventilateurs Inspire (Siroco+, Cadix, …) | ventilateur, lumière kit, vitesse, sens, modes (selon référentiel) |
+| ✅ Supporté | Luminaires Enki (Eglo, Lexman, …) | ON/OFF, luminosité, blanc variable, couleur RGB (HS) si `change_hue` + `change_saturation` |
+| ✅ Supporté | Prises / interrupteurs (Edisio, Equation, …) | ON/OFF via `switch-electrical-power` |
+| ✅ Supporté | Panneaux solaires Envertech-Lexman | production (W) via dashboard BFF |
+| ✅ Supporté | Capteurs mouvement / ouverture / vibration (Lexman, …) | `binary_sensor` |
 | ✅ Supporté | Thermomètres Enki (Sedea, …) | température, humidité, batterie |
-| ✅ Supporté | Sirènes Lexman | ON/OFF |
-| 🔬 Beta | Volets roulants (Evology, …) | ouverture, fermeture, position 0–100 % |
+| ✅ Supporté | Sirènes Lexman | `switch` ON/OFF |
 | ✅ Supporté | Relais ON/OFF Equation | ON/OFF (comme prises Edisio) |
-| ✅ Supporté | Détecteur fuite Lexman | fuite d'eau + batterie |
-| ✅ Supporté | Fil pilote Equation | modes Confort / Éco / Hors-gel |
-| ✅ Supporté | Radiateur Noirot | climate (consigne, occupancy, fenêtre) |
-| 🔜 Bientôt | Radiateurs ACOVA ARLAN | — |
+| 🔬 Beta | Volets roulants (Evology, Nodon, …) | code `cover` présent ; **aucune entité** tant que `ENKI_ACCESS_MOTORIZATION_API_KEY` est vide dans `const.py` |
+| 🔬 Beta | Détecteur fuite Lexman (v1.5.0+) | entités créées ; **batterie OK**, état fuite inactif sans `ENKI_WATER_SENSOR_API_KEY` |
+| 🔬 Beta | Fil pilote Equation (v1.5.0+) | entité `select` ; inactive sans `ENKI_HEATING_API_KEY` |
+| 🔬 Beta | Radiateur Noirot (v1.5.0+) | `climate` + fenêtre / présence ; inactive sans `ENKI_HEATING_API_KEY` |
+| 🔜 Bientôt | Radiateurs ACOVA ARLAN | allowlist fabricant OK, pas de matériel de test |
 | 🔜 Bientôt | Scénarios Enki (« Ouvrir Salon », …) | — |
-| ⏳ Pas prévu | Alarme Enki | — |
-| ✅ Prêt | Store HACS global | CI HACS + Hassfest vertes, releases publiées — éligible au [store par défaut](docs/HACS.md#store-hacs-par-défaut) |
+| ⏳ Pas prévu | Alarme Enki | pas d’API identifiée |
+| ✅ Prérequis OK | Store HACS global | CI HACS + Hassfest vertes, releases publiées — [PR `hacs/default` à ouvrir](docs/HACS.md#store-hacs-par-défaut) |
 
 Détail complet par appareil : [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md)
 
-**Hors périmètre :** Zigbee tiers appairé sur la box (Sonoff, Tuya, Aqara, …) → [Zigbee2MQTT](https://www.zigbee2mqtt.io/) ou ZHA. Seules les marques **Enki / Leroy Merlin** sont importées (Lexman, Equation, Inspire, … — même si la radio est Zigbee).
+**Hors périmètre :** Zigbee tiers appairé sur la box (Sonoff, Tuya, Aqara, IKEA, …) → [Zigbee2MQTT](https://www.zigbee2mqtt.io/) ou ZHA. Seules les marques **Enki / Leroy Merlin** listées dans [`lib/enki_scope.py`](custom_components/enki/lib/enki_scope.py) sont importées.
 
 ## Prérequis
 
@@ -103,7 +107,7 @@ Bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/i
 | | Sujet | Lien |
 |---|-------|------|
 | 📋 | Appareils supportés (détail) | [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) |
-| 🔬 | Volets beta — guide testeur | [SUPPORTED_DEVICES.md § testeurs](docs/SUPPORTED_DEVICES.md#pour-les-testeurs) |
+| 🔬 | Volets beta — guide testeur | [SUPPORTED_DEVICES.md § volets](docs/SUPPORTED_DEVICES.md#volets-roulants--beta-evology-nodon-) |
 | 📦 | Releases et changelog | [GitHub Releases](https://github.com/cyrilcolinet/enki-integration-hass/releases) |
 | 🐛 | Signaler un bug | [Nouvelle issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) |
 | 💡 | Demander un appareil | [Feature request](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) |
