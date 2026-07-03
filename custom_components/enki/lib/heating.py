@@ -24,9 +24,7 @@ def pilot_wire_options(possible_values: dict[str, Any]) -> list[str]:
         values = meta.get("values")
         if isinstance(values, list):
             return [
-                pilot_wire_option_slug(str(value))
-                for value in values
-                if isinstance(value, str)
+                pilot_wire_option_slug(str(value)) for value in values if isinstance(value, str)
             ]
     return [
         "comfort",
