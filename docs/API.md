@@ -90,7 +90,7 @@ Commands:
 
 - `POST …/change-shutter-position` — body `{"value": <0-100>}`, expect `202` or `204`
 
-Gateway key: `ENKI_ACCESS_MOTORIZATION_API_KEY` in `const.py`. Capture procedure: [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md). End-user testing (no proxy): [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md#volets-roulants--beta-evology-nodon--pour-les-testeurs).
+Gateway key: `ENKI_ACCESS_MOTORIZATION_API_KEY` in `const.py`. Capture procedure: [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md). End-user testing (no proxy): [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md#pour-les-testeurs).
 
 ### Standard lights (Eglo V-Link, Lexman, etc.)
 

@@ -1,6 +1,6 @@
 # Clé API volets — guide contributeur
 
-Ce document s’adresse aux **personnes à l’aise avec le réseau / le débogage mobile**. Les testeurs lambda n’ont pas besoin de le lire : voir [Beta volets — pour les testeurs](SUPPORTED_DEVICES.md#volets-roulants--beta-evology-nodon--pour-les-testeurs) dans `SUPPORTED_DEVICES.md`.
+Ce document s’adresse aux **personnes à l’aise avec le réseau / le débogage mobile**. Les testeurs lambda n’ont pas besoin de le lire : voir [Beta volets — pour les testeurs](SUPPORTED_DEVICES.md#pour-les-testeurs) dans `SUPPORTED_DEVICES.md`.
 
 ## Pourquoi cette clé existe
 
@@ -92,4 +92,4 @@ Puis publie une nouvelle version. Les utilisateurs n’ont rien à modifier manu
 ## Références
 
 - Notes API volets : [API.md](API.md#roller-shutters-evology-sin2rs1--beta)
-- Testeurs (sans proxy) : [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md#volets-roulants--beta-evology-nodon--pour-les-testeurs)
+- Testeurs (sans proxy) : [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md#pour-les-testeurs)

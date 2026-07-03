@@ -1,10 +1,17 @@
 # Enki pour Home Assistant
 
+[![CI](https://github.com/cyrilcolinet/enki-integration-hass/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrilcolinet/enki-integration-hass/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/cyrilcolinet/enki-integration-hass?label=release)](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/cyrilcolinet/enki-integration-hass)](LICENSE)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.12+-41BDF5?logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cyrilcolinet&repository=enki-integration-hass&category=integration)
 
 Contrôlez vos appareils **Enki** (Leroy Merlin) depuis Home Assistant.
 
 Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà fonctionner avec l’app — rien à configurer de plus côté HA.
+
+**Liens rapides :** [Installation HACS](#installation-avec-hacs) · [Appareils supportés](docs/SUPPORTED_DEVICES.md) · [Dernière release](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) · [Signaler un bug](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) · [Contribuer](CONTRIBUTING.md)
 
 ## Feuille de route
 
@@ -76,16 +83,20 @@ Bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/i
 3. Redémarrez Home Assistant
 4. Ajoutez l’intégration comme ci-dessus
 
-## Aide
+## Aide et ressources
 
-| Sujet | Lien |
-|-------|------|
-| Appareils supportés (détail) | [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) |
-| Signaler un bug | [Issues](https://github.com/cyrilcolinet/enki-integration-hass/issues) |
-| Demander un appareil | [Feature request](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) |
-| Contribuer | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Développement | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
-| Support produit Enki | [support.enki-home.com](https://support.enki-home.com/) |
+| | Sujet | Lien |
+|---|-------|------|
+| 📋 | Appareils supportés (détail) | [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) |
+| 🔬 | Volets beta — guide testeur | [SUPPORTED_DEVICES.md § testeurs](docs/SUPPORTED_DEVICES.md#pour-les-testeurs) |
+| 📦 | Releases et changelog | [GitHub Releases](https://github.com/cyrilcolinet/enki-integration-hass/releases) |
+| 🐛 | Signaler un bug | [Nouvelle issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) |
+| 💡 | Demander un appareil | [Feature request](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) |
+| 🤝 | Contribuer | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| 🛠️ | Développement local | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
+| 📡 | Télémétrie opt-in | [docs/TELEMETRY.md](docs/TELEMETRY.md) |
+| 🏠 | Support produit Enki | [support.enki-home.com](https://support.enki-home.com/) |
+| 🔗 | Projet d’origine | [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component) |
 
 ## Avertissement
 
