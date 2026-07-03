@@ -64,8 +64,10 @@ class EnkiHttpClient:
         "contact_sensor": "/api-enki-contact-sensor-prod/v1/sensors",
         "siren": "/api-enki-siren-prod/v1/siren",
         "heating": "/api-enki-heating-prod/v1/heating",
-        "water_sensor": "/api-enki-water-sensor-prod/v1/sensors",
+        "water_sensor": "/api-enki-water-leak-detector-prod/v1/detectors",
     }
+
+    _ROLLING_PATH_PREFIX = "/api-enki-rolling-prod/v1/shutter"
 
     _OPTIONAL_API_KEY_SERVICES = frozenset({"heating", "water_sensor"})
 
@@ -264,7 +266,7 @@ class EnkiHttpClient:
             )
         return await self.get_json(
             "motorization",
-            f"/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/{node_id}/{action}",
+            f"{self._ROLLING_PATH_PREFIX}/{node_id}/{action}",
             home_id=home_id,
             not_found_ok=True,
         )
@@ -283,7 +285,7 @@ class EnkiHttpClient:
             )
         await self.post_command(
             "motorization",
-            f"/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/{node_id}/{action}",
+            f"{self._ROLLING_PATH_PREFIX}/{node_id}/{action}",
             home_id=home_id,
             json={"value": value},
         )

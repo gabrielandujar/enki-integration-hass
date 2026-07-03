@@ -37,7 +37,8 @@ ENKI_SIREN_API_KEY = "9jDuso0Im0tTAvj6Ecf0B1HWENeOykZa"
 # Capture X-Gateway-APIKey when controlling heating in the Enki app — see docs/API.md.
 ENKI_HEATING_API_KEY = ""
 
-# api-enki-water-sensor-prod (détecteurs de fuite Lexman, …).
+# api-enki-water-leak-detector-prod (détecteurs de fuite Lexman, …).
+# Legacy name in docs: water-sensor. Keys come from mobile-config at runtime — see scripts/fetch_gateway_keys.py.
 ENKI_WATER_SENSOR_API_KEY = ""
 
 FAN_ENDPOINT = 1
@@ -62,8 +63,8 @@ DEVICE_TYPE_INVERTERS = "inverters"
 DEVICE_TYPE_ACCESS_MOTORIZATION = "access_and_motorizations"
 DEVICE_TYPE_SENSORS = "sensors"
 
-# api-enki-access-motorizations-prod (Evology/Nodon roller shutters, …).
-# Capture with mitmproxy when controlling a shutter in the Enki app (see docs/API.md).
+# api-enki-rolling-prod (volets — paths shutter/{nodeId}/…, APK 2.25.1+).
+# Legacy docs name: access-and-motorizations. Key via mobile-config — scripts/fetch_gateway_keys.py.
 ENKI_ACCESS_MOTORIZATION_API_KEY = ""
 
 REFERENTIEL_VERSION = "2.23.0"

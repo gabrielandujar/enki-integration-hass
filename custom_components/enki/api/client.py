@@ -436,7 +436,7 @@ class EnkiAPI:
         http: EnkiHttpClient,
         device: EnkiDevice,
     ) -> dict[str, Any]:
-        """Read roller shutter position/opening from access-and-motorizations API."""
+        """Read roller shutter position/opening from api-enki-rolling-prod."""
         home_id = device.home_id
         node_id = device.node_id
         profile = device.profile
