@@ -86,6 +86,45 @@ async def test_telemetry_dedupes_fingerprint() -> None:
 
 
 @pytest.mark.asyncio
+async def test_telemetry_skips_fully_supported_profile() -> None:
+    hass = MagicMock()
+    hass.config.version = "2024.12.0"
+    entry = MagicMock()
+    entry.entry_id = "entry1"
+    entry.options = {CONF_TELEMETRY: True}
+
+    record = build_discovery_record(
+        device_type="ceiling_fans",
+        bff_device_type="ceiling_fans",
+        capabilities=[
+            "change_fan_speed",
+            "check_fan_speed",
+            "change_light_state",
+            "check_light_state",
+            "switch_electrical_power",
+            "check_electrical_power",
+        ],
+        possible_values={},
+        manufacturer="Inspire",
+        model="AD_TCFL_1",
+        firmware_version="2.21.0",
+        supported_by_integration=True,
+    )
+
+    reporter = EnkiTelemetryReporter(hass, entry)
+    reporter._store.async_load = AsyncMock(return_value={"fingerprints": []})  # type: ignore[method-assign]
+    reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
+
+    with patch(
+        "enki.telemetry.reporter.persistent_notification.async_create",
+        new_callable=MagicMock,
+    ) as notify:
+        await reporter.async_report([record])
+        notify.assert_not_called()
+        reporter._store.async_save.assert_awaited()
+
+
+@pytest.mark.asyncio
 async def test_telemetry_tolerates_corrupt_storage() -> None:
     hass = MagicMock()
     hass.config.version = "2024.12.0"
