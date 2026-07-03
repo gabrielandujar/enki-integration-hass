@@ -8,33 +8,16 @@ Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà
 
 ## Feuille de route
 
-### ✅ Supporté
-
-| Appareil | Fonctionnalités |
-|----------|-----------------|
-| Ventilateurs Inspire (Siroco+, Cadix, …) | ventilateur, lumière kit, vitesse, sens, modes |
-| Luminaires Enki (Eglo, Lexman, …) | ON/OFF, luminosité, blanc variable |
-| Prises / interrupteurs (Edisio, …) | ON/OFF |
-| Panneaux solaires Envertech-Lexman | production (W) |
-
-### 🔬 Beta
-
-| Appareil | Fonctionnalités |
-|----------|-----------------|
-| Volets roulants (Evology, …) | ouverture, fermeture, position 0–100 % |
-
-### 🔜 Bientôt
-
-| Appareil |
-|----------|
-| Radiateurs ACOVA ARLAN |
-
-### ⏳ Pas prévu pour l’instant
-
-| Sujet |
-|-------|
-| Alarme Enki |
-| Inclusion au store HACS global (dépôt custom pour l’instant) |
+| Statut | Appareil | Fonctionnalités |
+|--------|----------|-------------------|
+| ✅ Supporté | Ventilateurs Inspire (Siroco+, Cadix, …) | ventilateur, lumière kit, vitesse, sens, modes |
+| ✅ Supporté | Luminaires Enki (Eglo, Lexman, …) | ON/OFF, luminosité, blanc variable |
+| ✅ Supporté | Prises / interrupteurs (Edisio, …) | ON/OFF |
+| ✅ Supporté | Panneaux solaires Envertech-Lexman | production (W) |
+| 🔬 Beta | Volets roulants (Evology, …) | ouverture, fermeture, position 0–100 % |
+| 🔜 Bientôt | Radiateurs ACOVA ARLAN | — |
+| ⏳ Pas prévu | Alarme Enki | — |
+| ⏳ Pas prévu | Store HACS global | dépôt custom pour l’instant |
 
 Détail complet par appareil : [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md)
 
