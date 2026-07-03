@@ -7,6 +7,7 @@ Merci de contribuer. Pour l’installation locale, les tests et la CI, voir [doc
 1. Vérifier les [issues ouvertes](https://github.com/cyrilcolinet/enki-integration-hass/issues)
 2. Nouvel appareil Enki : **feature request** avec le résultat de `scripts/discover_devices.py` (sans mot de passe)
 3. Contexte API : [docs/API.md](docs/API.md)
+4. Clé API volets (beta) : [docs/BETA_VOLETS_KEY.md](docs/BETA_VOLETS_KEY.md)
 
 ## Qualité attendue
 
