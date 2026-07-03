@@ -2,7 +2,13 @@
 
 Détail par type d’appareil et entités Home Assistant créées. L’intégration détecte les appareils via leurs **capabilities** API (comme l’app mobile), pas seulement par modèle.
 
-Version de référence : **1.3.0**
+Version de référence : **1.5.0**
+
+## Périmètre
+
+Cette intégration couvre **uniquement l'écosystème Enki / Leroy Merlin** : Lexman, Equation, Inspire, Noirot, Edisio, Eglo, Sedea, Evology, Nodon, ACOVA, Envertech, etc.
+
+**Important :** beaucoup de ces appareils utilisent **Zigbee en radio** via la box Enki — c'est normal et ils restent dans le périmètre. En revanche, tout **Zigbee tiers** appairé sur la box (Sonoff, Tuya, Aqara, IKEA, …) ou tout nœud **sans fabricant Enki connu** est **ignoré** à la découverte : intégrez-les via **Zigbee2MQTT** ou **ZHA**, pas ce dépôt.
 
 ## Ventilateurs Inspire (Siroco+, Aruba+, Cadix, Radix, …)
 
@@ -70,7 +76,7 @@ Portage des micro-services documentés par [StephaneBranly/ha-enki](https://gith
 | `check_current_humidity` | Humidité (%) |
 | `check_battery_health` | Batterie (%, mapping Enki) |
 
-Thermomètre Sonoff avec écran : [profil referentiel](./devices/6634999c9f53b36a99838c95.json) — déjà couvert (mêmes capabilities que Sedea).
+Thermomètres **Sedea** (écran) : température, humidité, batterie — même API que les autres capteurs Enki.
 
 ### Sirène Lexman
 
@@ -80,16 +86,25 @@ Thermomètre Sonoff avec écran : [profil referentiel](./devices/6634999c9f53b36
 
 **Entités HA :** `switch` (activation détection), `number` (sensibilité vibration 1–5)
 
-### Fuite d'eau (Lexman) — bientôt
+### Fuite d'eau (Lexman)
 
-**Profil referentiel :** [651eada55b3a798ef6b6bc5c.json](./devices/651eada55b3a798ef6b6bc5c.json) — `check_water_sensor_state` + batterie. Batterie déjà gérée ; entité `binary_sensor` fuite à implémenter.
+**Entités HA :** `binary_sensor` (fuite), `sensor` (batterie)
 
-## Chauffage — bientôt
+**Profil referentiel :** [651eada55b3a798ef6b6bc5c.json](./devices/651eada55b3a798ef6b6bc5c.json)
 
-| Modèle | Profil | Capabilities clés |
-|--------|--------|-------------------|
-| Fil pilote Equation | [63a054c81a423d4a245a877e.json](./devices/63a054c81a423d4a245a877e.json) | `switch_pilot_wire_mode` (Confort, Éco, …) |
-| Radiateur Noirot | [67a4b12bae1eca4709a45680.json](./devices/67a4b12bae1eca4709a45680.json) | consigne, occupancy, détection fenêtre |
+| Capability | Entité HA |
+|------------|-----------|
+| `check_water_sensor_state` | Fuite d'eau (humidité) |
+| `check_battery_health` | Batterie |
+
+## Chauffage
+
+| Modèle | Entités HA | Profil |
+|--------|------------|--------|
+| Fil pilote Equation | `select` (Confort, Éco, Hors gel, Off) | [63a054c81a423d4a245a877e.json](./devices/63a054c81a423d4a245a877e.json) |
+| Radiateur Noirot | `climate` (consigne, action chauffe), `binary_sensor` fenêtre / présence, `switch` modes détection | [67a4b12bae1eca4709a45680.json](./devices/67a4b12bae1eca4709a45680.json) |
+
+**Clés API gateway** (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY` dans `const.py`) : à capturer depuis l'app Enki lors d'une commande chauffage ou lecture capteur fuite — même principe que les volets ([API.md](API.md)). Sans clé, les entités apparaissent mais restent sans état jusqu'à la prochaine release incluant la clé.
 
 Catalogue complet : [docs/devices/README.md](./devices/README.md)
 
@@ -129,7 +144,7 @@ Pour les personnes à l’aise avec le débogage réseau (proxy, certificats) : 
 
 | Statut | Appareils |
 |--------|-----------|
-| Bientôt | Fil pilote Equation, radiateur Noirot, détecteur fuite Lexman, radiateurs ACOVA ARLAN |
+| Bientôt | Radiateurs ACOVA ARLAN (même API heating si capabilities compatibles) |
 | Non planifié | Alarme Enki (pas d’API identifiée) |
 | Hors périmètre | Box Enki, appairage, compte Leroy Merlin → [support Enki](https://support.enki-home.com/) |
 

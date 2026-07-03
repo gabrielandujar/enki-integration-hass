@@ -110,9 +110,29 @@ HA's `ColorMode.HS`. When the bulb also advertises `change_color_temperature`,
 the integration exposes both `hs` and `color_temp`; the reported `colorMode`
 field (`hs` vs `ct`) indicates which mode is active.
 
-## Future device families (not implemented yet)
+## Heating and water sensors (v1.5.0+)
 
-The Enki app also controls heating, alarms, and Enki scenarios via other microservices (`api-enki-heating-prod`, BFF scenario player, etc.). Use `scripts/discover_devices.py` to dump unknown `deviceType` values from your account before adding new platforms.
+**Heating base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-heating-prod/v1/heating/{nodeId}/`
+
+| Capability | Platform | Notes |
+|------------|----------|-------|
+| `check_pilot_wire_state` / `switch_pilot_wire_mode` | `select` | COMFORT, ECO, OFF, … |
+| `check_thermostat_target_temperature` / `change_thermostat_target_temperature` | `climate` | °C setpoint |
+| `check_thermostat_running_state` | `climate` | HEAT / IDLE → `hvac_action` |
+| `check_window_open_detection` | `binary_sensor` | WINDOW_OPEN / NO_WINDOW_OPEN |
+| `check_occupancy` | `binary_sensor` | OCCUPIED / UNOCCUPIED |
+
+**Water leak base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-water-sensor-prod/v1/sensors/{nodeId}/`
+
+| Capability | Platform |
+|------------|----------|
+| `check_water_sensor_state` | `binary_sensor` (moisture) |
+
+Gateway keys: `ENKI_HEATING_API_KEY` and `ENKI_WATER_SENSOR_API_KEY` in `const.py`. Capture `X-Gateway-APIKey` from the Enki mobile app when controlling a radiator or reading a leak sensor (same mitmproxy workflow as [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md)). Reads are skipped silently when a key is missing; writes raise a clear error.
+
+## Future device families
+
+The Enki app also controls alarms and Enki scenarios via other microservices (BFF scenario player, etc.). Use `scripts/discover_devices.py` to dump unknown `deviceType` values from your account before adding new platforms.
 
 ## References
 

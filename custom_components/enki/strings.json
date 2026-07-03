@@ -102,6 +102,15 @@
       },
       "contact": {
         "name": "Contact"
+      },
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "window": {
+        "name": "Window"
+      },
+      "occupancy": {
+        "name": "Occupancy"
       }
     },
     "switch": {
@@ -113,6 +122,12 @@
       },
       "siren": {
         "name": "Siren"
+      },
+      "window_open_detection_mode": {
+        "name": "Open window detection"
+      },
+      "occupancy_mode": {
+        "name": "Occupancy mode"
       }
     },
     "number": {
@@ -123,6 +138,24 @@
     "cover": {
       "roller_shutter": {
         "name": "Shutter (beta)"
+      }
+    },
+    "select": {
+      "pilot_wire": {
+        "name": "Pilot wire mode",
+        "state": {
+          "COMFORT": "Comfort",
+          "COMFORT_1": "Comfort -1",
+          "COMFORT_2": "Comfort -2",
+          "ECO": "Eco",
+          "FROST_PROTECTION": "Frost protection",
+          "OFF": "Off"
+        }
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
       }
     }
   }

@@ -64,7 +64,7 @@ Déclenché sur chaque push vers `main` et chaque pull request :
 | Lint | Ruff check + format |
 | Unit tests | `pytest tests/unit` |
 | Hassfest | Validation intégration HA |
-| HACS | Validation dépôt HACS |
+| HACS | Validation dépôt (éligibilité store par défaut) |
 
 Tests live : uniquement via `workflow_dispatch` avec secrets `ENKI_*` configurés sur le dépôt.
 

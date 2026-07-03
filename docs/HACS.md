@@ -2,9 +2,9 @@
 
 Checklist alignée sur la [documentation officielle HACS](https://www.hacs.xyz/docs/publish/).
 
-## Dépôt custom (installation immédiate)
+## Dépôt custom (installation actuelle)
 
-Les utilisateurs ajoutent le dépôt dans HACS sans passer par le store par défaut.
+En attendant l’inclusion dans le store par défaut, les utilisateurs ajoutent le dépôt manuellement ou via le badge **Open in HACS**.
 
 1. Dépôt **public** sur GitHub
 2. Fichier [`hacs.json`](../hacs.json) à la racine avec au minimum `name`
@@ -42,17 +42,21 @@ HACS affiche les 5 dernières releases si elles existent.
 2. Publier une **GitHub Release** (pas seulement un tag)
 3. Le workflow [`release.yml`](../.github/workflows/release.yml) met à jour `manifest.json` et attache `enki.zip`
 
-## Store HACS par défaut (optionnel)
+## Store HACS par défaut
 
 Procédure : [Include default repositories](https://www.hacs.xyz/docs/publish/include/)
 
-Prérequis supplémentaires :
+**État du dépôt :** les prérequis techniques sont couverts par la CI sur chaque push/PR :
 
-- Actions **HACS** et **Hassfest** vertes **sans** `ignore: brands`
-- Au moins **une release** publiée
-- PR sur [hacs/default](https://github.com/hacs/default) (fichier `integration`), entrée **alphabétique**
-- `country` dans `hacs.json` si le produit est limité géographiquement (déjà `FR`)
-- Brand : [`custom_components/enki/brand/icon.png`](../custom_components/enki/brand/icon.png) (chemin requis par HACS) ou PR vers [home-assistant/brands](https://github.com/home-assistant/brands) pour le domaine `enki`
+| Prérequis | Statut |
+|-----------|--------|
+| Action **HACS** (`hacs/action`, sans `ignore: brands`) | ✅ [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
+| Action **Hassfest** | ✅ idem |
+| `hacs.json` + `country: FR` | ✅ [`hacs.json`](../hacs.json) |
+| Au moins **une release** GitHub | ✅ [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases) |
+| Brand `custom_components/enki/brand/icon.png` | ✅ (icône HA post-install ; CDN HACS = placeholder tant que le domaine n’est pas dans [home-assistant/brands](https://github.com/home-assistant/brands)) |
+
+**Reste à faire côté publication :** PR sur [hacs/default](https://github.com/hacs/default) (fichier `integration`), entrée **alphabétique** : `cyrilcolinet/enki-integration-hass`.
 
 ## Validation locale
 

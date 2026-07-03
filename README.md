@@ -22,20 +22,21 @@ Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà
 | ✅ Supporté | Prises / interrupteurs (Edisio, …) | ON/OFF |
 | ✅ Supporté | Panneaux solaires Envertech-Lexman | production (W) |
 | ✅ Supporté | Capteurs mouvement / ouverture (Lexman, …) | binary_sensor |
-| ✅ Supporté | Thermomètres connectés (Sedea, …) | température, humidité, batterie |
+| ✅ Supporté | Thermomètres Enki (Sedea, …) | température, humidité, batterie |
 | ✅ Supporté | Sirènes Lexman | ON/OFF |
 | 🔬 Beta | Volets roulants (Evology, …) | ouverture, fermeture, position 0–100 % |
 | ✅ Supporté | Relais ON/OFF Equation | ON/OFF (comme prises Edisio) |
-| ✅ Supporté | Thermomètre Sonoff (écran) | température, humidité, batterie |
-| 🔜 Bientôt | Détecteur fuite Lexman | fuite d'eau + batterie |
-| 🔜 Bientôt | Fil pilote Equation | modes Confort / Éco / Hors-gel |
-| 🔜 Bientôt | Radiateur Noirot | climate (consigne, occupancy, fenêtre) |
+| ✅ Supporté | Détecteur fuite Lexman | fuite d'eau + batterie |
+| ✅ Supporté | Fil pilote Equation | modes Confort / Éco / Hors-gel |
+| ✅ Supporté | Radiateur Noirot | climate (consigne, occupancy, fenêtre) |
 | 🔜 Bientôt | Radiateurs ACOVA ARLAN | — |
 | 🔜 Bientôt | Scénarios Enki (« Ouvrir Salon », …) | — |
 | ⏳ Pas prévu | Alarme Enki | — |
-| ⏳ Pas prévu | Store HACS global | dépôt custom pour l’instant |
+| ✅ Prêt | Store HACS global | CI HACS + Hassfest vertes, releases publiées — éligible au [store par défaut](docs/HACS.md#store-hacs-par-défaut) |
 
 Détail complet par appareil : [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md)
+
+**Hors périmètre :** Zigbee tiers appairé sur la box (Sonoff, Tuya, Aqara, …) → [Zigbee2MQTT](https://www.zigbee2mqtt.io/) ou ZHA. Seules les marques **Enki / Leroy Merlin** sont importées (Lexman, Equation, Inspire, … — même si la radio est Zigbee).
 
 ## Prérequis
 
@@ -45,6 +46,11 @@ Détail complet par appareil : [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICE
 - Box Enki configurée et appareils visibles dans l’app mobile
 
 ## Installation avec HACS
+
+**Aujourd’hui :** dépôt custom (ci-dessous) ou badge **Open in HACS** en haut de page.  
+**Store HACS par défaut :** le dépôt remplit les prérequis (CI HACS + Hassfest, `hacs.json`, releases) — voir [docs/HACS.md](docs/HACS.md#store-hacs-par-défaut).
+
+### Dépôt custom (méthode actuelle)
 
 1. Ouvrez **HACS** → **Intégrations**
 2. Menu **⋮** (en haut à droite) → **Dépôts personnalisés**
