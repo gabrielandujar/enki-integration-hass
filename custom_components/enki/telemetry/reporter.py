@@ -87,7 +87,7 @@ class EnkiTelemetryReporter:
                 f"[Proposer le support sur GitHub]({issue_url})"
             )
 
-        await persistent_notification.async_create(
+        persistent_notification.async_create(
             self._hass,
             message=message,
             title=title,

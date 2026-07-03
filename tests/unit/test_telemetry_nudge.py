@@ -38,15 +38,15 @@ async def test_nudge_skipped_when_telemetry_enabled() -> None:
     with (
         patch(
             "enki.telemetry.nudge.persistent_notification.async_create",
-            new_callable=AsyncMock,
+            new_callable=MagicMock,
         ) as notify,
         patch(
             "enki.telemetry.nudge.persistent_notification.async_dismiss",
-            new_callable=AsyncMock,
+            new_callable=MagicMock,
         ),
     ):
         await nudge.async_handle_setup()
-        notify.assert_not_awaited()
+        notify.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -63,10 +63,10 @@ async def test_nudge_skipped_after_onboarding_step() -> None:
 
     with patch(
         "enki.telemetry.nudge.persistent_notification.async_create",
-        new_callable=AsyncMock,
+        new_callable=MagicMock,
     ) as notify:
         await nudge.async_handle_setup()
-        notify.assert_not_awaited()
+        notify.assert_not_called()
         nudge._store.async_save.assert_awaited()
 
 
@@ -84,18 +84,18 @@ async def test_nudge_shown_once_for_legacy_install() -> None:
 
     with patch(
         "enki.telemetry.nudge.persistent_notification.async_create",
-        new_callable=AsyncMock,
+        new_callable=MagicMock,
     ) as notify:
         await nudge.async_handle_setup()
-        notify.assert_awaited_once()
-        message = notify.await_args.kwargs["message"]
-        assert "Configurer" in message or "options" in message.lower()
+        notify.assert_called_once()
+        message = notify.call_args.kwargs["message"]
+        assert "options" in message.lower()
 
         nudge._store.async_load = AsyncMock(  # type: ignore[method-assign]
             return_value={"telemetry_nudge_dismissed": True, "first_seen_version": "legacy"}
         )
         await nudge.async_handle_setup()
-        notify.assert_awaited_once()
+        notify.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -112,7 +112,7 @@ async def test_nudge_dismissed_when_telemetry_turned_on() -> None:
 
     with patch(
         "enki.telemetry.nudge.persistent_notification.async_dismiss",
-        new_callable=AsyncMock,
+        new_callable=MagicMock,
     ) as dismiss:
         await nudge.async_handle_setup()
-        dismiss.assert_awaited_once()
+        dismiss.assert_called_once()

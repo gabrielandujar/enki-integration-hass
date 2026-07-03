@@ -34,10 +34,10 @@ async def test_telemetry_skipped_when_disabled() -> None:
     reporter = EnkiTelemetryReporter(hass, entry)
     with patch(
         "enki.telemetry.reporter.persistent_notification.async_create",
-        new_callable=AsyncMock,
+        new_callable=MagicMock,
     ) as notify:
         await reporter.async_report([_record()])
-        notify.assert_not_awaited()
+        notify.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -59,13 +59,13 @@ async def test_telemetry_notifies_new_profile() -> None:
     with (
         patch(
             "enki.telemetry.reporter.persistent_notification.async_create",
-            new_callable=AsyncMock,
+            new_callable=MagicMock,
         ) as notify,
         version_patch,
     ):
         await reporter.async_report([_record()])
-        notify.assert_awaited_once()
-        message = notify.await_args.kwargs["message"]
+        notify.assert_called_once()
+        message = notify.call_args.kwargs["message"]
         assert "github.com" in message
         assert "equation_radiator" in message
 
@@ -89,10 +89,10 @@ async def test_telemetry_dedupes_fingerprint() -> None:
     with (
         patch(
             "enki.telemetry.reporter.persistent_notification.async_create",
-            new_callable=AsyncMock,
+            new_callable=MagicMock,
         ) as notify,
         version_patch,
     ):
         await reporter.async_report([_record()])
         await reporter.async_report([_record()])
-        notify.assert_awaited_once()
+        notify.assert_called_once()

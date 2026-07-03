@@ -90,15 +90,15 @@ class EnkiTelemetryNudge:
 
     async def _show_notification(self) -> None:
         title, message = _nudge_copy(self._hass, self._entry.entry_id)
-        await persistent_notification.async_create(
+        persistent_notification.async_create(
             self._hass,
-            title=title,
             message=message,
+            title=title,
             notification_id=f"{NOTIFICATION_ID_PREFIX}_{self._entry.entry_id}",
         )
 
     async def _dismiss_notification(self) -> None:
-        await persistent_notification.async_dismiss(
+        persistent_notification.async_dismiss(
             self._hass,
             f"{NOTIFICATION_ID_PREFIX}_{self._entry.entry_id}",
         )
