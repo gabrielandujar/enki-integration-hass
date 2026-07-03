@@ -15,6 +15,7 @@ from .api import EnkiAPI
 from .const import (
     CONF_SCAN_INTERVAL,
     CONF_TELEMETRY,
+    CONF_TELEMETRY_ONBOARDING,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
@@ -59,12 +60,8 @@ class EnkiConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected error during Enki config flow")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"Enki – {user_input[CONF_USERNAME]}",
-                    data=user_input,
-                )
+                self.context["credentials"] = user_input
+                return await self.async_step_telemetry()
 
         return self.async_show_form(
             step_id="user",
@@ -75,6 +72,37 @@ class EnkiConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_telemetry(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Explain opt-in telemetry and let the user choose before finishing setup."""
+        credentials = self.context.get("credentials")
+        if not credentials:
+            return await self.async_step_user()
+
+        if user_input is not None:
+            await self.async_set_unique_id(credentials[CONF_USERNAME].lower())
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"Enki – {credentials[CONF_USERNAME]}",
+                data=credentials,
+                options={
+                    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                    CONF_TELEMETRY: user_input[CONF_TELEMETRY],
+                    CONF_TELEMETRY_ONBOARDING: True,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="telemetry",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_TELEMETRY, default=False): selector.BooleanSelector(),
+                }
+            ),
         )
 
     async def async_step_reconfigure(
@@ -120,7 +148,7 @@ class EnkiConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class EnkiOptionsFlow(OptionsFlow):
-    """Options flow for polling interval."""
+    """Options flow for polling interval and telemetry."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         self._config_entry = config_entry
@@ -130,7 +158,12 @@ class EnkiOptionsFlow(OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            options = {
+                **dict(self._config_entry.options),
+                CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                CONF_TELEMETRY: user_input[CONF_TELEMETRY],
+            }
+            return self.async_create_entry(title="", data=options)
 
         current_interval = self._config_entry.options.get(
             CONF_SCAN_INTERVAL,

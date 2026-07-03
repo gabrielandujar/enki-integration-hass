@@ -15,6 +15,13 @@
           "username": "Email",
           "password": "Password"
         }
+      },
+      "telemetry": {
+        "title": "Help extend Enki support",
+        "description": "Optional opt-in: when a new or unsupported device is detected on your account, Home Assistant can notify you with a **pre-filled GitHub link** (anonymized profile: type, model, capabilities).\n\nNothing is sent automatically — you decide whether to open the link. This helps prioritize heaters, shutters, sockets, and other hardware.\n\nYou can change this anytime under **Enki → Configure**.",
+        "data": {
+          "telemetry": "Notify me about new devices (recommended)"
+        }
       }
     },
     "error": {

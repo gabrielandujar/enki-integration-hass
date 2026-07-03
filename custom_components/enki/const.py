@@ -9,6 +9,7 @@ NAME = "Enki"
 
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_TELEMETRY = "telemetry"
+CONF_TELEMETRY_ONBOARDING = "telemetry_onboarding_shown"
 
 DEFAULT_SCAN_INTERVAL = 30
 MIN_SCAN_INTERVAL = 10
