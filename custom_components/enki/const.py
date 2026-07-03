@@ -45,6 +45,7 @@ DIRECTION_REVERSE = "reverse"
 
 DEVICE_TYPE_LIGHTS = "lights"
 DEVICE_TYPE_FANS = "ceiling_fans"
+DEVICE_TYPE_INVERTERS = "inverters"
 
 REFERENTIEL_VERSION = "2.23.0"
 

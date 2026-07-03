@@ -7,8 +7,16 @@ from typing import Any
 
 import aiohttp
 
+from .capabilities import (
+    is_fan_device,
+    is_inverter_device,
+    parse_bff_power,
+    supports_airflow_mode,
+    supports_electrical_power,
+    supports_fan_speed,
+    supports_light_state,
+)
 from .const import (
-    DEVICE_TYPE_FANS,
     DEVICE_TYPE_LIGHTS,
     ENKI_AIRFLOW_API_KEY,
     ENKI_BASE_URL,
@@ -22,9 +30,15 @@ from .const import (
     LOGGER,
     REFERENTIEL_VERSION,
 )
-from .device_profile import SUPPORTED_DEVICE_TYPES, build_discovery_record
+from .device_profile import build_discovery_record, integration_supports_device
 from .exceptions import EnkiApiNotFoundError, EnkiAuthError, EnkiConnectionError
-from .helpers import direction_to_enki_rotation, enki_rotation_to_direction, normalize_power_state
+from .helpers import (
+    direction_to_enki_rotation,
+    enki_rotation_to_direction,
+    is_command_success_status,
+    merge_light_state_payload,
+    normalize_power_state,
+)
 from .models import EnkiDevice, EnkiDiscoveryRecord
 
 
@@ -35,6 +49,7 @@ class EnkiAPI:
         self._username = username
         self._password = password
         self._access_token: str | None = None
+        self._refresh_token: str | None = None
         self._token_type = "Bearer"
         self._token_expires_at = 0.0
         self._session: aiohttp.ClientSession | None = None
@@ -56,7 +71,41 @@ class EnkiAPI:
     async def _ensure_token(self) -> None:
         if self._access_token and time.time() < self._token_expires_at - 30:
             return
+        if self._refresh_token:
+            try:
+                await self._refresh_access_token()
+                return
+            except EnkiAuthError:
+                LOGGER.debug("Refresh token rejected, falling back to password grant")
         await self.async_connect()
+
+    async def _refresh_access_token(self) -> None:
+        """Renew the access token without sending the account password again."""
+        if not self._refresh_token:
+            raise EnkiAuthError("No refresh token available")
+        session = await self._get_session()
+        try:
+            async with session.post(
+                ENKI_OIDC_URL,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": self._refresh_token,
+                    "client_id": "enki-front",
+                },
+            ) as response:
+                if response.status != 200:
+                    raise EnkiAuthError(f"Token refresh failed: HTTP {response.status}")
+                payload = await response.json()
+        except aiohttp.ClientError as err:
+            raise EnkiConnectionError(f"Cannot reach Enki auth: {err}") from err
+
+        self._access_token = payload["access_token"]
+        self._token_type = payload.get("token_type", "Bearer")
+        self._token_expires_at = time.time() + payload["expires_in"]
+        if refreshed := payload.get("refresh_token"):
+            self._refresh_token = refreshed
+        LOGGER.debug("Enki token refreshed, expires in %ss", payload["expires_in"])
 
     def _auth_headers(self, extra: dict[str, str] | None = None) -> dict[str, str]:
         headers = {"Authorization": f"{self._token_type} {self._access_token}"}
@@ -87,6 +136,7 @@ class EnkiAPI:
             raise EnkiConnectionError(f"Cannot reach Enki auth: {err}") from err
 
         self._access_token = payload["access_token"]
+        self._refresh_token = payload.get("refresh_token")
         self._token_type = payload.get("token_type", "Bearer")
         self._token_expires_at = time.time() + payload["expires_in"]
         LOGGER.debug("Enki session established, expires in %ss", payload["expires_in"])
@@ -145,11 +195,36 @@ class EnkiAPI:
                 node_id = metadata["nodeId"]
                 device_id = metadata["deviceId"]
                 bff_type = metadata.get("deviceType", "")
+                main_change_capability = metadata.get("mainChangeCapability") or {}
+                main_change_endpoints = [
+                    endpoint.get("id")
+                    for endpoint in main_change_capability.get("endpoints", [])
+                    if endpoint.get("id") is not None
+                ]
 
                 node_info = await self._get_node(home_id, node_id)
                 device_info = await self._get_device_info_safe(device_id)
                 device_type = device_info.get("type") or bff_type
-                supported = device_type in SUPPORTED_DEVICE_TYPES
+                capabilities = device_info.get("capabilities", [])
+                possible_values = device_info.get("possibleValues", {})
+                power_production = parse_bff_power(item.get("description"))
+
+                probe_device = EnkiDevice(
+                    home_id=home_id,
+                    device_id=device_id,
+                    node_id=node_id,
+                    device_name=item["title"]["label"],
+                    device_type=device_type,
+                    is_enabled=item["isEnabled"],
+                    state=item["state"],
+                    capabilities=capabilities,
+                    possible_values=possible_values,
+                    bff_device_type=bff_type,
+                    main_change_capability_id=metadata.get("mainChangeCapabilityId"),
+                    main_change_capability_endpoints=main_change_endpoints,
+                    power_production=power_production,
+                )
+                supported = integration_supports_device(probe_device)
 
                 manufacturer = (
                     node_info.get("manufacturerId")
@@ -163,8 +238,8 @@ class EnkiAPI:
                     build_discovery_record(
                         device_type=device_type,
                         bff_device_type=bff_type,
-                        capabilities=device_info.get("capabilities", []),
-                        possible_values=device_info.get("possibleValues", {}),
+                        capabilities=capabilities,
+                        possible_values=possible_values,
                         manufacturer=str(manufacturer) if manufacturer else None,
                         model=str(model) if model else None,
                         firmware_version=str(firmware) if firmware else None,
@@ -174,10 +249,12 @@ class EnkiAPI:
 
                 last_reported: dict[str, Any] = {}
                 if item["isEnabled"]:
-                    if device_type == DEVICE_TYPE_FANS:
-                        last_reported = await self._get_fan_full_state(home_id, node_id)
-                    elif device_type == DEVICE_TYPE_LIGHTS:
-                        last_reported = await self._get_light_state_payload(home_id, node_id)
+                    last_reported = await self._refresh_device_state(
+                        home_id,
+                        node_id,
+                        probe_device,
+                        node_info,
+                    )
 
                 if not supported:
                     LOGGER.debug(
@@ -196,9 +273,13 @@ class EnkiAPI:
                         device_type=device_type,
                         is_enabled=item["isEnabled"],
                         state=item["state"],
-                        capabilities=device_info.get("capabilities", []),
-                        possible_values=device_info.get("possibleValues", {}),
+                        capabilities=capabilities,
+                        possible_values=possible_values,
                         last_reported_value={**node_info, **last_reported},
+                        bff_device_type=bff_type,
+                        main_change_capability_id=metadata.get("mainChangeCapabilityId"),
+                        main_change_capability_endpoints=main_change_endpoints,
+                        power_production=power_production,
                     )
                 )
         return devices, records
@@ -234,6 +315,101 @@ class EnkiAPI:
                 raise EnkiConnectionError(f"get_device_info failed: HTTP {response.status}")
             return await response.json()
 
+    async def _refresh_device_state(
+        self,
+        home_id: str,
+        node_id: str,
+        device: EnkiDevice,
+        node_info: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Load live state based on referentiel capabilities (not only device type)."""
+        caps = {cap for cap in device.capabilities if isinstance(cap, str)}
+        possible = device.possible_values if isinstance(device.possible_values, dict) else {}
+
+        if is_fan_device(device):
+            return await self._get_fan_full_state(home_id, node_id)
+
+        state: dict[str, Any] = {}
+
+        if supports_light_state(caps, possible) or device.device_type == DEVICE_TYPE_LIGHTS:
+            try:
+                light_state = await self._get_light_state_payload(home_id, node_id)
+                state.update(light_state)
+                if light_state.get("power"):
+                    state["light_power"] = light_state["power"]
+            except EnkiConnectionError as err:
+                LOGGER.debug("Light state skipped for node %s: %s", node_id, err)
+
+        if supports_electrical_power(caps, possible):
+            try:
+                power_details = await self._get_electrical_power_details(home_id, node_id)
+                state["electrical_power"] = power_details.get("lastReportedValue")
+                state["electrical_endpoints"] = power_details.get("endpoints", [])
+                if not state.get("power") and isinstance(state["electrical_power"], str):
+                    state["power"] = state["electrical_power"]
+            except EnkiConnectionError as err:
+                LOGGER.debug("Electrical power skipped for node %s: %s", node_id, err)
+
+        if supports_fan_speed(caps, possible):
+            try:
+                state["fan_speed"] = await self._get_fan_speed(home_id, node_id)
+            except EnkiConnectionError as err:
+                LOGGER.debug("Fan speed skipped for node %s: %s", node_id, err)
+
+        if supports_airflow_mode(caps, possible):
+            try:
+                state["airflow_mode"] = await self._get_airflow_mode(home_id, node_id)
+            except EnkiConnectionError as err:
+                LOGGER.debug("Airflow mode skipped for node %s: %s", node_id, err)
+
+        if is_inverter_device(device):
+            state["power_production"] = device.power_production
+
+        return state
+
+    async def _get_electrical_power_details(
+        self,
+        home_id: str,
+        node_id: str,
+    ) -> dict[str, Any]:
+        session = await self._get_session()
+        async with session.get(
+            f"{ENKI_BASE_URL}/api-enki-power-prod/v1/power/{node_id}/check-electrical-power",
+            headers=self._auth_headers(
+                {
+                    "X-Gateway-APIKey": ENKI_POWER_API_KEY,
+                    "homeId": home_id,
+                }
+            ),
+        ) as response:
+            if response.status == 404:
+                return {}
+            if response.status != 200:
+                raise EnkiConnectionError(f"check-electrical-power failed: HTTP {response.status}")
+            return await response.json()
+
+    async def async_switch_electrical_power(
+        self,
+        home_id: str,
+        node_id: str,
+        value: str,
+    ) -> None:
+        """Switch global electrical power (sockets, outlets without lighting API)."""
+        await self._ensure_token()
+        session = await self._get_session()
+        async with session.post(
+            (f"{ENKI_BASE_URL}/api-enki-power-prod/v1/power/{node_id}/switch-electrical-power"),
+            headers=self._auth_headers(
+                {
+                    "X-Gateway-APIKey": ENKI_POWER_API_KEY,
+                    "homeId": home_id,
+                }
+            ),
+            json={"value": value},
+        ) as response:
+            if not is_command_success_status(response.status):
+                raise EnkiConnectionError(f"switch-electrical-power failed: HTTP {response.status}")
+
     async def _get_fan_full_state(self, home_id: str, node_id: str) -> dict[str, Any]:
         speed = await self._get_fan_speed(home_id, node_id)
         mode = await self._get_airflow_mode(home_id, node_id)
@@ -242,7 +418,7 @@ class EnkiAPI:
         last_reported = light_state.get("lastReportedValue", {})
         # ESDK fan kit on/off is reported by api-enki-lighting-prod (`power`), not power-prod.
         light_power = last_reported.get("power", "OFF")
-        return {
+        state: dict[str, Any] = {
             "fan_speed": speed,
             "airflow_mode": mode,
             "airflow_rotation": rotation,
@@ -252,6 +428,13 @@ class EnkiAPI:
             "colorTemperature": last_reported.get("colorTemperature"),
             "power": last_reported.get("power"),
         }
+        try:
+            power_details = await self._get_electrical_power_details(home_id, node_id)
+            state["electrical_power"] = power_details.get("lastReportedValue")
+            state["electrical_endpoints"] = power_details.get("endpoints", [])
+        except EnkiConnectionError as err:
+            LOGGER.debug("Electrical power skipped for fan node %s: %s", node_id, err)
+        return state
 
     async def _get_power_state(self, home_id: str, node_id: str, endpoint: int) -> str:
         session = await self._get_session()
@@ -389,7 +572,7 @@ class EnkiAPI:
             ),
             json={"value": speed},
         ) as response:
-            if response.status != 202:
+            if response.status != 202 and response.status != 204:
                 raise EnkiConnectionError(f"change-fan-speed failed: HTTP {response.status}")
 
     async def async_set_light_power(self, home_id: str, node_id: str, on: bool) -> None:
@@ -397,8 +580,7 @@ class EnkiAPI:
         await self.async_change_light_state(
             home_id,
             node_id,
-            "power",
-            "ON" if on else "OFF",
+            {"power": "ON" if on else "OFF"},
         )
 
     async def _switch_power(
@@ -422,7 +604,7 @@ class EnkiAPI:
             ),
             json={"value": value},
         ) as response:
-            if response.status != 202:
+            if not is_command_success_status(response.status):
                 raise EnkiConnectionError(f"switch-electrical-power failed: HTTP {response.status}")
 
     async def _get_light_state(self, home_id: str, node_id: str) -> dict[str, Any]:
@@ -448,16 +630,15 @@ class EnkiAPI:
         self,
         home_id: str,
         node_id: str,
-        parameter: str,
-        value: Any,
+        changes: dict[str, Any],
     ) -> None:
+        """Apply one or more lighting fields in a single change-light-state call."""
         await self._ensure_token()
         current = await self._get_light_state(home_id, node_id)
-        payload = dict(current.get("lastReportedValue", {}))
-        # Same merge order as the Enki app: default ON, then apply the requested field
-        # (so `power` OFF overwrites ON for turn_off).
-        payload["power"] = "ON"
-        payload[parameter] = value
+        payload = merge_light_state_payload(
+            current.get("lastReportedValue", {}),
+            changes,
+        )
         session = await self._get_session()
         async with session.post(
             f"{ENKI_BASE_URL}/api-enki-lighting-prod/v1/lighting/{node_id}/change-light-state",
@@ -469,5 +650,15 @@ class EnkiAPI:
             ),
             json=payload,
         ) as response:
-            if response.status != 202:
+            if not is_command_success_status(response.status):
                 raise EnkiConnectionError(f"change-light-state failed: HTTP {response.status}")
+
+    async def async_change_light_state_field(
+        self,
+        home_id: str,
+        node_id: str,
+        parameter: str,
+        value: Any,
+    ) -> None:
+        """Backward-compatible wrapper for single-field lighting updates."""
+        await self.async_change_light_state(home_id, node_id, {parameter: value})

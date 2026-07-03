@@ -50,4 +50,5 @@ class EnkiEntity(CoordinatorEntity[EnkiCoordinator]):
             .replace("_", " ")
             .title(),
             sw_version=metadata.get("version"),
+            serial_number=metadata.get("eui64") or self._device.node_id,
         )
