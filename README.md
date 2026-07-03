@@ -25,6 +25,11 @@ Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà
 | ✅ Supporté | Thermomètres connectés (Sedea, …) | température, humidité, batterie |
 | ✅ Supporté | Sirènes Lexman | ON/OFF |
 | 🔬 Beta | Volets roulants (Evology, …) | ouverture, fermeture, position 0–100 % |
+| ✅ Supporté | Relais ON/OFF Equation | ON/OFF (comme prises Edisio) |
+| ✅ Supporté | Thermomètre Sonoff (écran) | température, humidité, batterie |
+| 🔜 Bientôt | Détecteur fuite Lexman | fuite d'eau + batterie |
+| 🔜 Bientôt | Fil pilote Equation | modes Confort / Éco / Hors-gel |
+| 🔜 Bientôt | Radiateur Noirot | climate (consigne, occupancy, fenêtre) |
 | 🔜 Bientôt | Radiateurs ACOVA ARLAN | — |
 | 🔜 Bientôt | Scénarios Enki (« Ouvrir Salon », …) | — |
 | ⏳ Pas prévu | Alarme Enki | — |

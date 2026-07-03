@@ -27,15 +27,16 @@ Le ventilateur et sa lumière sont **indépendants** : allumer l’un n’allume
 | Luminosité | Selon modèle |
 | Blanc variable | Température de couleur (Kelvin), selon modèle |
 
-## Prises et interrupteurs (Edisio, …)
+## Prises, relais et interrupteurs (Edisio, Equation, …)
 
-**Entité HA :** lumière ON/OFF (API power Enki)
+**Entité HA :** lumière ON/OFF (API `switch-electrical-power`)
 
-| Fonction | Détail |
-|----------|--------|
-| Marche / arrêt | Via `switch-electrical-power` |
+| Modèle / type | Statut |
+|---------------|--------|
+| Prises Edisio | ✅ ON/OFF |
+| Relais ON/OFF Equation ([profil](./devices/63a053851a423d4a245a877c.json)) | ✅ ON/OFF |
 
-Les nœuds multi-circuits peuvent créer **une entité par circuit** (endpoint BFF).
+Les nœuds multi-circuits peuvent créer **une entité par circuit** (endpoint BFF). Conso (`check_electrical_consumption`) et timers : pas encore exposés.
 
 ## Panneaux solaires (Envertech-Lexman)
 
@@ -69,6 +70,8 @@ Portage des micro-services documentés par [StephaneBranly/ha-enki](https://gith
 | `check_current_humidity` | Humidité (%) |
 | `check_battery_health` | Batterie (%, mapping Enki) |
 
+Thermomètre Sonoff avec écran : [profil referentiel](./devices/6634999c9f53b36a99838c95.json) — déjà couvert (mêmes capabilities que Sedea).
+
 ### Sirène Lexman
 
 **Entité HA :** `switch` (ON/OFF via `switch_siren_status`)
@@ -76,6 +79,19 @@ Portage des micro-services documentés par [StephaneBranly/ha-enki](https://gith
 ### Réglages capteur contact
 
 **Entités HA :** `switch` (activation détection), `number` (sensibilité vibration 1–5)
+
+### Fuite d'eau (Lexman) — bientôt
+
+**Profil referentiel :** [651eada55b3a798ef6b6bc5c.json](./devices/651eada55b3a798ef6b6bc5c.json) — `check_water_sensor_state` + batterie. Batterie déjà gérée ; entité `binary_sensor` fuite à implémenter.
+
+## Chauffage — bientôt
+
+| Modèle | Profil | Capabilities clés |
+|--------|--------|-------------------|
+| Fil pilote Equation | [63a054c81a423d4a245a877e.json](./devices/63a054c81a423d4a245a877e.json) | `switch_pilot_wire_mode` (Confort, Éco, …) |
+| Radiateur Noirot | [67a4b12bae1eca4709a45680.json](./devices/67a4b12bae1eca4709a45680.json) | consigne, occupancy, détection fenêtre |
+
+Catalogue complet : [docs/devices/README.md](./devices/README.md)
 
 ## Volets roulants — beta (Evology, Nodon, …)
 
@@ -113,7 +129,7 @@ Pour les personnes à l’aise avec le débogage réseau (proxy, certificats) : 
 
 | Statut | Appareils |
 |--------|-----------|
-| Bientôt | Radiateurs ACOVA ARLAN |
+| Bientôt | Fil pilote Equation, radiateur Noirot, détecteur fuite Lexman, radiateurs ACOVA ARLAN |
 | Non planifié | Alarme Enki (pas d’API identifiée) |
 | Hors périmètre | Box Enki, appairage, compte Leroy Merlin → [support Enki](https://support.enki-home.com/) |
 
