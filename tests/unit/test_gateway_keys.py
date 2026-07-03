@@ -45,22 +45,24 @@ def test_parse_mobile_config_legacy_water_sensor_slug() -> None:
 
 
 def test_gateway_key_store_applies_to_const(monkeypatch) -> None:
-    import enki.const as const_module
+    import enki.gateway_keys_data as keys_module
 
-    monkeypatch.setattr(const_module, "ENKI_HEATING_API_KEY", "")
+    monkeypatch.setattr(keys_module, "ENKI_HEATING_API_KEY", "")
     store = GatewayKeyStore()
+    store.reload_from_const()
     payload = {"api-enki-heating-prod": "e" * 32}
     applied = store.apply_mobile_config(payload)
     assert applied["ENKI_HEATING_API_KEY"] == "e" * 32
-    assert const_module.ENKI_HEATING_API_KEY == "e" * 32
+    assert keys_module.ENKI_HEATING_API_KEY == "e" * 32
     assert store.get_transport_key("heating") == "e" * 32
 
 
 def test_gateway_key_store_does_not_override_filled_const(monkeypatch) -> None:
-    import enki.const as const_module
+    import enki.gateway_keys_data as keys_module
 
-    monkeypatch.setattr(const_module, "ENKI_HOME_API_KEY", "existing-home-key-0123456789012")
+    monkeypatch.setattr(keys_module, "ENKI_HOME_API_KEY", "existing-home-key-0123456789012")
     store = GatewayKeyStore()
+    store.reload_from_const()
     payload = {"api-enki-home-prod": "f" * 32}
     store.apply_mobile_config(payload)
-    assert const_module.ENKI_HOME_API_KEY == "existing-home-key-0123456789012"
+    assert keys_module.ENKI_HOME_API_KEY == "existing-home-key-0123456789012"

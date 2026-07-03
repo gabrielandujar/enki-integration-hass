@@ -32,13 +32,14 @@ from enki_bootstrap import bootstrap_fetch_keys, load_module  # noqa: E402
 
 bootstrap_fetch_keys()
 
-const = load_module("enki.const")
+const_mod = load_module("enki.const")
+keys_data = load_module("enki.gateway_keys_data")
 auth_mod = load_module("enki.api.auth")
 gateway_keys_mod = load_module("enki.api.gateway_keys")
 EnkiAuthSession = auth_mod.EnkiAuthSession
 MOBILE_CONFIG_PATH = gateway_keys_mod.MOBILE_CONFIG_PATH
-ENKI_BASE_URL = const.ENKI_BASE_URL
-ENKI_MOBILE_CONFIG_API_KEY = const.ENKI_MOBILE_CONFIG_API_KEY
+ENKI_BASE_URL = const_mod.ENKI_BASE_URL
+ENKI_MOBILE_CONFIG_API_KEY = keys_data.ENKI_MOBILE_CONFIG_API_KEY
 
 MISSING_KEYS = (
     "ENKI_HEATING_API_KEY",
@@ -76,7 +77,7 @@ async def fetch_settings(username: str, password: str) -> dict:
 
 
 def print_missing_key_help() -> None:
-    empty = [key for key in MISSING_KEYS if not getattr(const, key, "")]
+    empty = [key for key in MISSING_KEYS if not getattr(keys_data, key, "")]
     if not empty:
         return
     print("\n=== Missing gateway keys (not in mobile-config) ===", file=sys.stderr)

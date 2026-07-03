@@ -116,6 +116,7 @@ class EnkiHttpClient:
                 raise EnkiConnectionError(
                     f"GET {path} failed: HTTP {response.status}",
                     status=response.status,
+                    service=service,
                 )
             payload = await response.json()
             return payload if isinstance(payload, dict) else {}
@@ -149,6 +150,7 @@ class EnkiHttpClient:
                 raise EnkiConnectionError(
                     f"POST {path} failed: HTTP {response.status}",
                     status=response.status,
+                    service=service,
                 )
 
     async def get_homes(self) -> list[str]:
@@ -261,7 +263,8 @@ class EnkiHttpClient:
         if not self._service_api_key("motorization"):
             raise EnkiConnectionError(
                 "Motorization API key is not configured (beta shutters). "
-                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
+                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md.",
+                service="motorization",
             )
         return await self.get_json(
             "motorization",
@@ -280,7 +283,8 @@ class EnkiHttpClient:
         if not self._service_api_key("motorization"):
             raise EnkiConnectionError(
                 "Motorization API key is not configured (beta shutters). "
-                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
+                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md.",
+                service="motorization",
             )
         await self.post_command(
             "motorization",
@@ -325,7 +329,8 @@ class EnkiHttpClient:
         if not self._service_api_key(service):
             raise EnkiConnectionError(
                 f"Heating/water API key is not configured for {capability}. "
-                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
+                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md.",
+                service=service,
             )
         prefix = WIRED_PATH_PREFIXES[service]
         action = capability_to_path_segment(capability)

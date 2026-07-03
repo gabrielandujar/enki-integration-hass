@@ -23,7 +23,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CONST_PY = REPO_ROOT / "custom_components" / "enki" / "const.py"
+KEYS_PY = REPO_ROOT / "custom_components" / "enki" / "gateway_keys_data.py"
+CONST_PY = KEYS_PY  # backward-compatible alias for tests/scripts
 DEFAULT_JADX_DIR = REPO_ROOT / ".apk-work" / "jadx"
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
@@ -402,7 +403,7 @@ def main() -> int:
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="Write resolved keys into custom_components/enki/const.py (empty only)",
+        help="Write resolved keys into custom_components/enki/gateway_keys_data.py (empty only)",
     )
     parser.add_argument(
         "--update-known",

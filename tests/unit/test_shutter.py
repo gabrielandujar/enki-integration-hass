@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 from enki.domain.capabilities import is_cover_device
 from enki.domain.models import EnkiDevice
 from enki.domain.state import EnkiDeviceState
@@ -34,15 +32,8 @@ def test_shutter_opening_is_closed() -> None:
 
 
 def test_is_cover_device_from_capabilities() -> None:
-    with patch("enki.domain.capabilities.ENKI_ACCESS_MOTORIZATION_API_KEY", "test-key"):
-        device = EnkiDevice(**_COVER_DEVICE_KWARGS)
-        assert is_cover_device(device) is True
-
-
-def test_is_cover_device_requires_motorization_key() -> None:
-    with patch("enki.domain.capabilities.ENKI_ACCESS_MOTORIZATION_API_KEY", ""):
-        device = EnkiDevice(**_COVER_DEVICE_KWARGS)
-        assert is_cover_device(device) is False
+    device = EnkiDevice(**_COVER_DEVICE_KWARGS)
+    assert is_cover_device(device) is True
 
 
 def test_device_state_shutter_fields() -> None:

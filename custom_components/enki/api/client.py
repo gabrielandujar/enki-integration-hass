@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import aiohttp
@@ -21,47 +22,11 @@ from ..lib.conversion import (
 from ..lib.enki_scope import device_in_enki_scope
 from ..lib.shutter import normalize_shutter_position
 from .auth import EnkiAuthSession
-from .gateway_keys import GatewayKeyStore
+from .capability_routing import CAPABILITY_READS, CapabilityRead
+from .gateway_keys import GatewayKeyStore, fetch_mobile_config
 from .transport import EnkiHttpClient
 
-_SENSOR_CAPABILITY_READS: tuple[tuple[str, str, str], ...] = (
-    ("temperature_humidity", "check_current_temperature", "current_temperature"),
-    ("temperature_humidity", "check_current_humidity", "current_humidity"),
-    ("battery_health", "check_battery_health", "battery_health"),
-    ("luminosity_sensor", "check_illuminance_level", "illuminance_level"),
-    ("presence_detector", "check_motion_detection", "motion_detection"),
-    ("presence_detector", "check_motion_detector_state", "motion_detector_state"),
-    ("contact_sensor", "check_contact_sensor_state", "contact_sensor_state"),
-    ("contact_sensor", "check_vibration_detection", "vibration_detection"),
-    (
-        "contact_sensor",
-        "check_vibration_detection_activation",
-        "vibration_detection_activation",
-    ),
-    (
-        "contact_sensor",
-        "check_contact_detection_activation",
-        "contact_detection_activation",
-    ),
-    (
-        "contact_sensor",
-        "check_vibration_sensibility_level",
-        "vibration_sensibility_level",
-    ),
-    ("siren", "check_siren_global_state", "siren_global_state"),
-    ("water_sensor", "check_water_sensor_state", "water_sensor_state"),
-)
-
-_HEATING_CAPABILITY_READS: tuple[tuple[str, str], ...] = (
-    ("check_pilot_wire_state", "pilot_wire_state"),
-    ("check_thermostat_target_temperature", "thermostat_target_temperature"),
-    ("check_thermostat_running_state", "thermostat_running_state"),
-    ("check_current_temperature", "current_temperature"),
-    ("check_window_open_detection", "window_open_detection"),
-    ("check_window_open_detection_mode", "window_open_detection_mode"),
-    ("check_occupancy", "occupancy"),
-    ("check_occupancy_mode", "occupancy_mode"),
-)
+_DISCOVERY_CONCURRENCY = 8
 
 
 class EnkiAPI:
@@ -78,6 +43,7 @@ class EnkiAPI:
         self._http: EnkiHttpClient | None = None
         self._key_store = GatewayKeyStore()
         self._discovery_records: list[EnkiDiscoveryRecord] = []
+        self._referentiel_cache: dict[str, dict[str, Any]] = {}
 
     async def async_close(self) -> None:
         """Close the underlying HTTP session."""
@@ -109,6 +75,16 @@ class EnkiAPI:
         http = await self._get_http()
         await self._auth.connect(http.session)
 
+    async def async_fetch_mobile_settings(self) -> dict[str, Any]:
+        """Fetch Enki app settings (maintenance flags, min app version, …)."""
+        http = await self._get_http()
+        try:
+            payload = await fetch_mobile_config(http)
+        except EnkiConnectionError as err:
+            LOGGER.debug("Mobile-config settings skipped: %s", err)
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
     async def async_get_devices(self) -> list[EnkiDevice]:
         """Discover all nodes across every home on the account."""
         http = await self._get_http()
@@ -131,17 +107,36 @@ class EnkiAPI:
         home_id: str,
     ) -> tuple[list[EnkiDevice], list[EnkiDiscoveryRecord]]:
         dashboard = await http.get_dashboard(home_id)
+        items = [
+            item for section in dashboard.get("sections", []) for item in section.get("items", [])
+        ]
+        semaphore = asyncio.Semaphore(_DISCOVERY_CONCURRENCY)
+
+        async def discover_item(
+            item: dict[str, Any],
+        ) -> tuple[EnkiDevice | None, EnkiDiscoveryRecord | None]:
+            async with semaphore:
+                return await self._discover_dashboard_item(http, home_id, item)
+
+        results = await asyncio.gather(*(discover_item(item) for item in items))
+
         devices: list[EnkiDevice] = []
         records: list[EnkiDiscoveryRecord] = []
-
-        for section in dashboard.get("sections", []):
-            for item in section.get("items", []):
-                device, record = await self._discover_dashboard_item(http, home_id, item)
-                if record is not None:
-                    records.append(record)
-                if device is not None:
-                    devices.append(device)
+        for device, record in results:
+            if record is not None:
+                records.append(record)
+            if device is not None:
+                devices.append(device)
         return devices, records
+
+    async def _get_referentiel_device(
+        self,
+        http: EnkiHttpClient,
+        device_id: str,
+    ) -> dict[str, Any]:
+        if device_id not in self._referentiel_cache:
+            self._referentiel_cache[device_id] = await http.get_referentiel_device(device_id)
+        return self._referentiel_cache[device_id]
 
     async def _discover_dashboard_item(
         self,
@@ -164,7 +159,7 @@ class EnkiAPI:
         ]
 
         node_info = await http.get_node(home_id, node_id)
-        device_info = await http.get_referentiel_device(device_id)
+        device_info = await self._get_referentiel_device(http, device_id)
         device_type = device_info.get("type") or bff_type
         capabilities = device_info.get("capabilities", [])
         possible_values = device_info.get("possibleValues", {})
@@ -307,11 +302,10 @@ class EnkiAPI:
         if profile.is_inverter:
             state["power_production"] = device.power_production
 
-        await self._append_sensor_capability_states(http, home_id, node_id, profile, state)
-        await self._append_heating_capability_states(http, home_id, node_id, profile, state)
+        await self._append_capability_states(http, home_id, node_id, profile, state)
         return state
 
-    async def _append_heating_capability_states(
+    async def _append_capability_states(
         self,
         http: EnkiHttpClient,
         home_id: str,
@@ -319,51 +313,37 @@ class EnkiAPI:
         profile: EnkiCapabilityProfile,
         state: dict[str, Any],
     ) -> None:
-        """Best-effort reads for heating micro-service (pilot wire, thermostats)."""
+        """Best-effort parallel reads for sensor / heating micro-services."""
         caps = profile.capabilities
-        for capability, state_key in _HEATING_CAPABILITY_READS:
-            if capability not in caps:
-                continue
-            if capability == "check_current_temperature" and not profile.supports_thermostat:
-                continue
-            try:
-                data = await http.capability_get("heating", home_id, node_id, capability)
-                if data and "lastReportedValue" in data:
-                    state[state_key] = data["lastReportedValue"]
-            except EnkiConnectionError as err:
-                LOGGER.debug(
-                    "Heating capability %s skipped for node %s: %s",
-                    capability,
-                    node_id,
-                    err,
-                )
 
-    async def _append_sensor_capability_states(
-        self,
-        http: EnkiHttpClient,
-        home_id: str,
-        node_id: str,
-        profile: EnkiCapabilityProfile,
-        state: dict[str, Any],
-    ) -> None:
-        """Best-effort reads for sensor / detector micro-services."""
-        caps = profile.capabilities
-        for service, capability, state_key in _SENSOR_CAPABILITY_READS:
-            if capability not in caps:
-                continue
-            if capability == "check_current_temperature" and profile.supports_thermostat:
-                continue
+        async def read_one(read: CapabilityRead) -> tuple[str, Any] | None:
+            if read.capability not in caps:
+                return None
+            if read.skip is not None and read.skip(profile):
+                return None
             try:
-                data = await http.capability_get(service, home_id, node_id, capability)
-                if data and "lastReportedValue" in data:
-                    state[state_key] = data["lastReportedValue"]
+                data = await http.capability_get(
+                    read.transport_id,
+                    home_id,
+                    node_id,
+                    read.capability,
+                )
             except EnkiConnectionError as err:
                 LOGGER.debug(
                     "Capability %s skipped for node %s: %s",
-                    capability,
+                    read.capability,
                     node_id,
                     err,
                 )
+                return None
+            if data and "lastReportedValue" in data:
+                return read.state_key, data["lastReportedValue"]
+            return None
+
+        results = await asyncio.gather(*(read_one(read) for read in CAPABILITY_READS))
+        for result in results:
+            if result is not None:
+                state[result[0]] = result[1]
 
     async def _read_fan_state(
         self,
@@ -477,7 +457,7 @@ class EnkiAPI:
             except EnkiConnectionError as err:
                 LOGGER.debug("Shutter opening skipped for node %s: %s", node_id, err)
 
-        await self._append_sensor_capability_states(
+        await self._append_capability_states(
             http,
             home_id,
             node_id,
