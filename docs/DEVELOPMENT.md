@@ -106,7 +106,7 @@ git push origin v1.5.0
 
 3. Créer la **GitHub Release** depuis le tag — le workflow [`release.yml`](../.github/workflows/release.yml) attache `enki.zip` avec la version du tag injectée dans le manifest du ZIP (sans commit automatique sur le dépôt).
 
-Si le secret **`ENKI_APK_URL`** est configuré (URL directe vers l’APK Enki Play Store / artifact), le job **Validate gateway keys (APK)** décompile l’APK avec jadx et échoue la release si les clés `gateway_keys_data.py` divergent (`extract_gateway_keys.py --check`). Sans ce secret, la validation est ignorée et la release continue comme avant.
+La validation APK en CI release est **désactivée pour le moment**. En local, après une mise à jour de l’app Enki : `python3 scripts/extract_gateway_keys.py chemin/vers/enki.apk --check` puis `--apply --update-known` si besoin.
 
 ## Documentation technique
 
