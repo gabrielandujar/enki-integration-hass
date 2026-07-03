@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 from typing import Any
 
@@ -48,7 +49,14 @@ class EnkiCoordinator(DataUpdateCoordinator[list[EnkiDevice]]):
         except EnkiConnectionError as err:
             raise UpdateFailed(f"Cannot reach Enki cloud: {err}") from err
         else:
-            await self._telemetry.async_report(self.api.discovery_records)
+            try:
+                await self._telemetry.async_report(self.api.discovery_records)
+            except Exception as err:  # noqa: BLE001 — telemetry must never break polling
+                LOGGER.warning(
+                    "Enki telemetry skipped after discovery error: %s",
+                    err,
+                    exc_info=LOGGER.isEnabledFor(logging.DEBUG),
+                )
             return devices
 
     def get_device_by_node(self, node_id: str) -> EnkiDevice | None:

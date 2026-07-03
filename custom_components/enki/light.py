@@ -196,8 +196,13 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
         node_id = self._device.node_id
 
         if not self._supports_light_state:
-            await self.coordinator.api.async_switch_electrical_power(home_id, node_id, "ON")
-            self.coordinator.update_cached_value(node_id, "electrical_power", "ON")
+            await self.coordinator.api.async_switch_electrical_power(
+                home_id,
+                node_id,
+                "ON",
+                endpoint=self._endpoint_id,
+            )
+            self._cache_electrical_power("ON")
             return
 
         await self._mixed_endpoint_workaround()
@@ -212,15 +217,20 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
                 "colorTemperature",
                 changes["colorTemperature"],
             )
-        self._update_light_endpoint_cache("ON")
+        self._update_light_endpoint_cache("ON", self._endpoint_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         home_id = self._device.home_id
         node_id = self._device.node_id
 
         if not self._supports_light_state:
-            await self.coordinator.api.async_switch_electrical_power(home_id, node_id, "OFF")
-            self.coordinator.update_cached_value(node_id, "electrical_power", "OFF")
+            await self.coordinator.api.async_switch_electrical_power(
+                home_id,
+                node_id,
+                "OFF",
+                endpoint=self._endpoint_id,
+            )
+            self._cache_electrical_power("OFF")
             return
 
         await self.coordinator.api.async_change_light_state(
@@ -229,4 +239,12 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             {"power": "OFF"},
         )
         self.coordinator.update_cached_value(node_id, "power", "OFF")
-        self._update_light_endpoint_cache("OFF")
+        self._update_light_endpoint_cache("OFF", self._endpoint_id)
+
+    def _cache_electrical_power(self, power: str) -> None:
+        node_id = self._device.node_id
+        if self._endpoint_id is not None:
+            self.coordinator.update_endpoint_power(node_id, self._endpoint_id, power)
+            return
+        self.coordinator.update_cached_value(node_id, "electrical_power", power)
+        self.coordinator.update_cached_value(node_id, "power", power)

@@ -84,7 +84,7 @@ def profile_to_export_dict(
         "model": record.model,
         "firmware_version": record.firmware_version,
         "supported_by_integration": record.supported_by_integration,
-        "capabilities": sorted(record.capabilities),
+        "capabilities": sorted(record.capabilities or []),
         "possible_values": record.possible_values,
         "integration_version": integration_version,
         "ha_version": ha_version,
@@ -103,7 +103,7 @@ def profile_fingerprint(export_dict: dict[str, Any]) -> str:
         "capabilities": export_dict.get("capabilities"),
         "possible_values": export_dict.get("possible_values"),
     }
-    payload = json.dumps(stable, sort_keys=True, separators=(",", ":"))
+    payload = json.dumps(stable, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
