@@ -12,8 +12,6 @@ from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .capabilities import capabilities_set as device_capabilities_set
-from .capabilities import is_inverter_device, supports_power_production
 from .const import DOMAIN
 from .coordinator import EnkiCoordinator
 from .entity import EnkiEntity
@@ -34,11 +32,10 @@ async def async_setup_entry(
 
 
 def _has_power_production_sensor(device: EnkiDevice) -> bool:
+    profile = device.profile
     if device.power_production is None:
         return False
-    if is_inverter_device(device):
-        return True
-    return supports_power_production(device_capabilities_set(device.capabilities))
+    return profile.is_inverter or profile.supports_power_production
 
 
 class EnkiPowerProductionSensor(EnkiEntity, SensorEntity):
@@ -57,7 +54,7 @@ class EnkiPowerProductionSensor(EnkiEntity, SensorEntity):
     def native_value(self) -> float | None:
         value = self._device.power_production
         if value is None:
-            value = self._device.last_reported_value.get("power_production")
+            value = self._device.reported.power_production
         if value is None:
             return None
         try:

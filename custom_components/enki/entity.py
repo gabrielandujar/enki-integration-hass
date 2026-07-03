@@ -41,6 +41,7 @@ class EnkiEntity(CoordinatorEntity[EnkiCoordinator]):
 
     @property
     def device_info(self) -> DeviceInfo:
+        """Group entities by physical node (node_id + serial for HA registry)."""
         metadata = self._device.last_reported_value
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.node_id)},
