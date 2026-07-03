@@ -29,6 +29,8 @@ Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà
 
 ### Beta
 
+Fonctionnalités implémentées avec clés gateway APK 2.25.1 — retours terrain bienvenus.
+
 - **Volets roulants** (Evology, Nodon, …) — `cover` « Volet (beta) », API `api-enki-rolling-prod`
 - **Détecteur fuite Lexman** — `binary_sensor` + batterie
 - **Fil pilote Equation** — entité `select` (modes confort / éco / hors gel)
@@ -96,7 +98,7 @@ Pour **changer le mot de passe** : même menu → **Reconfigurer**.
 
 **« Identifiants invalides »** — Vérifiez e-mail et mot de passe sur l’app Enki. Une notification persistante propose de reconfigurer l’intégration.
 
-**HTTP 403 / appareils beta inactifs** — Les clés gateway peuvent être obsolètes après une mise à jour de l’app Enki. Voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (`extract_gateway_keys.py`).
+**HTTP 403 sur un micro-service** — Clé gateway probablement obsolète après une mise à jour de l’app Enki. Une notification persistante s’affiche ; voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (`extract_gateway_keys.py`).
 
 **Aucun appareil détecté** — L’appareil doit être actif dans l’app (même foyer).
 

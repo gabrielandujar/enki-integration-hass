@@ -7,7 +7,7 @@ Détail par type d’appareil et entités Home Assistant créées. L’intégrat
 | **Dernière release GitHub** | [v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
 | **Version `manifest.json` (dépôt)** | 1.5.0 |
 
-**Écart release / dépôt :** v1.3.3 n’inclut pas encore RGB (HS) ni chauffage/fuite. RGB est sur `main` (1.4.1). Chauffage, fuite et filtre fabricant Enki sont sur la branche courante (1.5.0).
+**Écart release / dépôt :** la [dernière release GitHub](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) (v1.3.3) n’inclut pas encore RGB (HS), chauffage, fuite ni volets. Le dépôt `main` est en **1.5.0** : RGB, clés gateway APK 2.25.1, chauffage / fuite / volets (beta), filtre fabricant Enki.
 
 Vue synthèse : [ROADMAP.md](ROADMAP.md) · version courte (HACS) : [README § Feuille de route](../README.md#feuille-de-route)
 
@@ -102,7 +102,7 @@ Thermomètres **Sedea** (écran) : température, humidité, batterie.
 
 | Capabilité | Service | Statut actuel |
 |------------|---------|---------------|
-| `check_battery_health` | `battery-health` | ✅ clé connue |
+| `check_battery_health` | `battery-health` | ✅ clé APK 2.25.1 |
 | `check_water_sensor_state` | `water-leak-detector` | ✅ clé APK 2.25.1 |
 
 ## Chauffage — beta (v1.5.0+)
@@ -118,7 +118,7 @@ Catalogue JSON : [docs/devices/README.md](./devices/README.md)
 
 ## Volets roulants — beta (Evology, Nodon, …)
 
-**Entité HA prévue :** `cover` « Volet (beta) »
+**Entité HA :** `cover` « Volet (beta) »
 
 | Fonction | Détail |
 |----------|--------|

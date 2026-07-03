@@ -52,8 +52,8 @@ Detection is **capability-based** (referentiel metadata + BFF dashboard), not li
 | `inverters` (Envertech-Lexman solar) | `sensor` (power W) | BFF dashboard `description.value` |
 | `access_and_motorizations` (Evology, Nodon, …) | `cover` (beta) | `api-enki-rolling-prod` — `shutter/{nodeId}/…` (APK ≥ 2.25.1) |
 | `sensors` (motion, contact, temperature, …) | `binary_sensor`, `sensor`, `switch`, `number` | presence, contact, temperature-humidity, battery-health, siren micro-services |
-| Heating / pilot wire / thermostat | `select`, `climate`, `switch`, `binary_sensor` | `api-enki-heating-prod` — reads skipped / writes fail if `ENKI_HEATING_API_KEY` is empty |
-| Water leak sensors | `binary_sensor`, `sensor` (battery) | `api-enki-water-leak-detector-prod` + `api-enki-battery-health-prod` |
+| Heating / pilot wire / thermostat | `select`, `climate`, `switch`, `binary_sensor` | `api-enki-heating-prod` — `ENKI_HEATING_API_KEY` in `const.py` (APK 2.25.1); if cleared, reads are skipped silently and writes raise an error |
+| Water leak sensors | `binary_sensor`, `sensor` (battery) | `api-enki-water-leak-detector-prod` + `api-enki-battery-health-prod` — keys in `const.py` (APK 2.25.1); same fallback if a key is missing |
 
 Sensor capability paths follow the same pattern as [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki): `GET/POST …/v1/sensors/{node_id}/{kebab-case-capability}` (siren uses `/v1/siren/`).
 
@@ -129,7 +129,7 @@ field (`hs` vs `ct`) indicates which mode is active.
 |------------|----------|
 | `check-water-sensor-state` | `binary_sensor` (moisture) |
 
-Gateway keys (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY`, …) are extracted from the Enki APK — see [DEVELOPMENT.md](DEVELOPMENT.md). Writes raise a clear error if a required key is missing.
+Gateway keys (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY`, …) are in `const.py` (APK 2.25.1). Refresh with `scripts/extract_gateway_keys.py` after an app update — see [DEVELOPMENT.md](DEVELOPMENT.md). If a key is cleared, reads are skipped silently and writes raise a clear error.
 
 ## Operational notifications
 

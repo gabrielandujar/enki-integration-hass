@@ -5,9 +5,9 @@ Fiches JSON anonymisées (capabilities + `possibleValues`) pour documenter des m
 | Appareil | Fabricant | deviceId | Statut HA (fork) | Fiche |
 |----------|-----------|----------|------------------|-------|
 | Relais ON/OFF | Equation | `63a053851a423d4a245a877c` | ✅ ON/OFF (conso / timers : non) | [JSON](./63a053851a423d4a245a877c.json) |
-| Détecteur de fuite | Lexman | `651eada55b3a798ef6b6bc5c` | 🔬 beta v1.5.0+ — batterie OK, fuite sans clé `ENKI_WATER_SENSOR_API_KEY` | [JSON](./651eada55b3a798ef6b6bc5c.json) |
-| Contrôleur fil pilote | Equation | `63a054c81a423d4a245a877e` | 🔬 beta v1.5.0+ — sans clé `ENKI_HEATING_API_KEY` | [JSON](./63a054c81a423d4a245a877e.json) |
-| Radiateur connecté | Noirot | `67a4b12bae1eca4709a45680` | 🔬 beta v1.5.0+ — sans clé `ENKI_HEATING_API_KEY` | [JSON](./67a4b12bae1eca4709a45680.json) |
+| Détecteur de fuite | Lexman | `651eada55b3a798ef6b6bc5c` | 🔬 beta v1.5.0+ — fuite + batterie (clés APK 2.25.1) | [JSON](./651eada55b3a798ef6b6bc5c.json) |
+| Contrôleur fil pilote | Equation | `63a054c81a423d4a245a877e` | 🔬 beta v1.5.0+ — `select` fil pilote (clé `ENKI_HEATING_API_KEY`, APK 2.25.1) | [JSON](./63a054c81a423d4a245a877e.json) |
+| Radiateur connecté | Noirot | `67a4b12bae1eca4709a45680` | 🔬 beta v1.5.0+ — `climate` + détections (clé `ENKI_HEATING_API_KEY`, APK 2.25.1) | [JSON](./67a4b12bae1eca4709a45680.json) |
 
 Profils importés depuis [StephaneBranly/ha-enki#15](https://github.com/StephaneBranly/ha-enki/pull/15) (contribution [@zetiti10](https://github.com/zetiti10)). Périmètre **Enki / Leroy Merlin uniquement** — pas de Zigbee tiers (→ Zigbee2MQTT / ZHA).
 

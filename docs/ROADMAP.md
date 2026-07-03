@@ -8,7 +8,7 @@ Détail par appareil : [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md).
 | **Dernière release GitHub** | [v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
 | **Version `manifest.json` (dépôt)** | 1.5.0 |
 
-**Écart release / dépôt :** v1.3.3 n’inclut pas encore RGB (HS) ni chauffage/fuite. RGB est sur `main` (1.4.1). Chauffage, fuite et filtre fabricant Enki sont sur la branche courante (1.5.0).
+**Écart release / dépôt :** la [dernière release GitHub](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) (v1.3.3) n’inclut pas encore RGB (HS), chauffage, fuite ni volets. Le dépôt `main` est en **1.5.0** : RGB, clés gateway APK 2.25.1, chauffage / fuite / volets (beta), filtre fabricant Enki.
 
 ## Statut par appareil
 
@@ -22,10 +22,10 @@ Détail par appareil : [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md).
 | ✅ Supporté | Thermomètres Enki (Sedea, …) | température, humidité, batterie |
 | ✅ Supporté | Sirènes Lexman | `switch` ON/OFF |
 | ✅ Supporté | Relais ON/OFF Equation | ON/OFF (comme prises Edisio) |
-| 🔬 Beta | Volets roulants (Evology, Nodon, …) | code `cover` présent ; **aucune entité** tant que `ENKI_ACCESS_MOTORIZATION_API_KEY` est vide dans `const.py` |
-| 🔬 Beta | Détecteur fuite Lexman (v1.5.0+) | entités créées ; **batterie OK**, état fuite inactif sans `ENKI_WATER_SENSOR_API_KEY` |
-| 🔬 Beta | Fil pilote Equation (v1.5.0+) | entité `select` ; inactive sans `ENKI_HEATING_API_KEY` |
-| 🔬 Beta | Radiateur Noirot (v1.5.0+) | `climate` + fenêtre / présence ; inactive sans `ENKI_HEATING_API_KEY` |
+| 🔬 Beta | Volets roulants (Evology, Nodon, …) | `cover` « Volet (beta) » si volet actif dans l’app ; clé `ENKI_ACCESS_MOTORIZATION_API_KEY` (APK 2.25.1) ; peu testé en conditions réelles |
+| 🔬 Beta | Détecteur fuite Lexman (v1.5.0+) | `binary_sensor` fuite + `sensor` batterie ; clés `ENKI_WATER_SENSOR_API_KEY` et `ENKI_BATTERY_HEALTH_API_KEY` (APK 2.25.1) |
+| 🔬 Beta | Fil pilote Equation (v1.5.0+) | entité `select` (modes confort / éco / hors gel) ; clé `ENKI_HEATING_API_KEY` (APK 2.25.1) |
+| 🔬 Beta | Radiateur Noirot (v1.5.0+) | `climate` + détection fenêtre / présence ; clé `ENKI_HEATING_API_KEY` (APK 2.25.1) |
 | 🔜 Bientôt | Radiateurs ACOVA ARLAN | allowlist fabricant OK, pas de matériel de test |
 | 🔜 Bientôt | Scénarios Enki (« Ouvrir Salon », …) | — |
 | ⏳ Pas prévu | Alarme Enki | pas d’API identifiée |
