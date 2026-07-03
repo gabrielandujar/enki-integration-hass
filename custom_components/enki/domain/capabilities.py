@@ -225,6 +225,27 @@ class EnkiCapabilityProfile:
             "check_siren_global_state",
         )
 
+    @property
+    def supports_color_temperature(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "change_color_temperature",
+            "check_color_temperature",
+        )
+
+    @property
+    def supports_brightness_control(self) -> bool:
+        return (
+            _supports(
+                self.capabilities,
+                self.possible_values,
+                "change_brightness",
+                "check_brightness",
+            )
+            or self.supports_light_state
+        )
+
     # --- HA platform classification ----------------------------------------
 
     @property
