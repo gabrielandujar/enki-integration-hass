@@ -2,16 +2,28 @@
 
 from __future__ import annotations
 
+from enki.helpers import merge_light_state_payload
 
-def test_change_light_state_payload_order_for_power_off() -> None:
-    """Mirrors api.async_change_light_state merge: power OFF must win over default ON."""
+
+def test_merge_light_state_payload_power_off_wins() -> None:
     current = {"power": "ON", "brightness": 0.5, "colorTemperature": "T4000K"}
-    parameter = "power"
-    value = "OFF"
-    payload = dict(current)
-    payload["power"] = "ON"
-    payload[parameter] = value
+    payload = merge_light_state_payload(current, {"power": "OFF"})
     assert payload["power"] == "OFF"
+    assert payload["brightness"] == 0.5
+
+
+def test_merge_light_state_payload_turn_on_defaults_power() -> None:
+    current = {"power": "OFF", "brightness": 0.5, "colorTemperature": "T4000K"}
+    payload = merge_light_state_payload(current, {"power": "ON"})
+    assert payload["power"] == "ON"
+    assert payload["brightness"] == 0.5
+
+
+def test_merge_light_state_payload_brightness_update_keeps_on() -> None:
+    current = {"power": "OFF", "brightness": 0.2}
+    payload = merge_light_state_payload(current, {"brightness": 0.8})
+    assert payload["power"] == "ON"
+    assert payload["brightness"] == 0.8
 
 
 def test_fan_light_power_from_lighting_last_reported() -> None:

@@ -38,13 +38,9 @@ def airflow_modes_from_metadata(device: EnkiDevice) -> list[str]:
     if isinstance(meta, dict):
         values = meta.get("values")
         if isinstance(values, list):
-            presets: list[str] = []
-            for value in values:
-                preset = enki_airflow_mode_to_preset(str(value))
-                if preset is not None and preset not in presets:
-                    presets.append(preset)
-            if presets:
-                return presets
+            modes = [str(value) for value in values if isinstance(value, str)]
+            if modes:
+                return modes
     return [PRESET_MODE_MANUAL, PRESET_MODE_BREEZE]
 
 
@@ -60,15 +56,27 @@ def enki_airflow_mode_to_preset(mode: str | None) -> str | None:
 
 
 def preset_to_enki_airflow_mode(preset: str) -> str:
-    normalized = preset.strip().lower()
-    if normalized == PRESET_MODE_MANUAL:
+    normalized = preset.strip().upper()
+    if normalized in {
+        "MANUAL",
+        "BREEZE",
+        "VENTILATION",
+        "BOOST",
+        "AUTO",
+        "SLEEP",
+    }:
+        return normalized
+    lowered = preset.strip().lower()
+    if lowered == PRESET_MODE_MANUAL:
         return AIRFLOW_MODE_MANUAL
-    if normalized == PRESET_MODE_BREEZE:
+    if lowered == PRESET_MODE_BREEZE:
         return AIRFLOW_MODE_BREEZE
     raise ValueError(f"Unsupported preset mode: {preset}")
 
 
 def infer_airflow_mode_supported(device: EnkiDevice, mode: str | None) -> bool:
+    if mode is not None and mode in airflow_modes_from_metadata(device):
+        return True
     if enki_airflow_mode_to_preset(mode) is not None:
         return True
     return device_supports_airflow_mode(device)

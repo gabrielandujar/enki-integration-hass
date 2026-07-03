@@ -7,15 +7,14 @@ import json
 from typing import Any
 from urllib.parse import quote
 
-from .const import (
-    DEVICE_TYPE_FANS,
-    DEVICE_TYPE_LIGHTS,
-    TELEMETRY_GITHUB_REPO,
-    TELEMETRY_ISSUE_LABELS,
-)
-from .models import EnkiDiscoveryRecord
+from .capabilities import device_is_supported
+from .const import TELEMETRY_GITHUB_REPO, TELEMETRY_ISSUE_LABELS
+from .models import EnkiDevice, EnkiDiscoveryRecord
 
-SUPPORTED_DEVICE_TYPES = {DEVICE_TYPE_FANS, DEVICE_TYPE_LIGHTS}
+
+def integration_supports_device(device: EnkiDevice) -> bool:
+    """Return True when at least one HA platform can represent this node."""
+    return device_is_supported(device)
 
 _SENSITIVE_STATE_KEYS = frozenset(
     {

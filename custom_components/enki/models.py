@@ -20,6 +20,10 @@ class EnkiDevice:
     capabilities: list[str] = field(default_factory=list)
     possible_values: dict[str, Any] = field(default_factory=dict)
     last_reported_value: dict[str, Any] = field(default_factory=dict)
+    bff_device_type: str = ""
+    main_change_capability_id: str | None = None
+    main_change_capability_endpoints: list[int | dict[str, Any]] = field(default_factory=list)
+    power_production: float | None = None
 
     @property
     def is_active(self) -> bool:

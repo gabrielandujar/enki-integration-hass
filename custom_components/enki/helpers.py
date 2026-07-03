@@ -88,3 +88,22 @@ def direction_to_enki_rotation(direction: str) -> str:
     if mapped is None:
         raise ValueError(f"Unsupported fan direction: {direction}")
     return mapped
+
+
+def merge_light_state_payload(
+    current: dict[str, Any],
+    changes: dict[str, Any],
+) -> dict[str, Any]:
+    """Build a change-light-state body from the last reported value and requested changes."""
+    payload = dict(current)
+    if changes.get("power") == "OFF":
+        payload.update(changes)
+        return payload
+    payload["power"] = "ON"
+    payload.update(changes)
+    return payload
+
+
+def is_command_success_status(status: int) -> bool:
+    """Enki command endpoints return 202 Accepted or 204 No Content."""
+    return status in {202, 204}

@@ -78,7 +78,7 @@ async def test_light_power_independent(api: EnkiAPI) -> None:
     state = await api._get_light_state(HOME_ID, NODE_ID)
     assert state["lastReportedValue"]["power"] == "OFF"
 
-    await api.async_change_light_state(HOME_ID, NODE_ID, "power", "ON")
+    await api.async_change_light_state_field(HOME_ID, NODE_ID, "power", "ON")
     await asyncio.sleep(2)
     state = await api._get_light_state(HOME_ID, NODE_ID)
     assert state["lastReportedValue"]["power"] == "ON"

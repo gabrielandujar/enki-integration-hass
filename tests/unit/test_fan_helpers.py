@@ -60,4 +60,4 @@ def test_airflow_modes_from_metadata_uses_referentiel_values() -> None:
             "change_airflow_mode": {"values": ["MANUAL", "BREEZE"]},
         },
     )
-    assert airflow_modes_from_metadata(device) == [PRESET_MODE_MANUAL, PRESET_MODE_BREEZE]
+    assert airflow_modes_from_metadata(device) == ["MANUAL", "BREEZE"]
