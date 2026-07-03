@@ -21,12 +21,14 @@ from ..lib.conversion import (
 from ..lib.enki_scope import device_in_enki_scope
 from ..lib.shutter import normalize_shutter_position
 from .auth import EnkiAuthSession
+from .gateway_keys import GatewayKeyStore
 from .transport import EnkiHttpClient
 
 _SENSOR_CAPABILITY_READS: tuple[tuple[str, str, str], ...] = (
     ("temperature_humidity", "check_current_temperature", "current_temperature"),
     ("temperature_humidity", "check_current_humidity", "current_humidity"),
     ("battery_health", "check_battery_health", "battery_health"),
+    ("luminosity_sensor", "check_illuminance_level", "illuminance_level"),
     ("presence_detector", "check_motion_detection", "motion_detection"),
     ("presence_detector", "check_motion_detector_state", "motion_detector_state"),
     ("contact_sensor", "check_contact_sensor_state", "contact_sensor_state"),
@@ -74,6 +76,7 @@ class EnkiAPI:
         self._auth = EnkiAuthSession(username, password)
         self._session: aiohttp.ClientSession | None = None
         self._http: EnkiHttpClient | None = None
+        self._key_store = GatewayKeyStore()
         self._discovery_records: list[EnkiDiscoveryRecord] = []
 
     async def async_close(self) -> None:
@@ -93,7 +96,11 @@ class EnkiAPI:
             self._session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=30),
             )
-            self._http = EnkiHttpClient(self._auth, self._session)
+            self._http = EnkiHttpClient(
+                self._auth,
+                self._session,
+                key_store=self._key_store,
+            )
         assert self._http is not None
         return self._http
 
@@ -436,7 +443,7 @@ class EnkiAPI:
         http: EnkiHttpClient,
         device: EnkiDevice,
     ) -> dict[str, Any]:
-        """Read roller shutter position/opening from access-and-motorizations API."""
+        """Read roller shutter position/opening from api-enki-rolling-prod."""
         home_id = device.home_id
         node_id = device.node_id
         profile = device.profile
@@ -547,7 +554,7 @@ class EnkiAPI:
         node_id: str,
         mode: str,
     ) -> None:
-        """Set fil pilote mode (COMFORT, ECO, OFF, …)."""
+        """Set pilot wire mode (COMFORT, ECO, OFF, …)."""
         await self.async_set_capability_value(
             home_id,
             node_id,

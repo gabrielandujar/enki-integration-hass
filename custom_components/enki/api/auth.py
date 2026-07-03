@@ -94,6 +94,11 @@ class EnkiAuthSession:
         self._apply_token_payload(payload)
         LOGGER.debug("Enki token refreshed, expires in %ss", payload["expires_in"])
 
+    def invalidate(self) -> None:
+        """Drop cached tokens so the next request re-authenticates."""
+        self._access_token = None
+        self._token_expires_at = 0.0
+
     def _apply_token_payload(self, payload: dict[str, Any]) -> None:
         self._access_token = payload["access_token"]
         self._token_type = payload.get("token_type", "Bearer")

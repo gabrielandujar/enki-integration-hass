@@ -33,7 +33,7 @@ async def async_setup_entry(
 
 
 class EnkiCoverEntity(EnkiEntity, CoverEntity):
-    """Roller shutter via api-enki-access-motorizations-prod (beta)."""
+    """Roller shutter via api-enki-rolling-prod (beta)."""
 
     _attr_translation_key = "roller_shutter"
     _attr_device_class = CoverDeviceClass.SHUTTER

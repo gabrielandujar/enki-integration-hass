@@ -2,34 +2,19 @@
 
 from __future__ import annotations
 
+import uuid
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import aiohttp
 
-from ..const import (
-    ENKI_ACCESS_MOTORIZATION_API_KEY,
-    ENKI_AIRFLOW_API_KEY,
-    ENKI_BASE_URL,
-    ENKI_BATTERY_HEALTH_API_KEY,
-    ENKI_BFF_API_KEY,
-    ENKI_CONTACT_SENSOR_API_KEY,
-    ENKI_HEATING_API_KEY,
-    ENKI_HOME_API_KEY,
-    ENKI_LIGHTS_API_KEY,
-    ENKI_NODE_API_KEY,
-    ENKI_POWER_API_KEY,
-    ENKI_PRESENCE_DETECTOR_API_KEY,
-    ENKI_REFERENTIEL_API_KEY,
-    ENKI_SIREN_API_KEY,
-    ENKI_TEMPERATURE_HUMIDITY_API_KEY,
-    ENKI_WATER_SENSOR_API_KEY,
-    LOGGER,
-    REFERENTIEL_VERSION,
-)
+from ..const import ENKI_BASE_URL, ENKI_USER_AGENT, LOGGER, REFERENTIEL_VERSION
 from ..exceptions import EnkiApiNotFoundError, EnkiConnectionError
 from ..lib.capability_path import capability_to_path_segment
 from ..lib.conversion import is_command_success_status
 from .auth import EnkiAuthSession
+from .gateway_keys import GatewayKeyStore
+from .gateway_registry import OPTIONAL_KEY_TRANSPORT_IDS, WIRED_PATH_PREFIXES
 
 
 class EnkiHttpClient:
@@ -39,63 +24,68 @@ class EnkiHttpClient:
     and sometimes a ``homeId`` header — this class centralises that wiring.
     """
 
-    _API_KEYS = {
-        "home": ENKI_HOME_API_KEY,
-        "bff": ENKI_BFF_API_KEY,
-        "node": ENKI_NODE_API_KEY,
-        "referentiel": ENKI_REFERENTIEL_API_KEY,
-        "lighting": ENKI_LIGHTS_API_KEY,
-        "airflow": ENKI_AIRFLOW_API_KEY,
-        "power": ENKI_POWER_API_KEY,
-        "motorization": ENKI_ACCESS_MOTORIZATION_API_KEY,
-        "temperature_humidity": ENKI_TEMPERATURE_HUMIDITY_API_KEY,
-        "battery_health": ENKI_BATTERY_HEALTH_API_KEY,
-        "presence_detector": ENKI_PRESENCE_DETECTOR_API_KEY,
-        "contact_sensor": ENKI_CONTACT_SENSOR_API_KEY,
-        "siren": ENKI_SIREN_API_KEY,
-        "heating": ENKI_HEATING_API_KEY,
-        "water_sensor": ENKI_WATER_SENSOR_API_KEY,
-    }
+    _ROLLING_PATH_PREFIX = WIRED_PATH_PREFIXES["motorization"]
 
-    _SERVICE_PATH_PREFIX = {
-        "temperature_humidity": "/api-enki-temperature-humidity-sensor-prod/v1/sensors",
-        "battery_health": "/api-enki-battery-health-prod/v1/sensors",
-        "presence_detector": "/api-enki-presence-detector-prod/v1/sensors",
-        "contact_sensor": "/api-enki-contact-sensor-prod/v1/sensors",
-        "siren": "/api-enki-siren-prod/v1/siren",
-        "heating": "/api-enki-heating-prod/v1/heating",
-        "water_sensor": "/api-enki-water-sensor-prod/v1/sensors",
-    }
-
-    _OPTIONAL_API_KEY_SERVICES = frozenset({"heating", "water_sensor"})
-
-    def __init__(self, auth: EnkiAuthSession, session: aiohttp.ClientSession) -> None:
+    def __init__(
+        self,
+        auth: EnkiAuthSession,
+        session: aiohttp.ClientSession,
+        *,
+        key_store: GatewayKeyStore | None = None,
+    ) -> None:
         self._auth = auth
         self._session = session
+        self._key_store = key_store or GatewayKeyStore()
 
     @property
     def session(self) -> aiohttp.ClientSession:
         return self._session
 
+    @property
+    def key_store(self) -> GatewayKeyStore:
+        return self._key_store
+
     async def ensure_token(self) -> None:
         await self._auth.ensure_valid(self._session)
 
     def _service_api_key(self, service: str) -> str | None:
-        api_key = self._API_KEYS.get(service, "")
+        api_key = self._key_store.get_transport_key(service)
         if api_key:
             return api_key
-        if service in self._OPTIONAL_API_KEY_SERVICES:
+        if service in OPTIONAL_KEY_TRANSPORT_IDS:
             return None
         return api_key
 
     def _headers(self, service: str, home_id: str | None = None) -> dict[str, str]:
-        extra: dict[str, str] = {}
+        extra: dict[str, str] = {
+            "User-Agent": ENKI_USER_AGENT,
+            "Accept": "application/json",
+            "X-Correlation-Id": f"iOS_{uuid.uuid4().hex.upper()}",
+        }
         api_key = self._service_api_key(service)
         if api_key:
             extra["X-Gateway-APIKey"] = api_key
         if home_id is not None:
             extra["homeId"] = home_id
         return self._auth.auth_headers(extra)
+
+    async def _reauthenticate(self) -> None:
+        self._auth.invalidate()
+        await self._auth.connect(self._session)
+
+    async def _with_auth_retry(
+        self,
+        request: Callable[[], Awaitable[aiohttp.ClientResponse]],
+    ) -> aiohttp.ClientResponse:
+        """Run one HTTP call; on 401 invalidate the session and retry once."""
+        await self.ensure_token()
+        response = await request()
+        if response.status != 401:
+            return response
+        LOGGER.warning("Enki API returned 401, re-authenticating and retrying once")
+        await response.release()
+        await self._reauthenticate()
+        return await request()
 
     async def get_json(
         self,
@@ -107,19 +97,26 @@ class EnkiHttpClient:
         not_found_ok: bool = False,
     ) -> dict[str, Any]:
         """GET returning parsed JSON; raises on unexpected status."""
-        await self.ensure_token()
         url = f"{ENKI_BASE_URL}{path}"
-        async with self._session.get(
-            url,
-            headers=self._headers(service, home_id),
-            params=params,
-        ) as response:
+
+        async def _get() -> aiohttp.ClientResponse:
+            return await self._session.get(
+                url,
+                headers=self._headers(service, home_id),
+                params=params,
+            )
+
+        response = await self._with_auth_retry(_get)
+        async with response:
             if response.status == 404 and not_found_ok:
                 return {}
             if response.status == 404:
                 raise EnkiApiNotFoundError(f"GET {path} not found", status=404)
             if response.status != 200:
-                raise EnkiConnectionError(f"GET {path} failed: HTTP {response.status}")
+                raise EnkiConnectionError(
+                    f"GET {path} failed: HTTP {response.status}",
+                    status=response.status,
+                )
             payload = await response.json()
             return payload if isinstance(payload, dict) else {}
 
@@ -134,14 +131,18 @@ class EnkiHttpClient:
         not_found_ok: bool = False,
     ) -> None:
         """POST a command endpoint; accepts HTTP 202/204 as success."""
-        await self.ensure_token()
         url = f"{ENKI_BASE_URL}{path}"
-        async with self._session.post(
-            url,
-            headers=self._headers(service, home_id),
-            params=params,
-            json=json,
-        ) as response:
+
+        async def _post() -> aiohttp.ClientResponse:
+            return await self._session.post(
+                url,
+                headers=self._headers(service, home_id),
+                params=params,
+                json=json,
+            )
+
+        response = await self._with_auth_retry(_post)
+        async with response:
             if response.status == 404 and not_found_ok:
                 raise EnkiApiNotFoundError(f"POST {path} not found", status=404)
             if not is_command_success_status(response.status):
@@ -257,14 +258,14 @@ class EnkiHttpClient:
         node_id: str,
         action: str,
     ) -> dict[str, Any]:
-        if not ENKI_ACCESS_MOTORIZATION_API_KEY:
+        if not self._service_api_key("motorization"):
             raise EnkiConnectionError(
                 "Motorization API key is not configured (beta shutters). "
                 "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
             )
         return await self.get_json(
             "motorization",
-            f"/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/{node_id}/{action}",
+            f"{self._ROLLING_PATH_PREFIX}/{node_id}/{action}",
             home_id=home_id,
             not_found_ok=True,
         )
@@ -276,14 +277,14 @@ class EnkiHttpClient:
         action: str,
         value: Any,
     ) -> None:
-        if not ENKI_ACCESS_MOTORIZATION_API_KEY:
+        if not self._service_api_key("motorization"):
             raise EnkiConnectionError(
                 "Motorization API key is not configured (beta shutters). "
                 "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
             )
         await self.post_command(
             "motorization",
-            f"/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/{node_id}/{action}",
+            f"{self._ROLLING_PATH_PREFIX}/{node_id}/{action}",
             home_id=home_id,
             json={"value": value},
         )
@@ -303,7 +304,7 @@ class EnkiHttpClient:
                 node_id,
             )
             return {}
-        prefix = self._SERVICE_PATH_PREFIX[service]
+        prefix = WIRED_PATH_PREFIXES[service]
         action = capability_to_path_segment(capability)
         return await self.get_json(
             service,
@@ -326,7 +327,7 @@ class EnkiHttpClient:
                 f"Heating/water API key is not configured for {capability}. "
                 "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
             )
-        prefix = self._SERVICE_PATH_PREFIX[service]
+        prefix = WIRED_PATH_PREFIXES[service]
         action = capability_to_path_segment(capability)
         await self.post_command(
             service,
