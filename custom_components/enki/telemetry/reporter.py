@@ -16,6 +16,7 @@ from ..domain.profile import (
     profile_fingerprint,
     profile_to_export_dict,
 )
+from ..domain.telemetry_coverage import discovery_record_needs_telemetry
 
 STORAGE_VERSION = 1
 
@@ -65,6 +66,10 @@ class EnkiTelemetryReporter:
 
             reported.add(fingerprint)
             await self._save_reported(reported)
+
+            if not discovery_record_needs_telemetry(record):
+                continue
+
             new_count += 1
             self._notify_new_profile(export_dict, fingerprint)
 

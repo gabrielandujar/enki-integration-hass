@@ -16,13 +16,15 @@ Export JSON local : profils anonymisés (type, fabricant, capabilities). À join
 
 > M’avertir des nouveaux appareils (lien issue GitHub)
 
-Quand un **nouveau** profil est détecté (empreinte unique) :
+Quand un **nouveau** profil est détecté (empreinte unique) **et qu'il manque du support** (appareil non géré ou capabilities non implémentées) :
 
 1. Une **notification persistante** apparaît dans Home Assistant
 2. Le lien ouvre GitHub avec titre et description **pré-remplis**
 3. Vous **validez** la création de l’issue — rien n’est envoyé sans ce clic
 
 **Jamais inclus :** e-mail, mot de passe, homeId, nodeId, noms de pièces.
+
+**Pas de notification** si l'appareil est déjà entièrement supporté (ex. variante de ventilateur Inspire déjà couverte).
 
 ## Pour les contributeurs
 
