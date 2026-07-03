@@ -102,7 +102,7 @@ Bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/i
 
 Intégration communautaire, **non affiliée** à Leroy Merlin, Adeo ou Enki. API cloud non officielle, susceptible d’évoluer sans préavis.
 
-Projet dérivé de [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component).
+Projet dérivé de [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component). Oui, on s’appelle tous les deux **Cyril** — non, ce n’est pas la même personne : **CyrilP** est l’auteur du repo d’origine ; **moi** ([cyrilcolinet](https://github.com/cyrilcolinet)), je maintiens ce fork à part. Même prénom, deux comptes GitHub, zéro télépathie.
 
 ## Licence
 
