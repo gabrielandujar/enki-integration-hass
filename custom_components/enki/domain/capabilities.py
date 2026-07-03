@@ -236,12 +236,15 @@ class EnkiCapabilityProfile:
 
     @property
     def supports_brightness_control(self) -> bool:
-        return _supports(
-            self.capabilities,
-            self.possible_values,
-            "change_brightness",
-            "check_brightness",
-        ) or self.supports_light_state
+        return (
+            _supports(
+                self.capabilities,
+                self.possible_values,
+                "change_brightness",
+                "check_brightness",
+            )
+            or self.supports_light_state
+        )
 
     # --- HA platform classification ----------------------------------------
 
