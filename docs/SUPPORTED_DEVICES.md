@@ -7,7 +7,9 @@ Détail par type d’appareil et entités Home Assistant créées. L’intégrat
 | **Dernière release GitHub** | [v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
 | **Version `manifest.json` (dépôt)** | 1.5.0 |
 
-**Écart release / dépôt :** v1.3.3 n’inclut pas encore RGB (HS) ni chauffage/fuite. RGB est sur `main` (1.4.0). Chauffage, fuite, filtre fabricant Enki sont sur la branche courante (1.5.0).
+**Écart release / dépôt :** v1.3.3 n’inclut pas encore RGB (HS) ni chauffage/fuite. RGB est sur `main` (1.4.1). Chauffage, fuite et filtre fabricant Enki sont sur la branche courante (1.5.0).
+
+Vue synthèse : [ROADMAP.md](ROADMAP.md) · version courte (HACS) : [README § Feuille de route](../README.md#feuille-de-route)
 
 ## Périmètre
 
