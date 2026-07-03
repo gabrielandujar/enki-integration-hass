@@ -7,6 +7,7 @@ from typing import Any
 import aiohttp
 
 from ..const import (
+    ENKI_ACCESS_MOTORIZATION_API_KEY,
     ENKI_AIRFLOW_API_KEY,
     ENKI_BASE_URL,
     ENKI_BFF_API_KEY,
@@ -37,6 +38,7 @@ class EnkiHttpClient:
         "lighting": ENKI_LIGHTS_API_KEY,
         "airflow": ENKI_AIRFLOW_API_KEY,
         "power": ENKI_POWER_API_KEY,
+        "motorization": ENKI_ACCESS_MOTORIZATION_API_KEY,
     }
 
     def __init__(self, auth: EnkiAuthSession, session: aiohttp.ClientSession) -> None:
@@ -206,6 +208,43 @@ class EnkiHttpClient:
         await self.post_command(
             "airflow",
             f"/api-enki-airflow-prod/v1/airflow/{node_id}/{action}",
+            home_id=home_id,
+            json={"value": value},
+        )
+
+    async def motorization_get(
+        self,
+        home_id: str,
+        node_id: str,
+        action: str,
+    ) -> dict[str, Any]:
+        if not ENKI_ACCESS_MOTORIZATION_API_KEY:
+            raise EnkiConnectionError(
+                "Motorization API key is not configured (beta shutters). "
+                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
+            )
+        return await self.get_json(
+            "motorization",
+            f"/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/{node_id}/{action}",
+            home_id=home_id,
+            not_found_ok=True,
+        )
+
+    async def motorization_post(
+        self,
+        home_id: str,
+        node_id: str,
+        action: str,
+        value: Any,
+    ) -> None:
+        if not ENKI_ACCESS_MOTORIZATION_API_KEY:
+            raise EnkiConnectionError(
+                "Motorization API key is not configured (beta shutters). "
+                "Capture X-Gateway-APIKey from the Enki app — see docs/API.md."
+            )
+        await self.post_command(
+            "motorization",
+            f"/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/{node_id}/{action}",
             home_id=home_id,
             json={"value": value},
         )

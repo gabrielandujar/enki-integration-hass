@@ -50,6 +50,7 @@ Detection is **capability-based** (referentiel metadata + BFF dashboard), not li
 | `lights` (+ light capabilities) | `light` | `api-enki-lighting-prod` |
 | Switches / outlets (Edisio, …) | `light` (ON/OFF) | `api-enki-power-prod` (`switch-electrical-power`) |
 | `inverters` (Envertech-Lexman solar) | `sensor` (power W) | BFF dashboard `description.value` |
+| `access_and_motorizations` (Evology, Nodon, …) | `cover` (beta) | `api-enki-access-and-motorizations-prod` |
 
 Multi-endpoint lights (several circuits on one node) create one HA light entity per BFF `mainChangeCapability` endpoint.
 
@@ -76,6 +77,21 @@ Commands:
 
 Fan motor and light kit are **independent** (turning the fan on does not switch the light on).
 
+### Roller shutters (Evology SIN2RS1, …) — beta
+
+**Base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-access-and-motorizations-prod/v1/`
+
+| Field | Endpoint | Notes |
+|-------|----------|-------|
+| `shutter_position` | `GET …/check-shutter-position` | `0–100` (% open) |
+| `shutter_opening` | `GET …/check-shutter-opening` | `OPEN` / `CLOSED` |
+
+Commands:
+
+- `POST …/change-shutter-position` — body `{"value": <0-100>}`, expect `202` or `204`
+
+Gateway key: `ENKI_ACCESS_MOTORIZATION_API_KEY` in `const.py` (capture from Enki app traffic with mitmproxy if HTTP 403).
+
 ### Standard lights (Eglo V-Link, Lexman, etc.)
 
 | Capability | Parameter | Wire format |
@@ -86,7 +102,7 @@ Fan motor and light kit are **independent** (turning the fan on does not switch 
 
 ## Future device families (not implemented yet)
 
-The Enki app also controls heating, shutters, sockets, and alarms via other microservices (`api-enki-heating-prod`, motorisation APIs, etc.). Use `scripts/discover_devices.py` to dump unknown `deviceType` values from your account before adding new platforms.
+The Enki app also controls heating, alarms, and Enki scenarios via other microservices (`api-enki-heating-prod`, BFF scenario player, etc.). Use `scripts/discover_devices.py` to dump unknown `deviceType` values from your account before adding new platforms.
 
 ## References
 

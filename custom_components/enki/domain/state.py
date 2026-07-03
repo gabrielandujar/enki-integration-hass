@@ -79,6 +79,17 @@ class EnkiDeviceState:
         return None
 
     @property
+    def shutter_position(self) -> int | None:
+        from ..lib.shutter import normalize_shutter_position
+
+        return normalize_shutter_position(self._data.get("shutter_position"))
+
+    @property
+    def shutter_opening(self) -> str | None:
+        value = self._data.get("shutter_opening")
+        return str(value).upper() if isinstance(value, str) else None
+
+    @property
     def electrical_endpoints(self) -> list[dict[str, Any]]:
         endpoints = self._data.get("electrical_endpoints")
         if isinstance(endpoints, list):

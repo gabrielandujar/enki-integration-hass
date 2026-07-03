@@ -8,7 +8,7 @@ Mêmes identifiants que l’**application mobile Enki**. Pas de box supplémenta
 
 ## Feuille de route
 
-### ✅ Supporté (v1.1.3)
+### ✅ Supporté (v1.2.0)
 
 | Appareil | Dans Home Assistant |
 |----------|---------------------|
@@ -25,12 +25,19 @@ Mêmes identifiants que l’**application mobile Enki**. Pas de box supplémenta
 
 L’intégration détecte les appareils via leurs **capabilities** API (comme l’app mobile), pas seulement par modèle.
 
+### 🔬 Beta — testeurs recherchés
+
+| Appareil / sujet | Statut | Issue |
+|------------------|--------|-------|
+| Volets roulants Evology (EnOcean) | Plateforme `cover` beta — **confirmation matérielle requise** | [#53](https://github.com/CyrilP/hass-enki-component/issues/53) (upstream) · [feedback](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) |
+
+Les entités apparaissent comme **« Volet (beta) »**. Ouvrir/fermer et position 0–100 % si l’API motorisation répond. Signalez le comportement (OK / KO + logs `enki`) pour promouvoir en stable.
+
 ### 🔜 Bientôt
 
 | Appareil / sujet | Statut | Issue |
 |------------------|--------|-------|
 | Radiateurs ACOVA ARLAN | API identifiée, implémentation à venir | [#75](https://github.com/CyrilP/hass-enki-component/issues/75) (upstream) |
-| Volets roulants Evology (EnOcean) | En étude (capabilities + scénarios) | [#53](https://github.com/CyrilP/hass-enki-component/issues/53) (upstream) |
 
 Priorisation selon retours et contributions — [ouvrir une feature request](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml) pour voter un appareil.
 

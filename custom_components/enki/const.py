@@ -47,6 +47,11 @@ DIRECTION_REVERSE = "reverse"
 DEVICE_TYPE_LIGHTS = "lights"
 DEVICE_TYPE_FANS = "ceiling_fans"
 DEVICE_TYPE_INVERTERS = "inverters"
+DEVICE_TYPE_ACCESS_MOTORIZATION = "access_and_motorizations"
+
+# api-enki-access-motorizations-prod (Evology/Nodon roller shutters, …).
+# Capture with mitmproxy when controlling a shutter in the Enki app (see docs/API.md).
+ENKI_ACCESS_MOTORIZATION_API_KEY = ""
 
 REFERENTIEL_VERSION = "2.23.0"
 

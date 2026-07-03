@@ -5,7 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from ..const import DEVICE_TYPE_FANS, DEVICE_TYPE_INVERTERS, DEVICE_TYPE_LIGHTS
+from ..const import (
+    DEVICE_TYPE_ACCESS_MOTORIZATION,
+    DEVICE_TYPE_FANS,
+    DEVICE_TYPE_INVERTERS,
+    DEVICE_TYPE_LIGHTS,
+)
 from .models import EnkiDevice
 
 
@@ -117,6 +122,23 @@ class EnkiCapabilityProfile:
     def supports_power_production(self) -> bool:
         return "check_power_production" in self.capabilities
 
+    @property
+    def supports_shutter_position(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "change_shutter_position",
+            "check_shutter_position",
+        )
+
+    @property
+    def supports_shutter_opening(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_shutter_opening",
+        )
+
     # --- HA platform classification ----------------------------------------
 
     @property
@@ -143,8 +165,15 @@ class EnkiCapabilityProfile:
         return self.supports_power_production and self.power_production is not None
 
     @property
+    def is_cover(self) -> bool:
+        """Roller shutters and similar motorizations (beta)."""
+        if self.device_type in {DEVICE_TYPE_ACCESS_MOTORIZATION, "access_and_motorizations"}:
+            return self.supports_shutter_position or self.supports_shutter_opening
+        return self.supports_shutter_position
+
+    @property
     def is_supported(self) -> bool:
-        return self.is_fan or self.is_light_controllable or self.is_inverter
+        return self.is_fan or self.is_light_controllable or self.is_inverter or self.is_cover
 
     @property
     def uses_power_api_only(self) -> bool:
@@ -213,6 +242,19 @@ def supports_airflow_mode(capabilities: set[str], possible_values: dict[str, Any
 
 def supports_power_production(capabilities: set[str]) -> bool:
     return "check_power_production" in capabilities
+
+
+def supports_shutter_position(capabilities: set[str], possible_values: dict[str, Any]) -> bool:
+    return _supports(
+        capabilities,
+        possible_values,
+        "change_shutter_position",
+        "check_shutter_position",
+    )
+
+
+def is_cover_device(device: EnkiDevice) -> bool:
+    return device.profile.is_cover
 
 
 def device_capabilities(device: EnkiDevice) -> set[str]:

@@ -17,6 +17,7 @@ from ..lib.conversion import (
     merge_light_state_payload,
     normalize_power_state,
 )
+from ..lib.shutter import normalize_shutter_position
 from .auth import EnkiAuthSession
 from .transport import EnkiHttpClient
 
@@ -204,6 +205,9 @@ class EnkiAPI:
         if profile.is_fan:
             return await self._read_fan_state(http, home_id, node_id)
 
+        if profile.is_cover:
+            return await self._read_shutter_state(http, device)
+
         state: dict[str, Any] = {}
 
         if profile.supports_light_state or device.device_type == DEVICE_TYPE_LIGHTS:
@@ -303,6 +307,47 @@ class EnkiAPI:
         state = await http.get_light_state(home_id, node_id)
         return state.get("lastReportedValue", {})
 
+    async def _read_shutter_state(
+        self,
+        http: EnkiHttpClient,
+        device: EnkiDevice,
+    ) -> dict[str, Any]:
+        """Read roller shutter position/opening from access-and-motorizations API."""
+        home_id = device.home_id
+        node_id = device.node_id
+        profile = device.profile
+        state: dict[str, Any] = {}
+
+        if profile.supports_shutter_position:
+            try:
+                position_data = await http.motorization_get(
+                    home_id,
+                    node_id,
+                    "check-shutter-position",
+                )
+                if position_data:
+                    normalized = normalize_shutter_position(position_data.get("lastReportedValue"))
+                    if normalized is not None:
+                        state["shutter_position"] = normalized
+            except EnkiConnectionError as err:
+                LOGGER.debug("Shutter position skipped for node %s: %s", node_id, err)
+
+        if profile.supports_shutter_opening:
+            try:
+                opening_data = await http.motorization_get(
+                    home_id,
+                    node_id,
+                    "check-shutter-opening",
+                )
+                if opening_data:
+                    opening = opening_data.get("lastReportedValue")
+                    if isinstance(opening, str):
+                        state["shutter_opening"] = opening.upper()
+            except EnkiConnectionError as err:
+                LOGGER.debug("Shutter opening skipped for node %s: %s", node_id, err)
+
+        return state
+
     # --- public command API --------------------------------------------------
 
     async def async_switch_electrical_power(
@@ -335,6 +380,21 @@ class EnkiAPI:
         """Set fan speed (0 = off, 1–6 = levels)."""
         http = await self._get_http()
         await http.airflow_post(home_id, node_id, "change-fan-speed", speed)
+
+    async def async_set_shutter_position(
+        self,
+        home_id: str,
+        node_id: str,
+        position: int,
+    ) -> None:
+        """Set roller shutter position (0 = closed, 100 = open)."""
+        http = await self._get_http()
+        await http.motorization_post(
+            home_id,
+            node_id,
+            "change-shutter-position",
+            max(0, min(100, position)),
+        )
 
     async def async_set_light_power(self, home_id: str, node_id: str, on: bool) -> None:
         """Turn the ESDK fan light kit on or off (lighting API)."""
