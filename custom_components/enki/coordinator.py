@@ -15,6 +15,7 @@ from .api import EnkiAPI
 from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 from .domain.models import EnkiDevice
 from .exceptions import EnkiAuthError, EnkiConnectionError
+from .notifications import EnkiNotifier, notify_for_connection_error
 from .telemetry import EnkiTelemetryReporter
 
 
@@ -29,6 +30,7 @@ class EnkiCoordinator(DataUpdateCoordinator[list[EnkiDevice]]):
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
         )
+        self._notifier = EnkiNotifier(hass, config_entry)
         self._telemetry = EnkiTelemetryReporter(hass, config_entry)
         scan_interval = config_entry.options.get(
             CONF_SCAN_INTERVAL,
@@ -45,10 +47,13 @@ class EnkiCoordinator(DataUpdateCoordinator[list[EnkiDevice]]):
         try:
             devices = await self.api.async_get_devices()
         except EnkiAuthError as err:
+            self._notifier.notify_auth_failed()
             raise UpdateFailed(f"Authentication error: {err}") from err
         except EnkiConnectionError as err:
+            notify_for_connection_error(self._notifier, err)
             raise UpdateFailed(f"Cannot reach Enki cloud: {err}") from err
         else:
+            self._notifier.dismiss_operational_errors()
             try:
                 await self._telemetry.async_report(self.api.discovery_records)
             except Exception as err:  # noqa: BLE001 — telemetry must never break polling

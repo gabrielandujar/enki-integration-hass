@@ -13,6 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .exceptions import EnkiAuthError, EnkiConnectionError
+from .notifications import EnkiNotifier, notify_for_connection_error
 
 if TYPE_CHECKING:
     from .coordinator import EnkiCoordinator
@@ -40,12 +41,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnkiConfigEntry) -> bool
     from .coordinator import EnkiCoordinator
 
     coordinator = EnkiCoordinator(hass, entry)
+    notifier = EnkiNotifier(hass, entry)
 
     try:
         await coordinator.api.async_connect()
     except EnkiAuthError as err:
+        notifier.notify_auth_failed()
         raise ConfigEntryNotReady(f"Invalid Enki credentials: {err}") from err
     except EnkiConnectionError as err:
+        notify_for_connection_error(notifier, err)
         raise ConfigEntryNotReady(f"Cannot reach Enki cloud: {err}") from err
 
     await coordinator.async_config_entry_first_refresh()
@@ -65,6 +69,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: EnkiConfigEntry) ->
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnkiConfigEntry) -> bool:
+    EnkiNotifier(hass, entry).dismiss_all()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.api.async_close()
     return unload_ok
