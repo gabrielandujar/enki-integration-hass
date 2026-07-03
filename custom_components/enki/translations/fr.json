@@ -15,6 +15,13 @@
           "username": "E-mail",
           "password": "Mot de passe"
         }
+      },
+      "telemetry": {
+        "title": "Aidez à étendre le support Enki",
+        "description": "Option facultative : lorsqu’un appareil nouveau ou non supporté est détecté sur votre compte, Home Assistant peut vous avertir avec un **lien GitHub pré-rempli** (profil anonymisé : type, modèle, capabilities).\n\nRien n’est envoyé automatiquement — vous choisissez d’ouvrir le lien ou non. Cela aide à prioriser radiateurs, volets, prises et autres matériels.\n\nModifiable à tout moment via **Enki → Configurer**.",
+        "data": {
+          "telemetry": "M’avertir des nouveaux appareils (recommandé)"
+        }
       }
     },
     "error": {

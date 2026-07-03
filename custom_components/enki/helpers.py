@@ -94,7 +94,12 @@ def merge_light_state_payload(
     current: dict[str, Any],
     changes: dict[str, Any],
 ) -> dict[str, Any]:
-    """Build a change-light-state body from the last reported value and requested changes."""
+    """Build a change-light-state body from the last reported value and requested changes.
+
+    Enki requires the full lastReportedValue object on every POST. When turning ON,
+    the API also expects ``power: ON`` even if the caller only asked for brightness
+    or color temperature — otherwise Siroco+ kits ignore the command (#71).
+    """
     payload = dict(current)
     if changes.get("power") == "OFF":
         payload.update(changes)

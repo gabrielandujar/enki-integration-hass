@@ -26,7 +26,7 @@ async def test_connect_success() -> None:
         )
         api = EnkiAPI("user@example.com", "secret")
         await api.async_connect()
-        assert api._access_token == "token-abc"
+        assert api._auth.access_token == "token-abc"
         await api.async_close()
 
 
@@ -75,7 +75,7 @@ async def test_connect_stores_refresh_token() -> None:
         )
         api = EnkiAPI("user@example.com", "secret")
         await api.async_connect()
-        assert api._refresh_token == "refresh-xyz"
+        assert api._auth._refresh_token == "refresh-xyz"
         await api.async_close()
 
 
@@ -93,14 +93,14 @@ async def test_ensure_token_uses_refresh_before_password() -> None:
             },
         )
         api = EnkiAPI("user@example.com", "secret")
-        api._access_token = "expired"
-        api._refresh_token = "old-refresh"
-        api._token_expires_at = time.time() - 10
+        api._auth._access_token = "expired"
+        api._auth._refresh_token = "old-refresh"
+        api._auth._token_expires_at = time.time() - 10
 
         await api._ensure_token()
 
-        assert api._access_token == "refreshed-token"
-        assert api._refresh_token == "new-refresh"
+        assert api._auth.access_token == "refreshed-token"
+        assert api._auth._refresh_token == "new-refresh"
         await api.async_close()
 
 
@@ -119,11 +119,11 @@ async def test_ensure_token_falls_back_to_password_when_refresh_fails() -> None:
             },
         )
         api = EnkiAPI("user@example.com", "secret")
-        api._access_token = "expired"
-        api._refresh_token = "bad-refresh"
-        api._token_expires_at = time.time() - 10
+        api._auth._access_token = "expired"
+        api._auth._refresh_token = "bad-refresh"
+        api._auth._token_expires_at = time.time() - 10
 
         await api._ensure_token()
 
-        assert api._access_token == "password-token"
+        assert api._auth.access_token == "password-token"
         await api.async_close()

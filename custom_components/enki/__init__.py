@@ -41,6 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnkiConfigEntry) -> bool
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
+    from .telemetry_nudge import async_handle_telemetry_nudge
+
+    await async_handle_telemetry_nudge(hass, entry)
+
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

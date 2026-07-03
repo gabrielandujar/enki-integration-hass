@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .capabilities import EnkiCapabilityProfile
+    from .device_state import EnkiDeviceState
 
 
 @dataclass(slots=True)
@@ -29,6 +33,20 @@ class EnkiDevice:
     def is_active(self) -> bool:
         """Return True when the node is enabled and not deactivated."""
         return self.is_enabled and self.state != "DEACTIVATED"
+
+    @property
+    def profile(self) -> EnkiCapabilityProfile:
+        """Capability snapshot used for platform selection and API probing."""
+        from .capabilities import EnkiCapabilityProfile
+
+        return EnkiCapabilityProfile.from_device(self)
+
+    @property
+    def reported(self) -> EnkiDeviceState:
+        """Typed accessor for live API fields cached on the coordinator."""
+        from .device_state import EnkiDeviceState
+
+        return EnkiDeviceState(self.last_reported_value)
 
 
 @dataclass(slots=True)
