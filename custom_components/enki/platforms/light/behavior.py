@@ -73,9 +73,16 @@ class EnkiLightBehaviorMixin:
         coordinator.update_cached_value(self.node_id, "light_power", "OFF")
         coordinator.update_cached_value(self.node_id, "power", "OFF")
 
-    def _update_light_endpoint_cache(self: EnkiEntity, power: str) -> None:
-        for endpoint_id in self._light_endpoint_ids():
+    def _update_light_endpoint_cache(
+        self: EnkiEntity,
+        power: str,
+        endpoint_id: int | None = None,
+    ) -> None:
+        if endpoint_id is not None:
             self.coordinator.update_endpoint_power(self._device.node_id, endpoint_id, power)
+            return
+        for gang_id in self._light_endpoint_ids():
+            self.coordinator.update_endpoint_power(self._device.node_id, gang_id, power)
 
     @staticmethod
     def _parse_color_temp_values(possible_values: dict[str, Any]) -> list[int]:

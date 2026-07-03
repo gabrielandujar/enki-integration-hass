@@ -65,6 +65,7 @@ async def test_telemetry_notifies_new_profile() -> None:
     ):
         await reporter.async_report([_record()])
         notify.assert_called_once()
+        reporter._store.async_save.assert_awaited()
         message = notify.call_args.kwargs["message"]
         assert "github.com" in message
         assert "equation_radiator" in message

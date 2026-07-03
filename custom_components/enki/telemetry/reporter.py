@@ -55,37 +55,30 @@ class EnkiTelemetryReporter:
                 continue
 
             reported.add(fingerprint)
+            await self._save_reported(reported)
             new_count += 1
-            await self._notify_new_profile(export_dict, fingerprint)
+            self._notify_new_profile(export_dict, fingerprint)
 
         if new_count == 0:
             return
 
-        await self._save_reported(reported)
         LOGGER.info(
             "Notified about %s new Enki device profile(s) (opt-in telemetry)",
             new_count,
         )
 
-    async def _notify_new_profile(self, export_dict: dict[str, Any], fingerprint: str) -> None:
+    def _notify_new_profile(self, export_dict: dict[str, Any], fingerprint: str) -> None:
         device_type = export_dict.get("device_type", "unknown")
-        model = export_dict.get("model") or "inconnu"
+        model = export_dict.get("model") or "unknown"
         issue_url = build_github_new_issue_url(export_dict, fingerprint)
         supported = export_dict.get("supported_by_integration")
-
-        if supported:
-            title = "Enki — nouveau profil d'appareil"
-            message = (
-                f"Profil détecté : **{device_type}** ({model}).\n\n"
-                "Données anonymisées — rien n'est envoyé sans votre action.\n\n"
-                f"[Ouvrir une issue GitHub pré-remplie]({issue_url})"
-            )
-        else:
-            title = "Enki — appareil non supporté"
-            message = (
-                f"Type **{device_type}** ({model}) n'est pas encore géré par l'intégration.\n\n"
-                f"[Proposer le support sur GitHub]({issue_url})"
-            )
+        title, message = _profile_notification_copy(
+            self._hass,
+            device_type=str(device_type),
+            model=str(model),
+            issue_url=issue_url,
+            supported=bool(supported),
+        )
 
         persistent_notification.async_create(
             self._hass,
@@ -110,3 +103,47 @@ class EnkiTelemetryReporter:
         from .. import __version__
 
         return __version__
+
+
+def _profile_notification_copy(
+    hass: HomeAssistant,
+    *,
+    device_type: str,
+    model: str,
+    issue_url: str,
+    supported: bool,
+) -> tuple[str, str]:
+    if hass.config.language.startswith("fr"):
+        if supported:
+            return (
+                "Enki — nouveau profil d'appareil",
+                (
+                    f"Profil détecté : **{device_type}** ({model}).\n\n"
+                    "Données anonymisées — rien n'est envoyé sans votre action.\n\n"
+                    f"[Ouvrir une issue GitHub pré-remplie]({issue_url})"
+                ),
+            )
+        return (
+            "Enki — appareil non supporté",
+            (
+                f"Type **{device_type}** ({model}) n'est pas encore géré par l'intégration.\n\n"
+                f"[Proposer le support sur GitHub]({issue_url})"
+            ),
+        )
+
+    if supported:
+        return (
+            "Enki — new device profile",
+            (
+                f"Profile detected: **{device_type}** ({model}).\n\n"
+                "Anonymized data only — nothing is sent without your action.\n\n"
+                f"[Open a pre-filled GitHub issue]({issue_url})"
+            ),
+        )
+    return (
+        "Enki — unsupported device",
+        (
+            f"Type **{device_type}** ({model}) is not supported by the integration yet.\n\n"
+            f"[Request support on GitHub]({issue_url})"
+        ),
+    )

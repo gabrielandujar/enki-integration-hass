@@ -150,14 +150,17 @@ class EnkiAPI:
         possible_values = device_info.get("possibleValues", {})
         power_production = parse_bff_power(item.get("description"))
 
+        title = item.get("title") or {}
+        device_name = title.get("label") or node_id
+
         skeleton = EnkiDevice(
             home_id=home_id,
             device_id=device_id,
             node_id=node_id,
-            device_name=item["title"]["label"],
+            device_name=device_name,
             device_type=device_type,
-            is_enabled=item["isEnabled"],
-            state=item["state"],
+            is_enabled=item.get("isEnabled", True),
+            state=item.get("state", "ACTIVE"),
             capabilities=capabilities,
             possible_values=possible_values,
             bff_device_type=bff_type,
@@ -187,7 +190,7 @@ class EnkiAPI:
         )
 
         last_reported: dict[str, Any] = {}
-        if item["isEnabled"]:
+        if item.get("isEnabled", True):
             last_reported = await self._refresh_device_state(http, skeleton, node_info)
 
         if not supported:
@@ -203,10 +206,10 @@ class EnkiAPI:
                 home_id=home_id,
                 device_id=device_id,
                 node_id=node_id,
-                device_name=item["title"]["label"],
+                device_name=device_name,
                 device_type=device_type,
-                is_enabled=item["isEnabled"],
-                state=item["state"],
+                is_enabled=item.get("isEnabled", True),
+                state=item.get("state", "ACTIVE"),
                 capabilities=capabilities,
                 possible_values=possible_values,
                 last_reported_value={**node_info, **last_reported},
@@ -307,23 +310,37 @@ class EnkiAPI:
         home_id: str,
         node_id: str,
     ) -> dict[str, Any]:
-        speed_data = await http.airflow_get(home_id, node_id, "check-fan-speed")
-        mode_data = await http.airflow_get(home_id, node_id, "check-airflow-mode")
-        rotation, rotation_supported = await self._read_fan_rotation(http, home_id, node_id)
-        light_state = await http.get_light_state(home_id, node_id)
-        last_reported = light_state.get("lastReportedValue", {})
-        light_power = last_reported.get("power", "OFF")
+        state: dict[str, Any] = {}
 
-        state: dict[str, Any] = {
-            "fan_speed": speed_data["lastReportedValue"],
-            "airflow_mode": mode_data["lastReportedValue"],
-            "airflow_rotation": rotation,
-            "airflow_rotation_supported": rotation_supported,
-            "light_power": light_power,
-            "brightness": last_reported.get("brightness"),
-            "colorTemperature": last_reported.get("colorTemperature"),
-            "power": last_reported.get("power"),
-        }
+        try:
+            speed_data = await http.airflow_get(home_id, node_id, "check-fan-speed")
+            if "lastReportedValue" in speed_data:
+                state["fan_speed"] = speed_data["lastReportedValue"]
+        except EnkiConnectionError as err:
+            LOGGER.debug("Fan speed skipped for node %s: %s", node_id, err)
+
+        try:
+            mode_data = await http.airflow_get(home_id, node_id, "check-airflow-mode")
+            if "lastReportedValue" in mode_data:
+                state["airflow_mode"] = mode_data["lastReportedValue"]
+        except EnkiConnectionError as err:
+            LOGGER.debug("Airflow mode skipped for node %s: %s", node_id, err)
+
+        rotation, rotation_supported = await self._read_fan_rotation(http, home_id, node_id)
+        state["airflow_rotation"] = rotation
+        state["airflow_rotation_supported"] = rotation_supported
+
+        try:
+            light_state = await http.get_light_state(home_id, node_id)
+            last_reported = light_state.get("lastReportedValue", {})
+            if isinstance(last_reported, dict):
+                state["light_power"] = last_reported.get("power", "OFF")
+                state["brightness"] = last_reported.get("brightness")
+                state["colorTemperature"] = last_reported.get("colorTemperature")
+                state["power"] = last_reported.get("power")
+        except EnkiConnectionError as err:
+            LOGGER.debug("Fan light state skipped for node %s: %s", node_id, err)
+
         try:
             power_details = await http.get_electrical_power(home_id, node_id)
             state["electrical_power"] = power_details.get("lastReportedValue")
@@ -415,10 +432,12 @@ class EnkiAPI:
         home_id: str,
         node_id: str,
         value: str,
+        *,
+        endpoint: int | None = None,
     ) -> None:
-        """Switch global electrical power (sockets, outlets without lighting API)."""
+        """Switch electrical power globally or for one BFF endpoint."""
         http = await self._get_http()
-        await http.switch_electrical_power(home_id, node_id, value)
+        await http.switch_electrical_power(home_id, node_id, value, endpoint=endpoint)
 
     async def async_set_fan_rotation(
         self,

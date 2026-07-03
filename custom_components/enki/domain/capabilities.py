@@ -10,6 +10,7 @@ from ..const import (
     DEVICE_TYPE_FANS,
     DEVICE_TYPE_INVERTERS,
     DEVICE_TYPE_LIGHTS,
+    ENKI_ACCESS_MOTORIZATION_API_KEY,
 )
 from .models import EnkiDevice
 
@@ -252,6 +253,8 @@ class EnkiCapabilityProfile:
     @property
     def is_cover(self) -> bool:
         """Roller shutters and similar motorizations (beta)."""
+        if not ENKI_ACCESS_MOTORIZATION_API_KEY:
+            return False
         if self.device_type in {DEVICE_TYPE_ACCESS_MOTORIZATION, "access_and_motorizations"}:
             return self.supports_shutter_position or self.supports_shutter_opening
         return self.supports_shutter_position
