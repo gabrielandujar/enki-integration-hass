@@ -40,17 +40,26 @@ class EnkiTelemetryReporter:
             return
 
         reported = await self._load_reported()
-        integration_version = await self._integration_version()
-        ha_version = self._hass.config.version
+        integration_version = _integration_version()
+        ha_version = _ha_version(self._hass)
 
         new_count = 0
         for record in records:
-            export_dict = profile_to_export_dict(
-                record,
-                integration_version=integration_version,
-                ha_version=ha_version,
-            )
-            fingerprint = profile_fingerprint(export_dict)
+            try:
+                export_dict = profile_to_export_dict(
+                    record,
+                    integration_version=integration_version,
+                    ha_version=ha_version,
+                )
+                fingerprint = profile_fingerprint(export_dict)
+            except (TypeError, ValueError) as err:
+                LOGGER.warning(
+                    "Skipping telemetry for profile %s: %s",
+                    getattr(record, "device_type", "unknown"),
+                    err,
+                )
+                continue
+
             if fingerprint in reported:
                 continue
 
@@ -91,18 +100,26 @@ class EnkiTelemetryReporter:
         if self._reported is not None:
             return self._reported
         data = await self._store.async_load() or {}
-        fingerprints = data.get("fingerprints", [])
-        self._reported = {str(item) for item in fingerprints}
+        fingerprints = data.get("fingerprints") or []
+        if not isinstance(fingerprints, list):
+            fingerprints = []
+        self._reported = {str(item) for item in fingerprints if item}
         return self._reported
 
     async def _save_reported(self, reported: set[str]) -> None:
         self._reported = reported
         await self._store.async_save({"fingerprints": sorted(reported)})
 
-    async def _integration_version(self) -> str:
-        from .. import __version__
 
-        return __version__
+def _integration_version() -> str:
+    from .. import __version__
+
+    return __version__
+
+
+def _ha_version(hass: HomeAssistant) -> str:
+    version = getattr(hass.config, "version", None)
+    return str(version) if version is not None else "unknown"
 
 
 def _profile_notification_copy(
@@ -113,7 +130,8 @@ def _profile_notification_copy(
     issue_url: str,
     supported: bool,
 ) -> tuple[str, str]:
-    if hass.config.language.startswith("fr"):
+    language = getattr(hass.config, "language", None) or "en"
+    if language.startswith("fr"):
         if supported:
             return (
                 "Enki — nouveau profil d'appareil",

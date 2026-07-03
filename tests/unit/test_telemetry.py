@@ -52,17 +52,10 @@ async def test_telemetry_notifies_new_profile() -> None:
     reporter._store.async_load = AsyncMock(return_value={"fingerprints": []})  # type: ignore[method-assign]
     reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
-    version_patch = patch(
-        "enki.telemetry.reporter.EnkiTelemetryReporter._integration_version",
-        AsyncMock(return_value="1.0.7"),
-    )
-    with (
-        patch(
-            "enki.telemetry.reporter.persistent_notification.async_create",
-            new_callable=MagicMock,
-        ) as notify,
-        version_patch,
-    ):
+    with patch(
+        "enki.telemetry.reporter.persistent_notification.async_create",
+        new_callable=MagicMock,
+    ) as notify:
         await reporter.async_report([_record()])
         notify.assert_called_once()
         reporter._store.async_save.assert_awaited()
@@ -83,17 +76,31 @@ async def test_telemetry_dedupes_fingerprint() -> None:
     reporter._store.async_load = AsyncMock(return_value={"fingerprints": []})  # type: ignore[method-assign]
     reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
-    version_patch = patch(
-        "enki.telemetry.reporter.EnkiTelemetryReporter._integration_version",
-        AsyncMock(return_value="1.0.7"),
-    )
-    with (
-        patch(
-            "enki.telemetry.reporter.persistent_notification.async_create",
-            new_callable=MagicMock,
-        ) as notify,
-        version_patch,
-    ):
+    with patch(
+        "enki.telemetry.reporter.persistent_notification.async_create",
+        new_callable=MagicMock,
+    ) as notify:
         await reporter.async_report([_record()])
+        await reporter.async_report([_record()])
+        notify.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_telemetry_tolerates_corrupt_storage() -> None:
+    hass = MagicMock()
+    hass.config.version = "2024.12.0"
+    hass.config.language = "en"
+    entry = MagicMock()
+    entry.entry_id = "entry1"
+    entry.options = {CONF_TELEMETRY: True}
+
+    reporter = EnkiTelemetryReporter(hass, entry)
+    reporter._store.async_load = AsyncMock(return_value={"fingerprints": None})  # type: ignore[method-assign]
+    reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
+
+    with patch(
+        "enki.telemetry.reporter.persistent_notification.async_create",
+        new_callable=MagicMock,
+    ) as notify:
         await reporter.async_report([_record()])
         notify.assert_called_once()
