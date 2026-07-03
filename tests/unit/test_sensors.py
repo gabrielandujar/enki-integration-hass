@@ -49,3 +49,11 @@ def test_battery_health_mapping() -> None:
     assert battery_health_to_percent("GOOD") == 80
     assert battery_health_to_percent("CRITICAL") == 5
     assert battery_health_to_percent("UNKNOWN") is None
+
+
+def test_illuminance_sensor_supported() -> None:
+    device = _device(capabilities=["check_illuminance_level"])
+    profile = device.profile
+    assert profile.supports_illuminance_level is True
+    assert profile.is_environment_sensor is True
+    assert device_is_supported(device) is True

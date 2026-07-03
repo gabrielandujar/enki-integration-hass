@@ -74,9 +74,6 @@
       },
       "light": {
         "name": "Lumière"
-      },
-      "outlet": {
-        "name": "Interrupteur"
       }
     },
     "sensor": {
@@ -91,6 +88,9 @@
       },
       "battery": {
         "name": "Batterie"
+      },
+      "illuminance": {
+        "name": "Luminosité"
       }
     },
     "binary_sensor": {
@@ -114,6 +114,9 @@
       }
     },
     "switch": {
+      "outlet": {
+        "name": "Prise"
+      },
       "vibration_detection": {
         "name": "Détection vibration"
       },

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-# Marques de l'écosystème Enki / Leroy Merlin (catalogue officiel).
-# Beaucoup utilisent Zigbee en radio — ce n'est pas un critère d'exclusion.
+# Enki / Leroy Merlin ecosystem brands (official catalogue).
+# Many use Zigbee radio — that is not an exclusion criterion.
 _ENKI_ECOSYSTEM_MANUFACTURERS = frozenset(
     {
         "adeo",
@@ -22,7 +22,7 @@ _ENKI_ECOSYSTEM_MANUFACTURERS = frozenset(
     }
 )
 
-# Types référentiel réservés au catalogue Enki (fabricant parfois absent côté API).
+# Referentiel types reserved for the Enki catalogue (manufacturer sometimes missing from API).
 _ENKI_NATIVE_DEVICE_TYPES = frozenset(
     {
         "access_and_motorizations",

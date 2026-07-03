@@ -122,6 +122,10 @@ class EnkiDeviceState:
         return _as_float(self._data.get("current_humidity"))
 
     @property
+    def illuminance_level(self) -> float | None:
+        return _as_float(self._data.get("illuminance_level"))
+
+    @property
     def battery_health(self) -> str | None:
         value = self._data.get("battery_health")
         return str(value) if isinstance(value, str) else None

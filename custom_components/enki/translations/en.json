@@ -74,9 +74,6 @@
       },
       "light": {
         "name": "Light"
-      },
-      "outlet": {
-        "name": "Switch"
       }
     },
     "sensor": {
@@ -91,6 +88,9 @@
       },
       "battery": {
         "name": "Battery"
+      },
+      "illuminance": {
+        "name": "Illuminance"
       }
     },
     "binary_sensor": {
@@ -114,6 +114,9 @@
       }
     },
     "switch": {
+      "outlet": {
+        "name": "Outlet"
+      },
       "vibration_detection": {
         "name": "Vibration detection"
       },

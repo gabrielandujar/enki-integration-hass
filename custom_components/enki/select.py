@@ -1,4 +1,4 @@
-"""Select platform for Enki fil pilote (pilot wire) controllers."""
+"""Select platform for Enki pilot wire controllers."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
 
 
 class EnkiPilotWireSelect(EnkiEntity, SelectEntity):
-    """Fil pilote mode selector (Confort, Éco, Hors gel, Off, …)."""
+    """Pilot wire mode selector (Comfort, Eco, Frost, Off, …)."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "pilot_wire"

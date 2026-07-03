@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -47,6 +47,8 @@ def _build_sensor_entities(
         entities.append(EnkiHumiditySensor(coordinator, device))
     if profile.supports_battery_health:
         entities.append(EnkiBatterySensor(coordinator, device))
+    if profile.supports_illuminance_level:
+        entities.append(EnkiIlluminanceSensor(coordinator, device))
 
     return entities
 
@@ -126,3 +128,18 @@ class EnkiBatterySensor(EnkiEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         return battery_health_to_percent(self._device.reported.battery_health)
+
+
+class EnkiIlluminanceSensor(EnkiEntity, SensorEntity):
+    _attr_translation_key = "illuminance"
+    _attr_device_class = SensorDeviceClass.ILLUMINANCE
+    _attr_native_unit_of_measurement = LIGHT_LUX
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator: EnkiCoordinator, device: EnkiDevice) -> None:
+        super().__init__(coordinator, device)
+        self._attr_unique_id = f"{DOMAIN}-{device.node_id}-illuminance"
+
+    @property
+    def native_value(self) -> float | None:
+        return self._device.reported.illuminance_level

@@ -1,10 +1,10 @@
-"""Switch platform for Enki sirens and detector activation toggles."""
+"""Switch platform for Enki outlets, sirens, and detector activation toggles."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,6 +78,38 @@ async def async_setup_entry(
 def _build_switch_entities(
     coordinator: EnkiCoordinator,
     device: EnkiDevice,
+) -> list[SwitchEntity]:
+    entities: list[SwitchEntity] = []
+    entities.extend(_build_outlet_switches(coordinator, device))
+    entities.extend(_build_config_switches(coordinator, device))
+    return entities
+
+
+def _build_outlet_switches(
+    coordinator: EnkiCoordinator,
+    device: EnkiDevice,
+) -> list[EnkiOutletSwitch]:
+    profile = device.profile
+    if not profile.is_outlet:
+        return []
+
+    endpoint_ids = profile.power_switch_endpoints
+    if endpoint_ids:
+        return [
+            EnkiOutletSwitch(
+                coordinator,
+                device,
+                endpoint_id=endpoint_id,
+                suffix=f"outlet_{chr(ord('a') + index)}",
+            )
+            for index, endpoint_id in enumerate(endpoint_ids)
+        ]
+    return [EnkiOutletSwitch(coordinator, device, endpoint_id=None, suffix="outlet")]
+
+
+def _build_config_switches(
+    coordinator: EnkiCoordinator,
+    device: EnkiDevice,
 ) -> list[EnkiConfigSwitch]:
     profile = device.profile
     if not profile.is_config_switch:
@@ -104,6 +136,60 @@ def _build_switch_entities(
             )
         )
     return entities
+
+
+class EnkiOutletSwitch(EnkiEntity, SwitchEntity):
+    """Power outlet or relay controlled via api-enki-power-prod."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "outlet"
+    _attr_device_class = SwitchDeviceClass.OUTLET
+
+    def __init__(
+        self,
+        coordinator: EnkiCoordinator,
+        device: EnkiDevice,
+        *,
+        endpoint_id: int | None,
+        suffix: str,
+    ) -> None:
+        super().__init__(coordinator, device)
+        self._endpoint_id = endpoint_id
+        self._attr_unique_id = f"{DOMAIN}-{device.node_id}-{suffix}"
+
+    @property
+    def is_on(self) -> bool | None:
+        reported = self._device.reported
+        if self._endpoint_id is not None:
+            power = reported.endpoint_power(self._endpoint_id)
+            if power is None:
+                return None
+            return power == "ON"
+        if reported.global_power is not None:
+            return reported.global_power == "ON"
+        if reported.electrical_power is not None:
+            return reported.electrical_power == "ON"
+        return None
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._set_power("ON")
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._set_power("OFF")
+
+    async def _set_power(self, power: str) -> None:
+        node_id = self._device.node_id
+        await self.coordinator.api.async_switch_electrical_power(
+            self._device.home_id,
+            node_id,
+            power,
+            endpoint=self._endpoint_id,
+        )
+        if self._endpoint_id is not None:
+            self.coordinator.update_endpoint_power(node_id, self._endpoint_id, power)
+            return
+        self.coordinator.update_cached_value(node_id, "electrical_power", power)
+        self.coordinator.update_cached_value(node_id, "power", power)
 
 
 class EnkiConfigSwitch(EnkiEntity, SwitchEntity):

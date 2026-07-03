@@ -11,6 +11,7 @@ from ..const import (
     DEVICE_TYPE_INVERTERS,
     DEVICE_TYPE_LIGHTS,
     ENKI_ACCESS_MOTORIZATION_API_KEY,
+    FAN_ENDPOINT,
 )
 from .models import EnkiDevice
 
@@ -162,6 +163,14 @@ class EnkiCapabilityProfile:
             self.capabilities,
             self.possible_values,
             "check_battery_health",
+        )
+
+    @property
+    def supports_illuminance_level(self) -> bool:
+        return _supports(
+            self.capabilities,
+            self.possible_values,
+            "check_illuminance_level",
         )
 
     @property
@@ -317,12 +326,19 @@ class EnkiCapabilityProfile:
 
     @property
     def is_light_controllable(self) -> bool:
-        """Lights, dimmers, fan kits, and power-only outlets."""
+        """Lights, dimmers, and fan kits (not power-only outlets)."""
         if self.device_type == DEVICE_TYPE_LIGHTS:
             return True
         if self.is_fan:
             return self.supports_light_state
+        if self.uses_power_api_only:
+            return False
         return self.supports_light_state or self.supports_electrical_power
+
+    @property
+    def is_outlet(self) -> bool:
+        """Power-only switches and outlets (Edisio, Equation relays, …)."""
+        return self.uses_power_api_only
 
     @property
     def is_inverter(self) -> bool:
@@ -342,13 +358,18 @@ class EnkiCapabilityProfile:
 
     @property
     def is_environment_sensor(self) -> bool:
-        """Temperature, humidity, or battery level sensors (not thermostats)."""
+        """Temperature, humidity, illuminance, or battery level sensors (not thermostats)."""
         if self.supports_thermostat:
-            return self.supports_current_humidity or self.supports_battery_health
+            return (
+                self.supports_current_humidity
+                or self.supports_battery_health
+                or self.supports_illuminance_level
+            )
         return (
             self.supports_current_temperature
             or self.supports_current_humidity
             or self.supports_battery_health
+            or self.supports_illuminance_level
         )
 
     @property
@@ -370,7 +391,7 @@ class EnkiCapabilityProfile:
 
     @property
     def is_pilot_wire(self) -> bool:
-        """Fil pilote controllers (Confort / Éco / Off)."""
+        """Pilot wire controllers (Comfort / Eco / Off)."""
         return self.supports_pilot_wire
 
     @property
@@ -389,6 +410,7 @@ class EnkiCapabilityProfile:
         return (
             self.is_fan
             or self.is_light_controllable
+            or self.is_outlet
             or self.is_inverter
             or self.is_cover
             or self.is_environment_sensor
@@ -424,6 +446,13 @@ class EnkiCapabilityProfile:
         if self.main_change_capability_id != "switch_electrical_power":
             return []
         return list(self.main_change_capability_endpoints)
+
+    @property
+    def fan_light_endpoints(self) -> list[int]:
+        """Light kit endpoints on ceiling fans (excludes the motor endpoint)."""
+        if self.device_type != DEVICE_TYPE_FANS and not self.is_fan:
+            return []
+        return [endpoint for endpoint in self.power_switch_endpoints if endpoint != FAN_ENDPOINT]
 
 
 # --- Backward-compatible module functions (used by tests and legacy imports) ---
@@ -515,3 +544,7 @@ def fan_max_speed(device: EnkiDevice) -> int | None:
 
 def main_change_capability_endpoints(device: EnkiDevice) -> list[int]:
     return device.profile.power_switch_endpoints
+
+
+def fan_light_endpoints(device: EnkiDevice) -> list[int]:
+    return device.profile.fan_light_endpoints

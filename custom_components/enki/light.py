@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.light import ATTR_HS_COLOR, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_HS_COLOR,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.components.light.const import DEFAULT_MAX_KELVIN, DEFAULT_MIN_KELVIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -39,6 +45,17 @@ def _build_light_entities(
         return []
 
     if profile.is_fan:
+        light_endpoints = profile.fan_light_endpoints
+        if len(light_endpoints) > 1:
+            return [
+                EnkiFanLightEntity(
+                    coordinator,
+                    device,
+                    endpoint_id=endpoint_id,
+                    suffix=f"light_{chr(ord('a') + index)}",
+                )
+                for index, endpoint_id in enumerate(light_endpoints)
+            ]
         return [EnkiFanLightEntity(coordinator, device)]
 
     endpoint_ids = profile.power_switch_endpoints
@@ -53,8 +70,7 @@ def _build_light_entities(
             for index, endpoint_id in enumerate(endpoint_ids)
         ]
 
-    translation_key = "outlet" if profile.uses_power_api_only else "light"
-    return [EnkiLightEntity(coordinator, device, suffix="light", translation_key=translation_key)]
+    return [EnkiLightEntity(coordinator, device, suffix="light")]
 
 
 class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
@@ -68,15 +84,26 @@ class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
     _brightness_max = 100
     _color_temp_values: list[int] = []
 
-    def __init__(self, coordinator: EnkiCoordinator, device: EnkiDevice) -> None:
+    def __init__(
+        self,
+        coordinator: EnkiCoordinator,
+        device: EnkiDevice,
+        *,
+        endpoint_id: int | None = None,
+        suffix: str = "light",
+    ) -> None:
         super().__init__(coordinator, device)
-        self._attr_unique_id = f"{DOMAIN}-{device.node_id}-light"
+        self._endpoint_id = endpoint_id
+        self._attr_unique_id = f"{DOMAIN}-{device.node_id}-{suffix}"
         possible = device.profile.possible_values
         self._brightness_max = self._parse_brightness_max(possible)
         self._color_temp_values = self._parse_color_temp_values(possible)
 
     @property
     def is_on(self) -> bool:
+        if self._endpoint_id is not None:
+            power = self._device.reported.endpoint_power(self._endpoint_id)
+            return power == "ON" if power is not None else False
         return self._device.reported.light_power == "ON"
 
     @property
@@ -90,6 +117,14 @@ class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
         return int(raw.strip("TK")) if raw else None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        if (
+            self._endpoint_id is not None
+            and self._uses_endpoint_power(self._endpoint_id)
+            and self._simple_light_turn_on(kwargs)
+        ):
+            await self._switch_endpoint_power(self._endpoint_id, "ON")
+            return
+
         await self._mixed_endpoint_workaround()
         changes = self._build_turn_on_changes(kwargs, restore_last_brightness=True)
         await self.coordinator.api.async_change_light_state(
@@ -98,6 +133,7 @@ class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             changes,
         )
         self._cache_global_light_on(self.coordinator)
+        self._update_light_endpoint_cache("ON", self._endpoint_id)
         if "brightness" in changes:
             self.coordinator.update_cached_value(self.node_id, "brightness", changes["brightness"])
         if "colorTemperature" in changes:
@@ -108,16 +144,21 @@ class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        if self._endpoint_id is not None and self._uses_endpoint_power(self._endpoint_id):
+            await self._switch_endpoint_power(self._endpoint_id, "OFF")
+            return
+
         await self.coordinator.api.async_change_light_state(
             self._device.home_id,
             self._device.node_id,
             {"power": "OFF"},
         )
         self._cache_global_light_off(self.coordinator)
+        self._update_light_endpoint_cache("OFF", self._endpoint_id)
 
 
 class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
-    """Standard Enki light, dimmer, or switch/outlet node."""
+    """Standard Enki light or dimmer node."""
 
     _attr_translation_key = "light"
     _brightness_max = 100
@@ -239,6 +280,15 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             self._cache_electrical_power("ON")
             return
 
+        if (
+            self._endpoint_id is not None
+            and self._uses_endpoint_power(self._endpoint_id)
+            and self._simple_light_turn_on(kwargs)
+            and ATTR_HS_COLOR not in kwargs
+        ):
+            await self._switch_endpoint_power(self._endpoint_id, "ON")
+            return
+
         if ATTR_HS_COLOR in kwargs:
             hue, saturation = hs_to_enki(*kwargs[ATTR_HS_COLOR])
             await self.coordinator.api.async_change_light_color(home_id, node_id, hue, saturation)
@@ -277,6 +327,10 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
                 endpoint=self._endpoint_id,
             )
             self._cache_electrical_power("OFF")
+            return
+
+        if self._endpoint_id is not None and self._uses_endpoint_power(self._endpoint_id):
+            await self._switch_endpoint_power(self._endpoint_id, "OFF")
             return
 
         await self.coordinator.api.async_change_light_state(

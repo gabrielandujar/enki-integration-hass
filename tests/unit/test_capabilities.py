@@ -57,7 +57,9 @@ def test_device_uses_power_api_only() -> None:
         capabilities=["switch_electrical_power", "check_electrical_power"],
     )
     assert device_uses_power_api_only(device) is True
-    assert is_light_controllable(device) is True
+    assert device.profile.is_outlet is True
+    assert is_light_controllable(device) is False
+    assert device_is_supported(device) is True
 
 
 def test_main_change_capability_endpoints() -> None:
@@ -66,6 +68,18 @@ def test_main_change_capability_endpoints() -> None:
         main_change_capability_endpoints=[2, 3],
     )
     assert main_change_capability_endpoints(device) == [2, 3]
+
+
+def test_fan_light_endpoints_excludes_motor() -> None:
+    from enki.domain.capabilities import fan_light_endpoints
+
+    device = _device(
+        device_type="ceiling_fans",
+        capabilities=["change_fan_speed", "change_light_state"],
+        main_change_capability_id="switch_electrical_power",
+        main_change_capability_endpoints=[1, 2, 3],
+    )
+    assert fan_light_endpoints(device) == [2, 3]
 
 
 def test_fan_max_speed_from_metadata() -> None:

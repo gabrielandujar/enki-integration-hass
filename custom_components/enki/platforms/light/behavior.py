@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP_KELVIN
 
+from ...const import FAN_ENDPOINT
 from ...coordinator import EnkiCoordinator
 from ...entity import EnkiEntity
 
@@ -25,7 +26,31 @@ class EnkiLightBehaviorMixin:
         return f"T{best}K"
 
     def _light_endpoint_ids(self: EnkiEntity) -> list[int]:
-        return self._device.profile.power_switch_endpoints
+        profile = self._device.profile
+        if profile.is_fan:
+            return profile.fan_light_endpoints
+        return profile.power_switch_endpoints
+
+    def _uses_endpoint_power(self: EnkiEntity, endpoint_id: int | None) -> bool:
+        """True when simple on/off should use per-endpoint power API."""
+        if endpoint_id is None or endpoint_id == FAN_ENDPOINT:
+            return False
+        profile = self._device.profile
+        if profile.is_fan:
+            return endpoint_id in profile.fan_light_endpoints
+        return len(profile.power_switch_endpoints) > 1
+
+    def _simple_light_turn_on(self, kwargs: dict[str, Any]) -> bool:
+        return ATTR_BRIGHTNESS not in kwargs and ATTR_COLOR_TEMP_KELVIN not in kwargs
+
+    async def _switch_endpoint_power(self: EnkiEntity, endpoint_id: int, power: str) -> None:
+        await self.coordinator.api.async_switch_electrical_power(
+            self._device.home_id,
+            self._device.node_id,
+            power,
+            endpoint=endpoint_id,
+        )
+        self.coordinator.update_endpoint_power(self._device.node_id, endpoint_id, power)
 
     def _light_endpoints_have_mixed_power(self: EnkiEntity) -> bool:
         return self._device.reported.light_endpoints_have_mixed_power(self._light_endpoint_ids())

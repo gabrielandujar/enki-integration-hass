@@ -84,10 +84,16 @@ class EnkiThermostatClimate(EnkiEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         if hvac_mode == HVACMode.OFF:
-            await self.async_set_temperature(self._off_temperature)
-        elif hvac_mode == HVACMode.HEAT and self.target_temperature is None:
-            default_target = min(self._attr_max_temp, self._off_temperature + 1)
-            await self.async_set_temperature(default_target)
+            await self.async_set_temperature(**{ATTR_TEMPERATURE: self._off_temperature})
+            return
+        if hvac_mode != HVACMode.HEAT:
+            return
+        target = self.target_temperature
+        if target is not None and target > self._off_temperature:
+            return
+        step = self._attr_target_temperature_step or 1.0
+        default_target = min(float(self._attr_max_temp), self._off_temperature + step)
+        await self.async_set_temperature(**{ATTR_TEMPERATURE: default_target})
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         temperature = kwargs.get(ATTR_TEMPERATURE)

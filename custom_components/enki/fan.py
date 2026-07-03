@@ -116,7 +116,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
 
     @property
     def current_direction(self) -> str | None:
-        """forward = été (brise descendante), reverse = hiver (déstratification)."""
+        """forward = summer (downward breeze), reverse = winter (destratification)."""
         return self._device.reported.airflow_rotation
 
     async def async_set_direction(self, direction: str) -> None:
