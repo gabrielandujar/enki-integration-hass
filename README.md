@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="custom_components/enki/brand/icon.png" alt="Enki" width="128" height="128">
+  <img src="https://raw.githubusercontent.com/cyrilcolinet/enki-integration-hass/main/custom_components/enki/brand/icon.png" alt="Enki" width="128" height="128">
 </p>
 
 <h1 align="center">Enki pour Home Assistant</h1>
