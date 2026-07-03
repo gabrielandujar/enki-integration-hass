@@ -32,6 +32,12 @@ La CI fait la même chose + Hassfest + HACS.
 
 Imports publics via les `__init__.py` de chaque package (`from enki.api import EnkiAPI`, etc.).
 
+## Langue
+
+- **Code Python** (commentaires, docstrings, noms de symboles) : **anglais**
+- **Documentation Markdown** (`README.md`, `docs/`, `CONTRIBUTING.md`, …) : **français**
+- **Textes utilisateur Home Assistant** (notifications, config flow, traductions `strings.json`) : **français** (fichiers de traduction HA)
+
 ## Pull requests
 
 - Une PR = un sujet
