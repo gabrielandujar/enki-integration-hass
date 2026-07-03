@@ -23,14 +23,38 @@ Sans compte Enki ni matériel :
 pytest tests/unit -v
 ```
 
-(87 tests au compteur actuel sur la branche de dev.)
-
 ## Lint et format
 
 ```bash
 ruff check .
 ruff format --check .   # ou ruff format . pour corriger
 ```
+
+## Scripts locaux (hors Home Assistant)
+
+Les scripts dans `scripts/` s’exécutent **sur votre machine de dev**, pas dans le conteneur HA. Ils parlent directement à l’API Enki cloud (ou analysent un APK). Home Assistant n’a pas besoin d’être installé — seulement Python 3 et `pip install -r requirements-dev.txt`.
+
+| Script | Usage |
+|--------|--------|
+| `scripts/fetch_gateway_keys.py` | Vérifie le login et lit `mobile-config` `/settings` (pas les clés gateway) |
+| `scripts/extract_gateway_keys.py` | Extrait les clés gateway depuis un APK (jadx + DI module) ; `--apply` met à jour `const.py` |
+| `scripts/discover_devices.py` | Exporte les profils appareils anonymisés du compte |
+
+```bash
+source .venv/bin/activate
+python3 scripts/fetch_gateway_keys.py
+python3 scripts/extract_gateway_keys.py chemin/vers/enki.apk
+python3 scripts/extract_gateway_keys.py chemin/vers/enki.apk --apply --update-known
+python3 scripts/discover_devices.py votre@email.com 'mot-de-passe'
+```
+
+Les clés gateway sont embarquées dans l’APK (une par micro-service). Utiliser `extract_gateway_keys.py --apply` après chaque mise à jour de l’app Enki.
+
+## Langue du dépôt
+
+- **Code Python** (commentaires, docstrings) : anglais — voir [CONTRIBUTING.md](../CONTRIBUTING.md#langue)
+- **Markdown** (`docs/`, `README.md`, …) : français
+- **UI Home Assistant** (`strings.json`, traductions) : français
 
 ## Tests sur l’API réelle (optionnel)
 
@@ -102,9 +126,11 @@ custom_components/enki/
 ├── const.py, exceptions.py, strings.json, translations/, brand/
 │
 ├── api/                    # couche cloud
-│   ├── client.py           # discovery + commandes REST
+│   ├── client.py           # discovery + REST commands
 │   ├── auth.py             # OAuth Keycloak
-│   └── transport.py        # HTTP par micro-service
+│   ├── transport.py        # HTTP per micro-service
+│   ├── gateway_registry.py # APK micro-service catalogue
+│   └── gateway_keys.py     # runtime key store + mobile-config settings path
 │
 ├── domain/                 # modèle métier (sans import HA)
 │   ├── models.py, capabilities.py, state.py, profile.py

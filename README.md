@@ -1,7 +1,6 @@
 # Enki pour Home Assistant
 
 [![CI](https://github.com/cyrilcolinet/enki-integration-hass/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrilcolinet/enki-integration-hass/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/cyrilcolinet/enki-integration-hass?label=release)](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest)
 [![License: MIT](https://img.shields.io/github/license/cyrilcolinet/enki-integration-hass)](LICENSE)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.12+-41BDF5?logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
@@ -11,15 +10,13 @@ Contrôlez vos appareils **Enki** (Leroy Merlin) depuis Home Assistant.
 
 Mêmes identifiants que l’**application mobile Enki**. La box Enki doit déjà fonctionner avec l’app — rien à configurer de plus côté HA.
 
-**Liens rapides :** [Installation HACS](#installation-avec-hacs) · [Appareils supportés](docs/SUPPORTED_DEVICES.md) · [Feuille de route (tableau)](docs/ROADMAP.md) · [Dernière release](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) · [Signaler un bug](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) · [Contribuer](CONTRIBUTING.md)
+**Liens rapides :** [Installation HACS](#installation-avec-hacs) · [Appareils supportés](docs/SUPPORTED_DEVICES.md) · [Feuille de route](docs/ROADMAP.md) · [Releases](https://github.com/cyrilcolinet/enki-integration-hass/releases) · [Signaler un bug](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) · [Contribuer](CONTRIBUTING.md)
 
 ## Feuille de route
 
-Dernière release GitHub : **[v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest)** — version du dépôt (`manifest.json`) : **1.5.0** (prochaine release).
+État détaillé et historique des versions : [docs/ROADMAP.md](docs/ROADMAP.md).
 
-**Non publié dans v1.3.3 :** couleur RGB (HS) — sur `main` (1.4.1). Chauffage / fuite / filtre fabricant Enki — sur cette branche (1.5.0).
-
-### ✅ Supporté
+### Supporté
 
 - **Ventilateurs Inspire** (Siroco+, Cadix, …) — ventilateur, lumière kit, vitesse, sens, modes (selon référentiel)
 - **Luminaires Enki** (Eglo, Lexman, …) — ON/OFF, luminosité, blanc variable, couleur RGB (HS) si `change_hue` + `change_saturation`
@@ -30,27 +27,27 @@ Dernière release GitHub : **[v1.3.3](https://github.com/cyrilcolinet/enki-integ
 - **Sirènes Lexman** — `switch` ON/OFF
 - **Relais ON/OFF Equation** — ON/OFF (comme prises Edisio)
 
-### 🔬 Beta
+### Beta
 
-- **Volets roulants** (Evology, Nodon, …) — code `cover` présent ; **aucune entité** tant que `ENKI_ACCESS_MOTORIZATION_API_KEY` est vide dans `const.py`
-- **Détecteur fuite Lexman** (v1.5.0+) — entités créées ; **batterie OK**, état fuite inactif sans `ENKI_WATER_SENSOR_API_KEY`
-- **Fil pilote Equation** (v1.5.0+) — entité `select` ; inactive sans `ENKI_HEATING_API_KEY`
-- **Radiateur Noirot** (v1.5.0+) — `climate` + fenêtre / présence ; inactive sans `ENKI_HEATING_API_KEY`
+- **Volets roulants** (Evology, Nodon, …) — `cover` « Volet (beta) », API `api-enki-rolling-prod`
+- **Détecteur fuite Lexman** — `binary_sensor` + batterie
+- **Fil pilote Equation** — entité `select` (modes confort / éco / hors gel)
+- **Radiateur Noirot** — `climate` + détection fenêtre / présence
 
-### 🔜 Bientôt
+### Bientôt
 
 - **Radiateurs ACOVA ARLAN** — allowlist fabricant OK, pas de matériel de test
 - **Scénarios Enki** (« Ouvrir Salon », …)
 
-### ⏳ Pas prévu
+### Pas prévu
 
 - **Alarme Enki** — pas d’API identifiée
 
 ### Publication
 
-- **Store HACS global** — prérequis OK (CI HACS + Hassfest, releases) ; [PR `hacs/default` à ouvrir](docs/HACS.md#store-hacs-par-défaut)
+- **Store HACS global** — voir [docs/HACS.md](docs/HACS.md#store-hacs-par-défaut)
 
-Détail par appareil : [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) · Vue tableau : [docs/ROADMAP.md](docs/ROADMAP.md)
+Détail par appareil : [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md)
 
 **Hors périmètre :** Zigbee tiers appairé sur la box (Sonoff, Tuya, Aqara, IKEA, …) → [Zigbee2MQTT](https://www.zigbee2mqtt.io/) ou ZHA. Seules les marques **Enki / Leroy Merlin** listées dans [`lib/enki_scope.py`](custom_components/enki/lib/enki_scope.py) sont importées.
 
@@ -63,10 +60,9 @@ Détail par appareil : [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) ·
 
 ## Installation avec HACS
 
-**Aujourd’hui :** dépôt custom (ci-dessous) ou badge **Open in HACS** en haut de page.  
-**Store HACS par défaut :** le dépôt remplit les prérequis (CI HACS + Hassfest, `hacs.json`, releases) — voir [docs/HACS.md](docs/HACS.md#store-hacs-par-défaut).
+Dépôt custom ou badge **Open in HACS** en haut de page. Store HACS par défaut : [docs/HACS.md](docs/HACS.md#store-hacs-par-défaut).
 
-### Dépôt custom (méthode actuelle)
+### Dépôt custom
 
 1. Ouvrez **HACS** → **Intégrations**
 2. Menu **⋮** (en haut à droite) → **Dépôts personnalisés**
@@ -92,22 +88,25 @@ Vous pouvez aussi cliquer sur le badge **Open in HACS** en haut de cette page.
 
 - **Intervalle de rafraîchissement** — fréquence de mise à jour depuis le cloud (défaut : 30 s)
 - **Télémétrie (opt-in)** — notification pour appareils inconnus ; lien GitHub pré-rempli, rien n’est envoyé sans votre clic
+- **Notifications opérationnelles** — alerte persistante en cas d’échec de connexion, clé API obsolète (403) ou cloud inaccessible
 
 Pour **changer le mot de passe** : même menu → **Reconfigurer**.
 
 ## Problèmes fréquents
 
-**« Identifiants invalides »** — Vérifiez e-mail et mot de passe sur l’app Enki.
+**« Identifiants invalides »** — Vérifiez e-mail et mot de passe sur l’app Enki. Une notification persistante propose de reconfigurer l’intégration.
+
+**HTTP 403 / appareils beta inactifs** — Les clés gateway peuvent être obsolètes après une mise à jour de l’app Enki. Voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (`extract_gateway_keys.py`).
 
 **Aucun appareil détecté** — L’appareil doit être actif dans l’app (même foyer).
 
 **Erreur dans les journaux** — Redémarrez HA après une mise à jour HACS ; vérifiez que la box Enki est en ligne.
 
-Bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) avec version HA, version intégration et logs `enki`.
+Bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml) avec version HA, version de l’intégration (HACS ou release GitHub) et logs `enki`.
 
 ## Installation manuelle (sans HACS)
 
-1. Téléchargez ce dépôt (ou la dernière [release](https://github.com/cyrilcolinet/enki-integration-hass/releases))
+1. Téléchargez ce dépôt ou une [release](https://github.com/cyrilcolinet/enki-integration-hass/releases) sur GitHub
 2. Copiez `custom_components/enki/` dans `config/custom_components/`
 3. Redémarrez Home Assistant
 4. Ajoutez l’intégration comme ci-dessus
@@ -115,7 +114,7 @@ Bug : [ouvrir une issue](https://github.com/cyrilcolinet/enki-integration-hass/i
 ## Aide et ressources
 
 - 📋 [Appareils supportés (détail)](docs/SUPPORTED_DEVICES.md)
-- 🗺️ [Feuille de route (tableau)](docs/ROADMAP.md)
+- 🗺️ [Feuille de route](docs/ROADMAP.md)
 - 🔬 [Volets beta — guide testeur](docs/SUPPORTED_DEVICES.md#volets-roulants--beta-evology-nodon-)
 - 📦 [Releases et changelog](https://github.com/cyrilcolinet/enki-integration-hass/releases)
 - 🐛 [Signaler un bug](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=bug.yml)

@@ -103,7 +103,7 @@ Thermomètres **Sedea** (écran) : température, humidité, batterie.
 | Capabilité | Service | Statut actuel |
 |------------|---------|---------------|
 | `check_battery_health` | `battery-health` | ✅ clé connue |
-| `check_water_sensor_state` | `water-sensor` | 🔬 clé `ENKI_WATER_SENSOR_API_KEY` vide — entité créée, état fuite absent |
+| `check_water_sensor_state` | `water-leak-detector` | ✅ clé APK 2.25.1 |
 
 ## Chauffage — beta (v1.5.0+)
 
@@ -112,7 +112,7 @@ Thermomètres **Sedea** (écran) : température, humidité, batterie.
 | Fil pilote Equation | `select` (COMFORT, ECO, FROST_PROTECTION, OFF, …) | [63a054c81a423d4a245a877e.json](./devices/63a054c81a423d4a245a877e.json) |
 | Radiateur Noirot | `climate`, `binary_sensor` (fenêtre, présence), `switch` (modes détection) | [67a4b12bae1eca4709a45680.json](./devices/67a4b12bae1eca4709a45680.json) |
 
-**Clé API :** `ENKI_HEATING_API_KEY` dans `const.py` (vide aujourd’hui). Sans clé : entités visibles, lectures ignorées, commandes refusées avec message explicite. Capture : [API.md](API.md#heating-and-water-sensors-v150).
+**Clés API :** remplies depuis l’APK Enki 2.25.1 (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY`). Mise à jour : [DEVELOPMENT.md](DEVELOPMENT.md) · détail API : [API.md](API.md#heating-and-water-sensors-manifest--150).
 
 Catalogue JSON : [docs/devices/README.md](./devices/README.md)
 
@@ -125,32 +125,29 @@ Catalogue JSON : [docs/devices/README.md](./devices/README.md)
 | Ouverture / fermeture | Commandes cover HA |
 | Position | 0–100 % via `change-shutter-position` |
 
-**État actuel :** `ENKI_ACCESS_MOTORIZATION_API_KEY` est **vide** dans `const.py`. Tant qu’elle l’est, les volets **ne sont pas importés** (`is_cover` = false) : ni entité cover, ni appareil dans HA. Le code existe (`cover.py`, `lib/shutter.py`) et s’activera dès qu’une release inclura la clé.
+**État actuel :** clé `ENKI_ACCESS_MOTORIZATION_API_KEY` incluse (APK 2.25.1). Micro-service : `api-enki-rolling-prod` (plus `access-and-motorizations`). Entité **« Volet (beta) »** si le volet est actif dans l’app Enki.
 
 Retours contributeurs réseau : [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md).
 
 ### Pour les testeurs (volets)
 
-**Aujourd’hui**, sans clé API motorisation publiée, vous **ne verrez pas** de volet dans Home Assistant — c’est attendu.
-
-Quand une release inclura `ENKI_ACCESS_MOTORIZATION_API_KEY` :
-
-1. Mettre à jour l’intégration Enki (**v1.3.3+** minimum, ou la release qui annonce la clé) via HACS, puis redémarrer Home Assistant.
+1. Mettre à jour l’intégration Enki (**v1.5.0+**) via HACS, puis redémarrer Home Assistant.
 2. Vérifier l’entité **« Volet (beta) »** sous Enki.
 3. Tester ouvrir / fermer / positionner vs l’app mobile Enki.
 4. Remonter le résultat (modèle, version HA, version intégration, extrait journaux `enki` si échec).
 
 ## Fonctionnalités transverses
 
-- **Auth OAuth** — refresh token Keycloak
+- **Auth OAuth** — refresh token Keycloak ; notification HA si identifiants invalides
 - **Télémétrie opt-in** — notification pour profils inconnus, lien GitHub pré-rempli (rien n’est envoyé sans clic)
+- **Notifications opérationnelles** — échec login, clé gateway 403, cloud inaccessible ([API.md](API.md#operational-notifications))
 - **Diagnostics** — export JSON anonymisé depuis l’UI Enki
 
 ## En cours / non supporté
 
 | Statut | Sujet |
 |--------|--------|
-| Beta (clé manquante) | Volets, chauffage, fuite d’eau (voir ci-dessus) |
+| Beta | Volets, chauffage, fuite d’eau — clés APK 2.25.1, retours bienvenus |
 | Bientôt | Radiateurs ACOVA ARLAN (même API heating si capabilities compatibles) |
 | Bientôt | Scénarios Enki |
 | Non planifié | Alarme Enki (pas d’API identifiée) |

@@ -6,7 +6,9 @@ Ce document s’adresse aux **personnes à l’aise avec le réseau / le déboga
 
 L’app mobile Enki envoie, avec chaque requête cloud, un en-tête **`X-Gateway-APIKey`** propre au micro-service (ventilateurs, lumières, volets, etc.). L’intégration Home Assistant embarque ces clés dans `custom_components/enki/const.py`.
 
-Pour les **volets** (`api-enki-access-and-motorizations-prod`), la clé **`ENKI_ACCESS_MOTORIZATION_API_KEY`** n’est pas encore connue publiquement. Tant qu’elle est vide dans `const.py`, l’intégration **n’importe pas** les volets (`is_cover` retourne false) : aucune entité « Volet (beta) » dans Home Assistant.
+Pour les **volets** (`api-enki-rolling-prod`, APK ≥ 2.25.1), la clé **`ENKI_ACCESS_MOTORIZATION_API_KEY`** est incluse dans `const.py` (extraite de l’APK Enki 2.25.1). L’ancien micro-service `api-enki-access-and-motorizations-prod` n’est plus utilisé.
+
+**mitmproxy** reste utile pour **valider** une clé ou en capturer une nouvelle après une mise à jour de l’app — voir ci-dessous.
 
 **Ce n’est pas :**
 
@@ -21,7 +23,7 @@ Pour les **volets** (`api-enki-access-and-motorizations-prod`), la clé **`ENKI_
 Lors d’un contrôle de volet dans l’app Enki, repérer une requête HTTP vers :
 
 ```text
-…/api-enki-access-and-motorizations-prod/v1/access-and-motorizations/…
+…/api-enki-rolling-prod/v1/shutter/{nodeId}/…
 ```
 
 Copier la valeur de l’en-tête :

@@ -17,7 +17,7 @@ Every microservice call sends:
 - `X-Gateway-APIKey: <service-specific key>`
 - `homeId: <uuid>` when the node belongs to a home
 
-Gateway keys are bundled in `custom_components/enki/const.py`. They can change when the mobile app updates; capture fresh keys with mitmproxy if requests start failing with `401`/`403`.
+Gateway keys are bundled in `custom_components/enki/const.py`. They are **embedded in the Enki mobile APK** (one key per micro-service), not fetched from a central API. Refresh them after an app update with `scripts/extract_gateway_keys.py` (see [DEVELOPMENT.md](DEVELOPMENT.md)). Requests failing with `401`/`403` usually mean outdated credentials or gateway keys — Home Assistant shows a **persistent notification** with guidance.
 
 ## Discovery flow
 
@@ -50,10 +50,10 @@ Detection is **capability-based** (referentiel metadata + BFF dashboard), not li
 | `lights` (+ light capabilities) | `light` | `api-enki-lighting-prod` |
 | Switches / outlets (Edisio, …) | `light` (ON/OFF) | `api-enki-power-prod` (`switch-electrical-power`) |
 | `inverters` (Envertech-Lexman solar) | `sensor` (power W) | BFF dashboard `description.value` |
-| `access_and_motorizations` (Evology, Nodon, …) | `cover` (beta) | `api-enki-access-and-motorizations-prod` — **skipped** if `ENKI_ACCESS_MOTORIZATION_API_KEY` is empty |
+| `access_and_motorizations` (Evology, Nodon, …) | `cover` (beta) | `api-enki-rolling-prod` — `shutter/{nodeId}/…` (APK ≥ 2.25.1) |
 | `sensors` (motion, contact, temperature, …) | `binary_sensor`, `sensor`, `switch`, `number` | presence, contact, temperature-humidity, battery-health, siren micro-services |
 | Heating / pilot wire / thermostat | `select`, `climate`, `switch`, `binary_sensor` | `api-enki-heating-prod` — reads skipped / writes fail if `ENKI_HEATING_API_KEY` is empty |
-| Water leak sensors | `binary_sensor`, `sensor` (battery) | `api-enki-water-sensor-prod` + `api-enki-battery-health-prod` — leak read skipped if `ENKI_WATER_SENSOR_API_KEY` is empty |
+| Water leak sensors | `binary_sensor`, `sensor` (battery) | `api-enki-water-leak-detector-prod` + `api-enki-battery-health-prod` |
 
 Sensor capability paths follow the same pattern as [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki): `GET/POST …/v1/sensors/{node_id}/{kebab-case-capability}` (siren uses `/v1/siren/`).
 
@@ -83,7 +83,7 @@ Fan motor and light kit are **independent** (turning the fan on does not switch 
 
 ### Roller shutters (Evology SIN2RS1, …) — beta
 
-**Base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-access-and-motorizations-prod/v1/`
+**Base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-rolling-prod/v1/shutter/{nodeId}/`
 
 | Field | Endpoint | Notes |
 |-------|----------|-------|
@@ -94,7 +94,7 @@ Commands:
 
 - `POST …/change-shutter-position` — body `{"value": <0-100>}`, expect `202` or `204`
 
-Gateway key: `ENKI_ACCESS_MOTORIZATION_API_KEY` in `const.py` (currently **empty** — nodes are not imported until set). Capture procedure: [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md).
+Gateway key: `ENKI_ACCESS_MOTORIZATION_API_KEY` in `const.py` (filled from APK 2.25.1). Legacy path `api-enki-access-and-motorizations-prod` is obsolete. See [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md) for validation with mitmproxy.
 
 ### Standard lights (Eglo V-Link, Lexman, etc.)
 
@@ -113,8 +113,6 @@ field (`hs` vs `ct`) indicates which mode is active.
 
 ## Heating and water sensors (manifest ≥ 1.5.0)
 
-**Released on GitHub:** not yet at v1.5.0 (latest tag: [v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest)). Code present on branch `feat/heating-water-devices` (not merged to `main` yet).
-
 **Heating base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-heating-prod/v1/heating/{nodeId}/`
 
 | Capability | Platform | Notes |
@@ -125,13 +123,25 @@ field (`hs` vs `ct`) indicates which mode is active.
 | `check_window_open_detection` | `binary_sensor` | WINDOW_OPEN / NO_WINDOW_OPEN |
 | `check_occupancy` | `binary_sensor` | OCCUPIED / UNOCCUPIED |
 
-**Water leak base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-water-sensor-prod/v1/sensors/{nodeId}/`
+**Water leak base URL:** `https://enki.api.devportal.adeo.cloud/api-enki-water-leak-detector-prod/v1/detectors/{nodeId}/`
 
 | Capability | Platform |
 |------------|----------|
-| `check_water_sensor_state` | `binary_sensor` (moisture) |
+| `check-water-sensor-state` | `binary_sensor` (moisture) |
 
-Gateway keys: `ENKI_HEATING_API_KEY` and `ENKI_WATER_SENSOR_API_KEY` in `const.py`. Capture `X-Gateway-APIKey` from the Enki mobile app when controlling a radiator or reading a leak sensor (same mitmproxy workflow as [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md)). Reads are skipped silently when a key is missing; writes raise a clear error.
+Gateway keys (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY`, …) are extracted from the Enki APK — see [DEVELOPMENT.md](DEVELOPMENT.md). Writes raise a clear error if a required key is missing.
+
+## Operational notifications
+
+Home Assistant shows **persistent notifications** (French or English) when:
+
+| Situation | What you see |
+|-----------|----------------|
+| Invalid Enki credentials | Link to reconfigure the integration |
+| HTTP 403 (gateway key) | Hint to refresh keys from the APK |
+| Network / cloud unreachable | Check Internet and `enki` logs |
+
+Notifications clear automatically after the next successful poll.
 
 ## Future device families
 
