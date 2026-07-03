@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .. import const
-from ..const import ENKI_BASE_URL, ENKI_MOBILE_CONFIG_API_KEY, LOGGER
+from .. import gateway_keys_data
+from ..const import ENKI_BASE_URL, LOGGER
 from ..exceptions import EnkiConnectionError
 from .gateway_registry import (
     LEGACY_SLUG_ALIASES,
@@ -129,7 +129,7 @@ class GatewayKeyStore:
 
     def reload_from_const(self) -> None:
         self._defaults = {
-            svc.const_key: getattr(const, svc.const_key, "")
+            svc.const_key: getattr(gateway_keys_data, svc.const_key, "")
             for svc in SERVICE_BY_CONST_KEY.values()
         }
 
@@ -140,13 +140,13 @@ class GatewayKeyStore:
             if not value:
                 continue
             self._runtime[const_key] = value
-            if not getattr(const, const_key, ""):
-                setattr(const, const_key, value)
+            if not getattr(gateway_keys_data, const_key, ""):
+                setattr(gateway_keys_data, const_key, value)
                 LOGGER.debug("Gateway key loaded from mobile-config: %s", const_key)
         return resolved
 
     def get_const_value(self, const_key: str) -> str:
-        return self._runtime.get(const_key) or getattr(const, const_key, "")
+        return self._runtime.get(const_key) or getattr(gateway_keys_data, const_key, "")
 
     def get_transport_key(self, transport_id: str) -> str | None:
         from .gateway_registry import SERVICE_BY_TRANSPORT_ID
@@ -172,14 +172,14 @@ async def fetch_mobile_config(http_client: Any) -> dict[str, Any]:
     The mobile app sends only ``X-Gateway-APIKey`` (no ``Authorization``) on this
     endpoint; we still attach Bearer when available for consistency.
     """
-    if not ENKI_MOBILE_CONFIG_API_KEY:
+    if not gateway_keys_data.ENKI_MOBILE_CONFIG_API_KEY:
         raise EnkiConnectionError(
             "ENKI_MOBILE_CONFIG_API_KEY is required for mobile-config",
         )
     await http_client.ensure_token()
     url = f"{ENKI_BASE_URL}{MOBILE_CONFIG_PATH}"
     headers = http_client._auth.auth_headers(
-        {"X-Gateway-APIKey": ENKI_MOBILE_CONFIG_API_KEY},
+        {"X-Gateway-APIKey": gateway_keys_data.ENKI_MOBILE_CONFIG_API_KEY},
     )
     async with http_client.session.get(url, headers=headers) as response:
         if response.status != 200:

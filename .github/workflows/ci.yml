@@ -27,6 +27,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
       - run: ruff format --check .
+      - run: python scripts/validate_gateway_keys.py
 
   test:
     name: Unit tests

@@ -17,7 +17,7 @@ def notify_for_connection_error(notifier: EnkiNotifier, err: EnkiConnectionError
     """Map an API transport error to the appropriate persistent notification."""
     status = err.status
     if status == 403:
-        notifier.notify_gateway_rejected()
+        notifier.notify_gateway_rejected(service=err.service)
     elif status == 401:
         notifier.notify_auth_failed(gateway_hint=True)
     elif status in {502, 503, 504}:
@@ -40,10 +40,10 @@ class EnkiNotifier:
         title, message = _auth_copy(self._hass, self._entry.entry_id, gateway_hint=gateway_hint)
         self._create(self._id("auth"), title, message)
 
-    def notify_gateway_rejected(self) -> None:
+    def notify_gateway_rejected(self, *, service: str | None = None) -> None:
         """HTTP 403 — gateway API key likely outdated."""
         self._dismiss(self._id("connection"))
-        title, message = _gateway_copy(self._hass)
+        title, message = _gateway_copy(self._hass, service=service)
         self._create(self._id("gateway"), title, message)
 
     def notify_connection_failed(self) -> None:
@@ -57,6 +57,11 @@ class EnkiNotifier:
         """Enki cloud temporarily unavailable (5xx)."""
         self.notify_connection_failed()
 
+    def notify_maintenance_mode(self) -> None:
+        """Enki cloud reports active maintenance."""
+        title, message = _maintenance_copy(self._hass)
+        self._create(self._id("maintenance"), title, message)
+
     def dismiss_operational_errors(self) -> None:
         """Clear auth / gateway / connection notifications after a successful poll."""
         for suffix in ("auth", "gateway", "connection"):
@@ -65,6 +70,7 @@ class EnkiNotifier:
     def dismiss_all(self) -> None:
         """Clear every operational notification for this entry (e.g. on unload)."""
         self.dismiss_operational_errors()
+        self._dismiss(self._id("maintenance"))
 
     def _id(self, suffix: str) -> str:
         return f"{DOMAIN}_{suffix}_{self._entry.entry_id}"
@@ -128,14 +134,15 @@ def _auth_copy(
     return title, body
 
 
-def _gateway_copy(hass: HomeAssistant) -> tuple[str, str]:
+def _gateway_copy(hass: HomeAssistant, *, service: str | None = None) -> tuple[str, str]:
+    service_hint = f" (`{service}`)" if service else ""
     if hass.config.language.startswith("fr"):
         return (
             "Enki — clé API gateway refusée",
             (
-                "L'API Enki a répondu **HTTP 403** : une clé gateway (micro-service) "
-                "est probablement obsolète. Cela arrive quand l'application Enki est "
-                "mise à jour.\n\n"
+                f"L'API Enki a répondu **HTTP 403**{service_hint} : une clé gateway "
+                "(micro-service) est probablement obsolète. Cela arrive quand "
+                "l'application Enki est mise à jour.\n\n"
                 "Mettez à jour les clés via `scripts/extract_gateway_keys.py` ou consultez "
                 f"[la documentation]({_DOCUMENTATION_URL}).\n\n"
                 f"[Signaler un problème]({_ISSUE_TRACKER})"
@@ -144,11 +151,32 @@ def _gateway_copy(hass: HomeAssistant) -> tuple[str, str]:
     return (
         "Enki — gateway API key rejected",
         (
-            "The Enki API returned **HTTP 403**: a gateway (micro-service) API key is likely "
-            "outdated. This often happens after an Enki app update.\n\n"
+            f"The Enki API returned **HTTP 403**{service_hint}: a gateway "
+            "(micro-service) API key is likely outdated. This often happens after "
+            "an Enki app update.\n\n"
             "Refresh keys with `scripts/extract_gateway_keys.py` or see "
             f"[the documentation]({_DOCUMENTATION_URL}).\n\n"
             f"[Report an issue]({_ISSUE_TRACKER})"
+        ),
+    )
+
+
+def _maintenance_copy(hass: HomeAssistant) -> tuple[str, str]:
+    if hass.config.language.startswith("fr"):
+        return (
+            "Enki — maintenance en cours",
+            (
+                "L'écosystème Enki signale une **maintenance** en cours. "
+                "Certaines fonctions peuvent être indisponibles temporairement.\n\n"
+                "[Support Enki](https://support.enki-home.com/)"
+            ),
+        )
+    return (
+        "Enki — maintenance in progress",
+        (
+            "The Enki cloud reports **maintenance** in progress. "
+            "Some features may be temporarily unavailable.\n\n"
+            "[Enki support](https://support.enki-home.com/)"
         ),
     )
 
