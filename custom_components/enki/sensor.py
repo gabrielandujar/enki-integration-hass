@@ -9,9 +9,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -179,7 +179,7 @@ class EnkiElectricalConsumptionSensor(EnkiEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str:
         unit = self._device.reported.electrical_consumption_unit
         if unit in {"kWh", "KWH"}:
-            return ENERGY_KILO_WATT_HOUR
+            return UnitOfEnergy.KILO_WATT_HOUR
         return UnitOfPower.WATT
 
     @property
