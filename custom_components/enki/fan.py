@@ -177,9 +177,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        await self._set_speed(
-            percentage_to_ordered_list_item(self._ordered_speeds, percentage)
-        )
+        await self._set_speed(percentage_to_ordered_list_item(self._ordered_speeds, percentage))
 
     async def _set_speed(self, speed: int) -> None:
         home_id = self._device.home_id
