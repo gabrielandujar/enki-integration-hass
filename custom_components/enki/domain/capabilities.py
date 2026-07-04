@@ -474,9 +474,7 @@ class EnkiCapabilityProfile:
             return []
         light_endpoints = set(self.fan_light_endpoints)
         return [
-            endpoint
-            for endpoint in self.power_switch_endpoints
-            if endpoint not in light_endpoints
+            endpoint for endpoint in self.power_switch_endpoints if endpoint not in light_endpoints
         ]
 
     @property
