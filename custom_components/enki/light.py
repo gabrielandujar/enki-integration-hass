@@ -99,9 +99,6 @@ class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
 
     @property
     def is_on(self) -> bool:
-        if self._endpoint_id is not None:
-            power = self._device.reported.endpoint_power(self._endpoint_id)
-            return power == "ON" if power is not None else False
         return self._device.reported.light_power == "ON"
 
     @property
@@ -221,8 +218,10 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             power = reported.endpoint_power(self._endpoint_id)
             return power == "ON" if power is not None else False
 
-        if reported.global_power is not None:
-            return reported.global_power == "ON"
+        if self._supports_light_state:
+            if reported.global_power is not None:
+                return reported.global_power == "ON"
+            return False
 
         return reported.electrical_power == "ON"
 

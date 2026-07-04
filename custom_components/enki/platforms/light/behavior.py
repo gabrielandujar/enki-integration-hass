@@ -37,7 +37,8 @@ class EnkiLightBehaviorMixin:
             return False
         profile = self._device.profile
         if profile.is_fan:
-            return endpoint_id in profile.fan_light_endpoints
+            # Fan light kits are driven by api-enki-lighting-prod, not power-prod.
+            return False
         return len(profile.power_switch_endpoints) > 1
 
     def _simple_light_turn_on(self, kwargs: dict[str, Any]) -> bool:

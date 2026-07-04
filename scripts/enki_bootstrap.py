@@ -79,7 +79,6 @@ def bootstrap(*modules: str) -> None:
         "enki.lib",
         "enki.platforms",
         "enki.platforms.light",
-        "enki.telemetry",
     ):
         _ensure_package(pkg)
 

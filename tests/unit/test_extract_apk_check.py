@@ -5,11 +5,23 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from enki_bootstrap import bootstrap, load_module  # noqa: E402
 from extract_gateway_keys import check_against_repo, read_const_keys  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _reset_enki_import_stubs() -> None:
+    """enki_bootstrap registers partial package stubs; drop them after each test."""
+    before = set(sys.modules)
+    yield
+    for key in list(sys.modules):
+        if (key == "enki" or key.startswith("enki.")) and key not in before:
+            del sys.modules[key]
 
 
 def _wired_repo_extract() -> dict[str, tuple[str | None, str]]:
