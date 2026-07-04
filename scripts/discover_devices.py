@@ -28,28 +28,28 @@ profile_to_export_dict = profile_mod.profile_to_export_dict
 enrich_telemetry_export = enrichment_mod.enrich_telemetry_export
 
 
-async def main(username: str, password: str, export: bool) -> None:
+async def main(username: str, password: str, export_json: bool) -> None:
     api = EnkiAPI(username, password)
     await api.async_connect()
     await api.async_get_devices()
 
     profiles = []
     for record in api.discovery_records:
-        export = profile_to_export_dict(
+        profile_export = profile_to_export_dict(
             record,
             integration_version="dev",
             ha_version="n/a",
         )
-        fingerprint = profile_fingerprint(export)
+        fingerprint = profile_fingerprint(profile_export)
         profiles.append(
             enrich_telemetry_export(
-                export,
+                profile_export,
                 record,
                 api_read_errors=api.read_errors_for_fingerprint(fingerprint) or None,
             )
         )
 
-    if export:
+    if export_json:
         print(json.dumps(profiles, indent=2, sort_keys=True))
     else:
         for profile in profiles:

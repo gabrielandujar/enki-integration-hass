@@ -69,13 +69,20 @@ class EnkiTelemetryReporter:
                 )
                 continue
 
-            if fingerprint in reported:
+            needs_telemetry = discovery_record_needs_telemetry(
+                record,
+                api_read_errors=api_errors,
+            )
+
+            # Re-notify when API read errors appear on a profile seen earlier.
+            if fingerprint in reported and not (needs_telemetry and api_errors):
                 continue
 
-            reported.add(fingerprint)
-            await self._save_reported(reported)
+            if fingerprint not in reported:
+                reported.add(fingerprint)
+                await self._save_reported(reported)
 
-            if not discovery_record_needs_telemetry(record, api_read_errors=api_errors):
+            if not needs_telemetry:
                 continue
 
             new_count += 1
