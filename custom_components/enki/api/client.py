@@ -701,7 +701,7 @@ class EnkiAPI:
         await self.async_set_capability_value(
             home_id,
             node_id,
-            "heating",
+            "thermostat",
             "switch_pilot_wire_mode",
             mode,
         )
@@ -716,7 +716,7 @@ class EnkiAPI:
         await self.async_set_capability_value(
             home_id,
             node_id,
-            "heating",
+            "thermostat",
             "change_thermostat_target_temperature",
             temperature,
         )

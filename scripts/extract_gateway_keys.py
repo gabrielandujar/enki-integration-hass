@@ -88,6 +88,10 @@ SHARED_INFRA_WRAPPERS = frozenset(
         "i3m",
     }
 )
+# Retrofit client wrappers (alo) vs repository classes that embed the gateway key (zlo).
+REPOSITORY_CONSUMERS: dict[str, tuple[str, ...]] = {
+    "alo": ("zlo",),
+}
 JUNK_KEYS = frozenset({"0123456789ABCDEFGHIJKLMNOPQRSTUV"})
 INCOMPLETE_MARKERS = (
     "Method dump skipped",
@@ -271,8 +275,12 @@ def keys_for_iface_in_sources(sources_dir: Path, iface: str) -> Counter[str]:
 
 
 def ordered_wrappers(wrappers: tuple[str, ...]) -> list[str]:
-    dedicated = [w for w in wrappers if w not in SKIP_WRAPPERS and w not in SHARED_INFRA_WRAPPERS]
-    shared = [w for w in wrappers if w in SHARED_INFRA_WRAPPERS]
+    expanded: list[str] = []
+    for wrapper in wrappers:
+        expanded.append(wrapper)
+        expanded.extend(REPOSITORY_CONSUMERS.get(wrapper, ()))
+    dedicated = [w for w in expanded if w not in SKIP_WRAPPERS and w not in SHARED_INFRA_WRAPPERS]
+    shared = [w for w in expanded if w in SHARED_INFRA_WRAPPERS]
     return dedicated + shared
 
 

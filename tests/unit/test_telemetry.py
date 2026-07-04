@@ -186,7 +186,7 @@ async def test_telemetry_notifies_when_api_errors_appear_after_fingerprint_store
     reporter._store.async_load = AsyncMock(return_value={"fingerprints": [fingerprint]})  # type: ignore[method-assign]
 
     entry.runtime_data.api.read_errors_for_fingerprint.return_value = {
-        "heating/check_thermostat_target_temperature": "HTTP 500",
+        "thermostat/check_thermostat_target_temperature": "HTTP 500",
     }
 
     with patch(
