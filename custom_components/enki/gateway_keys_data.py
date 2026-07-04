@@ -3,7 +3,9 @@
 Do not edit manually — refresh with:
     python scripts/extract_gateway_keys.py path/to/enki.apk --apply --update-known
 
-Source APK: Enki 2.25.1
+Source APK: Enki 2.25.1 (most keys). POWER and AIRFLOW verified against live
+api-enki-power-prod / api-enki-airflow-prod traffic (APK 2.25.1 extractor
+misassigned those two slugs — see #45).
 """
 
 # Wired micro-services (used by the integration today).
@@ -12,8 +14,8 @@ ENKI_BFF_API_KEY = "Bco7qBHRHOQiSVcEHdgS0rijpebMBwkB"
 ENKI_NODE_API_KEY = "UBb0Kv6xXpG6bOvD8VZ9A63uxqQ4G1A3"
 ENKI_REFERENTIEL_API_KEY = "3uk9rlaIUgBsz1tEPV7GQMhhGfRwPFJY"
 ENKI_LIGHTS_API_KEY = "3OVsNulRsUXfr7Hze54OHx8l6qDu2UcE"
-ENKI_POWER_API_KEY = "PCnbndkIqlfXwXGhFkqSWWMn4HcWza9J"
-ENKI_AIRFLOW_API_KEY = "L7nSeH7MOgxOCz0HpysKmOI3PQMM8SDV"
+ENKI_POWER_API_KEY = "DZ9MSuTT7sQxJWxxkBokAGvIt57qVl9N"
+ENKI_AIRFLOW_API_KEY = "hder4GeBrdbzQlV2R22dm2a9pbfTTHPj"
 ENKI_TEMPERATURE_HUMIDITY_API_KEY = "5Oqfse9MTtAWdfxwhlSPrOVO4gwqfgku"
 ENKI_BATTERY_HEALTH_API_KEY = "4o6CgR2B5fsq8eJw3VUk1GDs02Y6zKO3"
 ENKI_PRESENCE_DETECTOR_API_KEY = "b5A3sQcYHpRta3SqGXwH9T9GNaNHpj96"

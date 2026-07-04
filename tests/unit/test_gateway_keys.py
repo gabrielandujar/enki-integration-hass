@@ -66,3 +66,13 @@ def test_gateway_key_store_does_not_override_filled_const(monkeypatch) -> None:
     payload = {"api-enki-home-prod": "f" * 32}
     store.apply_mobile_config(payload)
     assert keys_module.ENKI_HOME_API_KEY == "existing-home-key-0123456789012"
+
+
+def test_wired_fan_and_power_keys_match_live_traffic() -> None:
+    """Regression: APK 2.25.1 extractor misassigned power/airflow (#45)."""
+    import enki.gateway_keys_data as keys_module
+
+    store = GatewayKeyStore()
+    assert store.get_transport_key("airflow") == "hder4GeBrdbzQlV2R22dm2a9pbfTTHPj"
+    assert store.get_transport_key("power") == "DZ9MSuTT7sQxJWxxkBokAGvIt57qVl9N"
+    assert keys_module.ENKI_LIGHTS_API_KEY == "3OVsNulRsUXfr7Hze54OHx8l6qDu2UcE"
