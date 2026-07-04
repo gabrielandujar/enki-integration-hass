@@ -1,6 +1,6 @@
-## Résumé
+## Summary
 
-<!-- Ce qui change et pourquoi -->
+<!-- What changed and why -->
 
 ## Type
 
@@ -11,15 +11,15 @@
 
 ## Checklist
 
-- [ ] `ruff check .` et `ruff format --check .` passent
-- [ ] `pytest tests/unit` passe
-- [ ] Traductions FR/EN mises à jour si l’UI change
-- [ ] Pas de secret / identifiant personnel dans le diff
+- [ ] `ruff check .` and `ruff format --check .` pass
+- [ ] `pytest tests/unit` passes
+- [ ] FR/EN translations updated if the UI changed
+- [ ] No secrets or personal identifiers in the diff
 
-## Issues liées
+## Related issues
 
 Fixes #
 
 ## Test plan
 
-<!-- Comment vérifier — matériel, étapes HA, etc. -->
+<!-- How to verify — hardware, HA steps, etc. -->

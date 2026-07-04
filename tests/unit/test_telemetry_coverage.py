@@ -86,3 +86,31 @@ def test_admin_capabilities_are_ignored() -> None:
     profile = profile_from_record(_ceiling_fan_record())
     assert capability_is_covered("ota_inventory", profile) is True
     assert capability_is_covered("change_esdk_certificate", profile) is True
+
+
+def test_sonoff_profile_not_eligible_for_telemetry() -> None:
+    record = build_discovery_record(
+        device_type="sensors",
+        bff_device_type="sensors",
+        capabilities=["check_current_temperature"],
+        possible_values={},
+        manufacturer="Sonoff",
+        model="SNZB-02D",
+        firmware_version="1.0.0",
+        supported_by_integration=False,
+    )
+    assert discovery_record_needs_telemetry(record) is False
+
+
+def test_gateway_profile_not_eligible_for_telemetry() -> None:
+    record = build_discovery_record(
+        device_type="gateways",
+        bff_device_type="gateways",
+        capabilities=["gateway_reboot", "gateway_inventory", "check_gateway_state"],
+        possible_values={},
+        manufacturer="Enki",
+        model="EnkiConnectGW001",
+        firmware_version="2.0.0",
+        supported_by_integration=False,
+    )
+    assert discovery_record_needs_telemetry(record) is False

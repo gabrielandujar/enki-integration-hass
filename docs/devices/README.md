@@ -1,14 +1,14 @@
-# Profils appareils (référentiel)
+# Device profiles (referentiel)
 
-Fiches JSON anonymisées (capabilities + `possibleValues`) pour documenter des modèles Enki **sans compte ni nodeId**. Source : API referentiel ou contributions communautaires.
+Anonymized JSON sheets (capabilities + `possibleValues`) to document Enki models **without account or nodeId**. Source: referentiel API or community contributions.
 
-| Appareil | Fabricant | deviceId | Statut HA (fork) | Fiche |
+| Device | Manufacturer | deviceId | HA status (fork) | Sheet |
 |----------|-----------|----------|------------------|-------|
-| Relais ON/OFF | Equation | `63a053851a423d4a245a877c` | ✅ ON/OFF (conso / timers : non) | [JSON](./63a053851a423d4a245a877c.json) |
-| Détecteur de fuite | Lexman | `651eada55b3a798ef6b6bc5c` | 🔬 beta v1.5.0+ — fuite + batterie (clés APK 2.25.1) | [JSON](./651eada55b3a798ef6b6bc5c.json) |
-| Contrôleur fil pilote | Equation | `63a054c81a423d4a245a877e` | 🔬 beta v1.5.0+ — `select` fil pilote (clé `ENKI_HEATING_API_KEY`, APK 2.25.1) | [JSON](./63a054c81a423d4a245a877e.json) |
-| Radiateur connecté | Noirot | `67a4b12bae1eca4709a45680` | 🔬 beta v1.5.0+ — `climate` + détections (clé `ENKI_HEATING_API_KEY`, APK 2.25.1) | [JSON](./67a4b12bae1eca4709a45680.json) |
+| ON/OFF relay | Equation | `63a053851a423d4a245a877c` | ✅ ON/OFF (consumption / timers: no) | [JSON](./63a053851a423d4a245a877c.json) |
+| Water leak detector | Lexman | `651eada55b3a798ef6b6bc5c` | 🔬 beta v1.5.0+ — leak + battery (APK 2.25.1 keys) | [JSON](./651eada55b3a798ef6b6bc5c.json) |
+| Pilot wire controller | Equation | `63a054c81a423d4a245a877e` | 🔬 beta v1.5.0+ — `select` pilot wire (`ENKI_HEATING_API_KEY`, APK 2.25.1) | [JSON](./63a054c81a423d4a245a877e.json) |
+| Connected radiator | Noirot | `67a4b12bae1eca4709a45680` | 🔬 beta v1.5.0+ — `climate` + detections (`ENKI_HEATING_API_KEY`, APK 2.25.1) | [JSON](./67a4b12bae1eca4709a45680.json) |
 
-Profils importés depuis [StephaneBranly/ha-enki#15](https://github.com/StephaneBranly/ha-enki/pull/15) (contribution [@zetiti10](https://github.com/zetiti10)). Périmètre **Enki / Leroy Merlin uniquement** — pas de Zigbee tiers (→ Zigbee2MQTT / ZHA).
+Profiles imported from [StephaneBranly/ha-enki#15](https://github.com/StephaneBranly/ha-enki/pull/15) (contribution [@zetiti10](https://github.com/zetiti10)). **Enki / Leroy Merlin scope only** — no third-party Zigbee (→ Zigbee2MQTT / ZHA).
 
-Pour proposer un nouveau profil : télémétrie opt-in dans HA, [issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml), ou PR avec un JSON dans ce dossier.
+To propose a new profile: opt-in telemetry in HA, [issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new?template=feature_request.yml), or PR with a JSON file in this folder.

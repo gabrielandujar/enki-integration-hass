@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..lib.enki_scope import device_in_enki_scope
 from .capabilities import EnkiCapabilityProfile
 from .models import EnkiDiscoveryRecord
 
@@ -54,7 +55,41 @@ _CAPABILITY_PROBES: dict[str, str] = {
     "check_vibration_sensibility_level": "supports_vibration_sensibility",
     "switch_electrical_power": "supports_electrical_power",
     "switch_siren_status": "supports_siren",
+    "switch_pilot_wire_mode": "supports_pilot_wire",
+    "check_pilot_wire_state": "supports_pilot_wire",
+    "change_thermostat_target_temperature": "supports_thermostat",
+    "check_thermostat_target_temperature": "supports_thermostat",
+    "check_thermostat_running_state": "supports_thermostat",
+    "change_occupancy_mode": "supports_occupancy_mode",
+    "check_occupancy_mode": "supports_occupancy_mode",
+    "change_window_open_detection_mode": "supports_window_open_detection_mode",
+    "check_window_open_detection_mode": "supports_window_open_detection_mode",
+    "check_window_open_detection": "supports_window_open_detection",
+    "check_occupancy": "supports_occupancy",
+    "check_water_sensor_state": "supports_water_leak",
 }
+
+# Referentiel capabilities with no HA entity planned (timers, energy totals, …).
+NOT_PLANNED_CAPABILITIES = frozenset(
+    {
+        "cancel_electrical_power_switch_in",
+        "next_electrical_power_switch_in",
+        "switch_electrical_power_in",
+        "total_supply_charge_consumption",
+    }
+)
+
+# Hub / infrastructure — never actionable as HA entity support requests.
+_GATEWAY_DEVICE_TYPES = frozenset({"gateways", "gateway"})
+_GATEWAY_CAPABILITY_MARKERS = frozenset(
+    {
+        "gateway_inventory",
+        "gateway_reboot",
+        "gateway_logs",
+        "change_gateway_certificate",
+        "check_gateway_state",
+    }
+)
 
 
 def profile_from_record(record: EnkiDiscoveryRecord) -> EnkiCapabilityProfile:
@@ -76,13 +111,48 @@ def capability_is_covered(capability: str, profile: EnkiCapabilityProfile) -> bo
     return bool(getattr(profile, probe_name))
 
 
-def discovery_record_needs_telemetry(record: EnkiDiscoveryRecord) -> bool:
+def _normalize_type(value: str | None) -> str:
+    if not value:
+        return ""
+    return value.strip().lower().replace(" ", "_")
+
+
+def discovery_record_eligible_for_telemetry(record: EnkiDiscoveryRecord) -> bool:
+    """Return False for out-of-scope or hub profiles that should not spam GitHub."""
+    if not device_in_enki_scope(
+        manufacturer=record.manufacturer,
+        device_type=record.device_type,
+    ):
+        return False
+
+    device_type = _normalize_type(record.device_type)
+    bff_type = _normalize_type(record.bff_device_type)
+    if device_type in _GATEWAY_DEVICE_TYPES or bff_type in _GATEWAY_DEVICE_TYPES:
+        return False
+
+    caps = record.capabilities or []
+    return not (caps and any(cap in _GATEWAY_CAPABILITY_MARKERS for cap in caps))
+
+
+def discovery_record_needs_telemetry(
+    record: EnkiDiscoveryRecord,
+    *,
+    api_read_errors: dict[str, str] | None = None,
+) -> bool:
     """Return True when the user should be nudged to open a GitHub issue."""
+    if not discovery_record_eligible_for_telemetry(record):
+        return False
+
+    if api_read_errors:
+        return True
+
     if not record.supported_by_integration:
         return True
 
     profile = profile_from_record(record)
     for capability in record.capabilities or []:
+        if capability in NOT_PLANNED_CAPABILITIES:
+            continue
         if not capability_is_covered(capability, profile):
             return True
     return False

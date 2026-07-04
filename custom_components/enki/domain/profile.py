@@ -108,38 +108,72 @@ def profile_fingerprint(export_dict: dict[str, Any]) -> str:
 
 
 def format_github_issue_body(export_dict: dict[str, Any], fingerprint: str) -> str:
-    supported = "oui" if export_dict.get("supported_by_integration") else "non"
+    supported = "yes" if export_dict.get("supported_by_integration") else "no"
     capabilities = export_dict.get("capabilities") or []
     possible_values = export_dict.get("possible_values") or {}
 
-    cap_lines = "\n".join(f"- `{capability}`" for capability in capabilities) or "- _(aucune)_"
+    cap_lines = "\n".join(f"- `{capability}`" for capability in capabilities) or "- _(none)_"
 
-    return (
-        "## Profil appareil Enki (partage opt-in)\n\n"
-        "Données anonymisées — sans identifiant de compte ou de domicile. "
-        "Issue ouverte manuellement depuis Home Assistant.\n\n"
-        f"- **Type référentiel** : `{export_dict.get('device_type', 'unknown')}`\n"
-        f"- **Type BFF** : `{export_dict.get('bff_device_type', '')}`\n"
-        f"- **Fabricant** : {export_dict.get('manufacturer') or 'inconnu'}\n"
-        f"- **Modèle** : {export_dict.get('model') or 'inconnu'}\n"
-        f"- **Firmware** : {export_dict.get('firmware_version') or 'inconnu'}\n"
-        f"- **Supporté par l'intégration** : {supported}\n"
-        f"- **Version intégration** : `{export_dict.get('integration_version', '')}`\n"
-        f"- **Home Assistant** : `{export_dict.get('ha_version', '')}`\n"
-        f"- **Empreinte** : `{fingerprint[:16]}`\n\n"
-        "### Capabilities\n"
+    body = (
+        "## Enki device profile (opt-in share)\n\n"
+        "Anonymized data — no account or home identifiers. "
+        "Issue opened manually from Home Assistant.\n\n"
+        f"- **Referentiel type:** `{export_dict.get('device_type', 'unknown')}`\n"
+        f"- **BFF type:** `{export_dict.get('bff_device_type', '')}`\n"
+        f"- **Manufacturer:** {export_dict.get('manufacturer') or 'unknown'}\n"
+        f"- **Model:** {export_dict.get('model') or 'unknown'}\n"
+        f"- **Firmware:** {export_dict.get('firmware_version') or 'unknown'}\n"
+        f"- **Supported by integration:** {supported}\n"
+        f"- **Integration version:** `{export_dict.get('integration_version', '')}`\n"
+        f"- **Home Assistant:** `{export_dict.get('ha_version', '')}`\n"
+        f"- **Fingerprint:** `{fingerprint[:16]}`\n"
+    )
+
+    if platforms := export_dict.get("ha_platforms"):
+        platform_line = ", ".join(f"`{platform}`" for platform in platforms)
+        body += f"- **HA platforms:** {platform_line}\n"
+
+    if reason := export_dict.get("telemetry_reason"):
+        reason_text = _TELEMETRY_REASON_LABELS.get(reason, reason)
+        body += f"- **Why this report:** {reason_text}\n"
+
+    body += (
+        "\n### Capabilities\n"
         f"{cap_lines}\n\n"
         "### Possible values\n"
         f"```json\n{json.dumps(possible_values, indent=2, sort_keys=True)}\n```\n"
     )
+
+    if uncovered := export_dict.get("uncovered_capabilities"):
+        uncovered_lines = "\n".join(f"- `{capability}`" for capability in uncovered)
+        body += f"\n### Uncovered capabilities\n{uncovered_lines}\n"
+
+    if api_errors := export_dict.get("api_read_errors"):
+        error_lines = "\n".join(
+            f"- `{endpoint}` → {status}" for endpoint, status in api_errors.items()
+        )
+        body += (
+            "\n### API read errors (last poll)\n"
+            f"{error_lines}\n\n"
+            "_No node or home identifiers — attach HA diagnostics if more context is needed._\n"
+        )
+
+    return body
+
+
+_TELEMETRY_REASON_LABELS = {
+    "api_read_errors": "Cloud API returned errors while reading state",
+    "unsupported_device": "Device type not supported by the integration yet",
+    "uncovered_capabilities": "Referentiel lists capabilities not implemented yet",
+}
 
 
 def format_github_issue_title(export_dict: dict[str, Any]) -> str:
     device_type = export_dict.get("device_type", "unknown")
     model = export_dict.get("model") or "unknown"
     if export_dict.get("supported_by_integration"):
-        return f"[telemetry] Profil {device_type} — {model}"
-    return f"[telemetry] Appareil non supporté — {device_type} ({model})"
+        return f"[telemetry] Profile {device_type} — {model}"
+    return f"[telemetry] Unsupported device — {device_type} ({model})"
 
 
 _GITHUB_ISSUE_URL_MAX_LENGTH = 7500

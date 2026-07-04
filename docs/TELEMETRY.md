@@ -1,43 +1,58 @@
-# Partage de profils appareils (opt-in)
+# Device profile sharing (opt-in)
 
-Aide à supporter de nouveaux matériels Enki **sans envoi automatique** et **sans secret** dans l’intégration.
+Helps support new Enki hardware **without automatic uploads** and **without secrets** in the integration.
 
-## Pour l’utilisateur
+## For users
 
-### Diagnostics (sans opt-in)
+### Diagnostics (no opt-in)
 
-**Paramètres** → **Appareils et services** → **Enki** → menu ⋮ → **Télécharger les diagnostics**
+**Settings** → **Devices & services** → **Enki** → ⋮ menu → **Download diagnostics**
 
-Export JSON local : profils anonymisés (type, fabricant, capabilities). À joindre à une [issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new) si besoin.
+Local JSON export: anonymized profiles (type, manufacturer, capabilities). Attach to an [issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new) if needed.
 
-### Opt-in (notification + issue pré-remplie)
+### Opt-in (notification + pre-filled issue)
 
-**Enki** → **Configurer** → activer :
+**Enki** → **Configure** → enable:
 
-> M’avertir des nouveaux appareils (lien issue GitHub)
+> Notify me about new devices (GitHub issue link)
 
-Quand un **nouveau** profil est détecté (empreinte unique) **et qu'il manque du support** (appareil non géré ou capabilities non implémentées) :
+When a **new** profile is detected (unique fingerprint) **and support is missing** (unsupported device or unimplemented capabilities):
 
-1. Une **notification persistante** apparaît dans Home Assistant
-2. Le lien ouvre GitHub avec titre et description **pré-remplis**
-3. Vous **validez** la création de l’issue — rien n’est envoyé sans ce clic
+1. A **persistent notification** appears in Home Assistant
+2. The link opens GitHub with a **pre-filled** title and body
+3. You **confirm** issue creation — nothing is sent without that click
 
-**Jamais inclus :** e-mail, mot de passe, homeId, nodeId, noms de pièces.
+**Never included:** email, password, homeId, nodeId, room names.
 
-**Pas de notification** si l'appareil est déjà entièrement supporté (ex. variante de ventilateur Inspire déjà couverte).
+**No notification** if the device is already fully supported (e.g. another Inspire fan variant already covered).
 
-## Pour les contributeurs
+**Also skipped (no notification, no GitHub link):** Enki hub / gateway profiles, and third-party Zigbee (Sonoff, Tuya, Aqara, …) that the integration deliberately ignores at discovery.
 
-Script local (compte requis) :
+### Enriched export
+
+Diagnostics and GitHub prefill now include extra **English** context when available:
+
+| Field | Meaning |
+|-------|---------|
+| `ha_platforms` | HA platforms that would be created (`climate`, `select`, …) |
+| `uncovered_capabilities` | Referentiel capabilities not implemented yet |
+| `api_read_errors` | Cloud read failures from the **last poll** (`heating/check_pilot_wire_state → HTTP 500`) — no node/home ids |
+| `telemetry_reason` | Why a notification was suggested |
+
+This helps reproduce cases like “entities exist but stay unavailable” without uploading full logs.
+
+## For contributors
+
+Local script (account required):
 
 ```bash
 python3 scripts/discover_devices.py <email> <password> --export
 ```
 
-Voir [DEVELOPMENT.md](DEVELOPMENT.md) pour les tests.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for tests.
 
-## Technique
+## Technical
 
-- Déduplication par empreinte SHA256 (stockage local HA)
-- URL : `github.com/.../issues/new?title=...&body=...&labels=device-telemetry`
-- Aucun token, aucun `repository_dispatch`
+- Deduplication by SHA256 fingerprint (local HA storage)
+- URL: `github.com/.../issues/new?title=...&body=...&labels=device-telemetry`
+- No token, no `repository_dispatch`

@@ -1,63 +1,63 @@
-# Publication HACS
+# HACS publication
 
-Checklist alignée sur la [documentation officielle HACS](https://www.hacs.xyz/docs/publish/).
+Checklist aligned with the [official HACS documentation](https://www.hacs.xyz/docs/publish/).
 
-## Dépôt custom (installation actuelle)
+## Custom repository (current install)
 
-En attendant l’inclusion dans le store par défaut, les utilisateurs ajoutent le dépôt manuellement ou via le badge **Open in HACS**.
+Until inclusion in the default store, users add the repo manually or via the **Open in HACS** badge.
 
-1. Dépôt **public** sur GitHub
-2. Fichier [`hacs.json`](../hacs.json) à la racine avec au minimum `name`
-3. Structure `custom_components/enki/` avec `manifest.json`
-4. README d’installation
-5. Workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (lint, tests, HACS, Hassfest) **sans erreur**
+1. **Public** GitHub repository
+2. [`hacs.json`](../hacs.json) at the root with at least `name`
+3. `custom_components/enki/` structure with `manifest.json`
+4. Installation README
+5. [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) workflow (lint, tests, HACS, Hassfest) **without errors**
 
-### Lien d’installation rapide (my.home-assistant.io)
+### Quick install link (my.home-assistant.io)
 
-Après publication du dépôt, générez un lien :
+After publishing the repo, generate a link:
 
-[Créer un lien HACS](https://my.home-assistant.io/create-link/?redirect=hacs_repository&owner=cyrilcolinet&repository=enki-integration-hass&category=integration)
+[Create a HACS link](https://my.home-assistant.io/create-link/?redirect=hacs_repository&owner=cyrilcolinet&repository=enki-integration-hass&category=integration)
 
-Exemple Markdown pour le README :
+Example Markdown for the README:
 
 ```markdown
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cyrilcolinet&repository=enki-integration-hass&category=integration)
 ```
 
-## Métadonnées GitHub (obligatoire pour HACS)
+## GitHub metadata (required for HACS)
 
-Configurer sur la page **Settings** du dépôt GitHub :
+Configure on the repository **Settings** page:
 
-| Champ | Exemple |
+| Field | Example |
 |-------|---------|
 | **Description** | Home Assistant integration for the Enki / Leroy Merlin smart home cloud — lights, fans, switches, sensors, covers, climate, scenarios, and more. |
 | **Topics** | `home-assistant`, `hacs`, `hacs-integration`, `enki`, `leroy-merlin`, `smart-home`, `home-automation`, `iot`, `lexman`, `edisio`, `equation` |
-| **Issues** | Activées |
+| **Issues** | Enabled |
 
-## Releases (recommandé)
+## Releases (recommended)
 
-HACS affiche les 5 dernières releases si elles existent.
+HACS shows the last 5 releases when they exist.
 
-1. Créer un tag sémantique (`v1.5.0`) aligné sur `custom_components/enki/manifest.json`
-2. Publier une **GitHub Release** (pas seulement un tag)
-3. Le workflow [`release.yml`](../.github/workflows/release.yml) injecte la version du tag dans le ZIP HACS attaché (`enki.zip`) — le fichier `manifest.json` du dépôt git doit être mis à jour manuellement avant le tag
+1. Create a semantic tag (`v1.6.5`) aligned with `custom_components/enki/manifest.json`
+2. Publish a **GitHub Release** (not just a tag)
+3. The [`release.yml`](../.github/workflows/release.yml) workflow attaches `enki.zip` with the tag version injected into the ZIP manifest — update `manifest.json` in git manually before tagging
 
-## Store HACS par défaut
+## Default HACS store
 
-Procédure : [Include default repositories](https://www.hacs.xyz/docs/publish/include/)
+Procedure: [Include default repositories](https://www.hacs.xyz/docs/publish/include/)
 
-**État du dépôt :** les prérequis techniques sont couverts par la CI sur chaque push/PR :
+**Repository status:** technical prerequisites are covered by CI on every push/PR:
 
-| Prérequis | Statut |
+| Prerequisite | Status |
 |-----------|--------|
-| Action **HACS** (`hacs/action`, sans `ignore: brands`) | ✅ [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
-| Action **Hassfest** | ✅ idem |
+| **HACS** action (`hacs/action`, no `ignore: brands`) | ✅ [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
+| **Hassfest** action | ✅ same |
 | `hacs.json` + `country: FR` | ✅ [`hacs.json`](../hacs.json) |
-| Au moins **une release** GitHub | ✅ [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases) |
-| Brand `custom_components/enki/brand/` | ✅ `icon.png` (256) + `icon@2x.png` (512) — servies localement par HA **2026.3+** ([Brands Proxy API](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)) ; **plus besoin** de PR sur [home-assistant/brands](https://github.com/home-assistant/brands) (nouvelles intégrations custom refusées depuis fév. 2026) |
+| At least **one** GitHub release | ✅ [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases) |
+| Brand `custom_components/enki/brand/` | ✅ `icon.png` (256) + `icon@2x.png` (512) — served locally by HA **2026.3+** ([Brands Proxy API](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); **no longer need** a PR on [home-assistant/brands](https://github.com/home-assistant/brands) (new custom integrations rejected since Feb 2026) |
 
-**Reste à faire côté publication :** PR sur [hacs/default](https://github.com/hacs/default) (fichier `integration`), entrée **alphabétique** : `cyrilcolinet/enki-integration-hass`.
+**Remaining publication step:** PR on [hacs/default](https://github.com/hacs/default) (`integration` file), **alphabetical** entry: `cyrilcolinet/enki-integration-hass`.
 
-## Validation locale
+## Local validation
 
-Les mêmes vérifications que le workflow **CI** (ruff, pytest, Hassfest, HACS action) tournent sur chaque push/PR. Sur GitHub : onglet **Actions** → workflow **CI**.
+Same checks as the **CI** workflow (ruff, pytest, Hassfest, HACS action) on every push/PR. On GitHub: **Actions** tab → **CI** workflow.
