@@ -29,6 +29,9 @@ def _ceiling_fan(**overrides) -> EnkiDevice:
         ],
         "main_change_capability_id": "switch_electrical_power",
         "main_change_capability_endpoints": [1, 2, 3],
+        "possible_values": {
+            "change_fan_speed": {"range": {"min": 0, "max": 6}},
+        },
     }
     defaults.update(overrides)
     return EnkiDevice(**defaults)
@@ -106,6 +109,45 @@ async def test_fan_turn_off_uses_airflow_when_speed_state_missing() -> None:
 
 
 @pytest.mark.asyncio
+async def test_fan_turn_on_uses_power_when_only_check_fan_speed() -> None:
+    """Ae Toit-style fans: check_fan_speed without writable range → power-prod."""
+    device = EnkiDevice(
+        home_id="home-1",
+        device_id="AE_TOIT_1",
+        node_id="6a1468f4045591224e5f1686",
+        device_name="Ventilateur",
+        device_type="ceiling_fans",
+        is_enabled=True,
+        state="ACTIVE",
+        capabilities=[
+            "check_fan_speed",
+            "switch_electrical_power",
+            "check_electrical_power",
+            "change_light_state",
+            "check_light_state",
+        ],
+        main_change_capability_id="switch_electrical_power",
+        main_change_capability_endpoints=[1, 2],
+    )
+    coordinator = MagicMock()
+    coordinator.api.async_set_fan_speed = AsyncMock()
+    coordinator.api.async_switch_electrical_power = AsyncMock()
+    coordinator.update_cached_value = MagicMock()
+    coordinator.update_endpoint_power = MagicMock()
+    entity = EnkiFanEntity(coordinator, device)
+
+    await entity.async_turn_on()
+
+    coordinator.api.async_switch_electrical_power.assert_awaited_once_with(
+        "home-1",
+        "6a1468f4045591224e5f1686",
+        "ON",
+        endpoint=1,
+    )
+    coordinator.api.async_set_fan_speed.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_fan_turn_on_falls_back_to_power_without_fan_speed_capability() -> None:
     device = EnkiDevice(
         home_id="home-1",
@@ -134,5 +176,6 @@ async def test_fan_turn_on_falls_back_to_power_without_fan_speed_capability() ->
         "home-1",
         "node-1",
         "ON",
+        endpoint=None,
     )
     coordinator.api.async_set_fan_speed.assert_not_called()

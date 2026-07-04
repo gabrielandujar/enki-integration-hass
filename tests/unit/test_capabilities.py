@@ -87,3 +87,18 @@ def test_fan_max_speed_from_metadata() -> None:
         possible_values={"change_fan_speed": {"range": {"min": 0, "max": 5}}},
     )
     assert fan_max_speed(device) == 5
+
+
+def test_supports_fan_speed_control_requires_change_and_range() -> None:
+    with_change = _device(
+        capabilities=["change_fan_speed", "check_fan_speed"],
+        possible_values={"change_fan_speed": {"range": {"min": 0, "max": 6}}},
+    )
+    check_only = _device(
+        capabilities=["check_fan_speed", "switch_electrical_power"],
+        main_change_capability_id="switch_electrical_power",
+        main_change_capability_endpoints=[1, 2],
+    )
+    assert with_change.profile.supports_fan_speed_control is True
+    assert check_only.profile.supports_fan_speed_control is False
+    assert check_only.profile.fan_motor_endpoint == 1

@@ -111,6 +111,13 @@ class EnkiCapabilityProfile:
         )
 
     @property
+    def supports_fan_speed_control(self) -> bool:
+        """Writable fan speed (change_fan_speed + range in referentiel metadata)."""
+        if not _supports(self.capabilities, self.possible_values, "change_fan_speed"):
+            return False
+        return self.fan_max_speed is not None
+
+    @property
     def supports_fan_rotation(self) -> bool:
         return _supports(
             self.capabilities,
@@ -460,6 +467,26 @@ class EnkiCapabilityProfile:
             return []
         return [endpoint for endpoint in self.power_switch_endpoints if endpoint != FAN_ENDPOINT]
 
+    @property
+    def fan_motor_endpoints(self) -> list[int]:
+        """Power-prod endpoints that are not light kit circuits."""
+        if self.main_change_capability_id != "switch_electrical_power":
+            return []
+        light_endpoints = set(self.fan_light_endpoints)
+        return [
+            endpoint
+            for endpoint in self.power_switch_endpoints
+            if endpoint not in light_endpoints
+        ]
+
+    @property
+    def fan_motor_endpoint(self) -> int | None:
+        """Single motor endpoint when unambiguous, else global power API."""
+        motor_endpoints = self.fan_motor_endpoints
+        if len(motor_endpoints) == 1:
+            return motor_endpoints[0]
+        return None
+
 
 # --- Backward-compatible module functions (used by tests and legacy imports) ---
 
@@ -479,6 +506,15 @@ def supports_electrical_power(capabilities: set[str], possible_values: dict[str,
 
 def supports_fan_speed(capabilities: set[str], possible_values: dict[str, Any]) -> bool:
     return _supports(capabilities, possible_values, "change_fan_speed", "check_fan_speed")
+
+
+def supports_fan_speed_control(capabilities: set[str], possible_values: dict[str, Any]) -> bool:
+    profile = EnkiCapabilityProfile(
+        device_type=DEVICE_TYPE_FANS,
+        capabilities=frozenset(capabilities),
+        possible_values=possible_values,
+    )
+    return profile.supports_fan_speed_control
 
 
 def supports_fan_rotation(capabilities: set[str], possible_values: dict[str, Any]) -> bool:
