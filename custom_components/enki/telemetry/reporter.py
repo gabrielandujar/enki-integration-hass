@@ -17,6 +17,7 @@ from ..domain.profile import (
     profile_to_export_dict,
 )
 from ..domain.telemetry_coverage import discovery_record_needs_telemetry
+from ..domain.telemetry_enrichment import enrich_telemetry_export
 
 STORAGE_VERSION = 1
 
@@ -43,6 +44,7 @@ class EnkiTelemetryReporter:
         reported = await self._load_reported()
         integration_version = _integration_version()
         ha_version = _ha_version(self._hass)
+        coordinator = self._entry.runtime_data
 
         new_count = 0
         for record in records:
@@ -53,6 +55,12 @@ class EnkiTelemetryReporter:
                     ha_version=ha_version,
                 )
                 fingerprint = profile_fingerprint(export_dict)
+                api_errors = coordinator.api.read_errors_for_fingerprint(fingerprint)
+                export_dict = enrich_telemetry_export(
+                    export_dict,
+                    record,
+                    api_read_errors=api_errors or None,
+                )
             except (TypeError, ValueError) as err:
                 LOGGER.warning(
                     "Skipping telemetry for profile %s: %s",
@@ -61,13 +69,20 @@ class EnkiTelemetryReporter:
                 )
                 continue
 
-            if fingerprint in reported:
+            needs_telemetry = discovery_record_needs_telemetry(
+                record,
+                api_read_errors=api_errors,
+            )
+
+            # Re-notify when API read errors appear on a profile seen earlier.
+            if fingerprint in reported and not (needs_telemetry and api_errors):
                 continue
 
-            reported.add(fingerprint)
-            await self._save_reported(reported)
+            if fingerprint not in reported:
+                reported.add(fingerprint)
+                await self._save_reported(reported)
 
-            if not discovery_record_needs_telemetry(record):
+            if not needs_telemetry:
                 continue
 
             new_count += 1

@@ -1,111 +1,111 @@
-# Clés gateway volets — guide contributeur
+# Cover gateway keys — contributor guide
 
-Ce document s’adresse aux **personnes à l’aise avec le réseau / le débogage mobile**. Les testeurs lambda n’ont pas besoin de le lire : voir [Beta volets — pour les testeurs](SUPPORTED_DEVICES.md#pour-les-testeurs) dans `SUPPORTED_DEVICES.md`.
+This document is for **people comfortable with networking / mobile debugging**. Casual testers do not need it: see [Beta covers — for testers](SUPPORTED_DEVICES.md#for-testers-covers) in `SUPPORTED_DEVICES.md`.
 
-## État actuel
+## Current state
 
-Pour les **volets** (`api-enki-rolling-prod`, APK ≥ 2.25.1), la clé **`ENKI_ACCESS_MOTORIZATION_API_KEY`** est déjà incluse dans `const.py` (extraite de l’APK Enki 2.25.1). L’ancien micro-service `api-enki-access-and-motorizations-prod` n’est plus utilisé.
+For **roller shutters** (`api-enki-rolling-prod`, APK ≥ 2.25.1), the **`ENKI_ACCESS_MOTORIZATION_API_KEY`** is already included in `const.py` (extracted from Enki APK 2.25.1). The legacy micro-service `api-enki-access-and-motorizations-prod` is no longer used.
 
-Les utilisateurs **n’ont rien à configurer** : l’entité **« Volet (beta) »** apparaît si le volet est actif dans l’app Enki et que l’intégration est en **v1.5.0+**.
+Users **configure nothing**: the **“Shutter (beta)”** entity appears if the cover is active in the Enki app and the integration is **v1.5.0+**.
 
-## Quand relire ce guide
+## When to read this guide
 
-- **Mise à jour de l’app Enki** — les clés gateway peuvent changer ; la méthode recommandée est `scripts/extract_gateway_keys.py` (voir [DEVELOPMENT.md](DEVELOPMENT.md)).
-- **HTTP 403** sur `api-enki-rolling-prod` — valider la clé embarquée vs le trafic réel de l’app (mitmproxy ci-dessous).
-- **Échec de l’extraction APK** — capturer manuellement `X-Gateway-APIKey` et ouvrir une issue ou PR.
+- **Enki app update** — gateway keys may change; the recommended method is `scripts/extract_gateway_keys.py` (see [DEVELOPMENT.md](DEVELOPMENT.md)).
+- **HTTP 403** on `api-enki-rolling-prod` — validate the embedded key vs real app traffic (mitmproxy below).
+- **APK extraction failure** — capture `X-Gateway-APIKey` manually and open an issue or PR.
 
-**Ce n’est pas :**
+**This is not:**
 
-- le mot de passe du compte Enki ;
-- un secret personnel lié à un foyer ;
-- une donnée à partager publiquement sur les réseaux sociaux (c’est une clé applicative Leroy Merlin / Adeo, réutilisable pour toute l’intégration une fois intégrée au repo).
+- the Enki account password;
+- a personal secret tied to a home;
+- data to share publicly on social media (it is a Leroy Merlin / Adeo app key, reusable for the whole integration once merged in the repo).
 
-## Ce qu’il faut récupérer (validation manuelle)
+## What to capture (manual validation)
 
-Lors d’un contrôle de volet dans l’app Enki, repérer une requête HTTP vers :
+When controlling a cover in the Enki app, look for an HTTP request to:
 
 ```text
 …/api-enki-rolling-prod/v1/shutter/{nodeId}/…
 ```
 
-Copier la valeur de l’en-tête :
+Copy the header value:
 
 ```text
-X-Gateway-APIKey: <valeur à comparer ou transmettre au mainteneur>
+X-Gateway-APIKey: <value to compare or send to maintainer>
 ```
 
-Actions typiques visibles dans l’URL : `check-shutter-position`, `change-shutter-position`, `check-shutter-opening`.
+Typical actions in the URL: `check-shutter-position`, `change-shutter-position`, `check-shutter-opening`.
 
-## Méthode recommandée — extraction APK
+## Recommended method — APK extraction
 
-Sur la machine de dev :
+On the dev machine:
 
 ```bash
-python3 scripts/extract_gateway_keys.py chemin/vers/enki.apk --apply --update-known
+python3 scripts/extract_gateway_keys.py path/to/enki.apk --apply --update-known
 ```
 
-Le script met à jour `custom_components/enki/const.py` (dont `ENKI_ACCESS_MOTORIZATION_API_KEY`). Détail : [DEVELOPMENT.md](DEVELOPMENT.md).
+The script updates `custom_components/enki/const.py` (including `ENKI_ACCESS_MOTORIZATION_API_KEY`). Details: [DEVELOPMENT.md](DEVELOPMENT.md).
 
-## Alternative — mitmproxy (validation réseau)
+## Alternative — mitmproxy (network validation)
 
-### Prérequis
+### Prerequisites
 
-- PC et téléphone sur le **même réseau Wi‑Fi**
-- [mitmproxy](https://mitmproxy.org/) installé sur le PC
-- App **Enki** sur le téléphone, avec au moins un volet fonctionnel
+- PC and phone on the **same Wi‑Fi network**
+- [mitmproxy](https://mitmproxy.org/) installed on the PC
+- **Enki** app on the phone, with at least one working cover
 
-### Étapes
+### Steps
 
-1. **Lancer mitmproxy** sur le PC :
+1. **Start mitmproxy** on the PC:
    ```bash
    mitmweb
    ```
-   Interface web : http://127.0.0.1:8081 — proxy écoute sur le port **8080**.
+   Web UI: http://127.0.0.1:8081 — proxy listens on port **8080**.
 
-2. **Configurer le proxy Wi‑Fi sur le téléphone**  
-   Réglages Wi‑Fi → réseau actuel → proxy manuel → IP du PC, port **8080**.
+2. **Configure Wi‑Fi proxy on the phone**  
+   Wi‑Fi settings → current network → manual proxy → PC IP, port **8080**.
 
-3. **Installer le certificat mitmproxy** sur le téléphone  
-   Sur le téléphone, ouvrir http://mitm.it et suivre les instructions (iOS ou Android). Sans certificat, le trafic HTTPS de l’app ne sera pas visible.
+3. **Install the mitmproxy certificate** on the phone  
+   On the phone, open http://mitm.it and follow instructions (iOS or Android). Without the certificate, the app HTTPS traffic will not be visible.
 
-4. **Contrôler un volet dans l’app Enki**  
-   Ouvrir, fermer ou régler la position d’un volet.
+4. **Control a cover in the Enki app**  
+   Open, close, or set position.
 
-5. **Filtrer le trafic** dans mitmweb  
-   Rechercher `rolling-prod` ou `change-shutter`.
+5. **Filter traffic** in mitmweb  
+   Search for `rolling-prod` or `change-shutter`.
 
-6. **Copier `X-Gateway-APIKey`** depuis les en-têtes de la requête et la comparer à `ENKI_ACCESS_MOTORIZATION_API_KEY` dans `const.py`.
+6. **Copy `X-Gateway-APIKey`** from the request headers and compare to `ENKI_ACCESS_MOTORIZATION_API_KEY` in `const.py`.
 
-7. **Désactiver le proxy** sur le téléphone une fois terminé.
+7. **Disable the proxy** on the phone when done.
 
-### Transmission au projet
+### Reporting to the project
 
-Si la clé diffère de celle du dépôt, ouvrir une [issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new) ou commenter sur une issue volets existante avec :
+If the key differs from the repo, open an [issue](https://github.com/cyrilcolinet/enki-integration-hass/issues/new) or comment on an existing cover issue with:
 
-- la valeur de `X-Gateway-APIKey` (texte seul) ;
-- modèle de volet testé (ex. Evology SIN2RS1) ;
-- version de l’app Enki (APK) ;
-- confirmation que la commande fonctionnait dans l’app au moment de la capture.
+- the `X-Gateway-APIKey` value (text only);
+- cover model tested (e.g. Evology SIN2RS1);
+- Enki app (APK) version;
+- confirmation the command worked in the app at capture time.
 
-**Ne jamais joindre :** e-mail, mot de passe, tokens Bearer, homeId, nodeId.
+**Never attach:** email, password, Bearer tokens, homeId, nodeId.
 
 ## Alternative — HTTP Toolkit
 
-[HTTP Toolkit](https://httptoolkit.com/) propose une interface graphique (connexion téléphone Android via ADB, ou proxy manuel similaire à mitmproxy). Même principe : intercepter une requête `api-enki-rolling-prod` / `shutter/…` et lire `X-Gateway-APIKey`.
+[HTTP Toolkit](https://httptoolkit.com/) provides a GUI (Android via ADB, or manual proxy like mitmproxy). Same principle: intercept an `api-enki-rolling-prod` / `shutter/…` request and read `X-Gateway-APIKey`.
 
-## Intégration côté repo
+## Repository integration
 
-1. **Préféré :** `extract_gateway_keys.py --apply --update-known` (voir ci-dessus).
-2. **Sinon :** le mainteneur met à jour manuellement :
+1. **Preferred:** `extract_gateway_keys.py --apply --update-known` (see above).
+2. **Otherwise:** maintainer updates manually:
 
 ```python
 # custom_components/enki/const.py
 ENKI_ACCESS_MOTORIZATION_API_KEY = "…"
 ```
 
-Puis publie une nouvelle version. Les utilisateurs n’ont rien à modifier manuellement s’ils passent par HACS.
+Then publish a new version. Users change nothing manually if they use HACS.
 
-## Références
+## References
 
-- Notes API volets : [API.md](API.md#roller-shutters-evology-sin2rs1--beta)
-- Testeurs (sans proxy) : [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md#pour-les-testeurs)
+- Cover API notes: [API.md](API.md#roller-shutters-evology-sin2rs1--beta)
+- Testers (no proxy): [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md#for-testers-covers)

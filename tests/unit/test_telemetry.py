@@ -23,13 +23,20 @@ def _record():
     )
 
 
+def _entry_with_coordinator(*, telemetry: bool) -> MagicMock:
+    entry = MagicMock()
+    entry.entry_id = "entry1"
+    entry.options = {CONF_TELEMETRY: telemetry}
+    entry.runtime_data = MagicMock()
+    entry.runtime_data.api.read_errors_for_fingerprint.return_value = {}
+    return entry
+
+
 @pytest.mark.asyncio
 async def test_telemetry_skipped_when_disabled() -> None:
     hass = MagicMock()
     hass.config.version = "2024.12.0"
-    entry = MagicMock()
-    entry.entry_id = "entry1"
-    entry.options = {CONF_TELEMETRY: False}
+    entry = _entry_with_coordinator(telemetry=False)
 
     reporter = EnkiTelemetryReporter(hass, entry)
     with patch(
@@ -44,9 +51,7 @@ async def test_telemetry_skipped_when_disabled() -> None:
 async def test_telemetry_notifies_new_profile() -> None:
     hass = MagicMock()
     hass.config.version = "2024.12.0"
-    entry = MagicMock()
-    entry.entry_id = "entry1"
-    entry.options = {CONF_TELEMETRY: True}
+    entry = _entry_with_coordinator(telemetry=True)
 
     reporter = EnkiTelemetryReporter(hass, entry)
     reporter._store.async_load = AsyncMock(return_value={"fingerprints": []})  # type: ignore[method-assign]
@@ -68,9 +73,7 @@ async def test_telemetry_notifies_new_profile() -> None:
 async def test_telemetry_dedupes_fingerprint() -> None:
     hass = MagicMock()
     hass.config.version = "2024.12.0"
-    entry = MagicMock()
-    entry.entry_id = "entry1"
-    entry.options = {CONF_TELEMETRY: True}
+    entry = _entry_with_coordinator(telemetry=True)
 
     reporter = EnkiTelemetryReporter(hass, entry)
     reporter._store.async_load = AsyncMock(return_value={"fingerprints": []})  # type: ignore[method-assign]
@@ -89,9 +92,7 @@ async def test_telemetry_dedupes_fingerprint() -> None:
 async def test_telemetry_skips_fully_supported_profile() -> None:
     hass = MagicMock()
     hass.config.version = "2024.12.0"
-    entry = MagicMock()
-    entry.entry_id = "entry1"
-    entry.options = {CONF_TELEMETRY: True}
+    entry = _entry_with_coordinator(telemetry=True)
 
     record = build_discovery_record(
         device_type="ceiling_fans",
@@ -125,13 +126,82 @@ async def test_telemetry_skips_fully_supported_profile() -> None:
 
 
 @pytest.mark.asyncio
+async def test_telemetry_skips_out_of_scope_sonoff() -> None:
+    hass = MagicMock()
+    hass.config.version = "2024.12.0"
+    entry = _entry_with_coordinator(telemetry=True)
+
+    record = build_discovery_record(
+        device_type="sensors",
+        bff_device_type="sensors",
+        capabilities=["check_current_temperature"],
+        possible_values={},
+        manufacturer="Sonoff",
+        model="SNZB-02D",
+        firmware_version=None,
+        supported_by_integration=False,
+    )
+
+    reporter = EnkiTelemetryReporter(hass, entry)
+    reporter._store.async_load = AsyncMock(return_value={"fingerprints": []})  # type: ignore[method-assign]
+    reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
+
+    with patch(
+        "enki.telemetry.reporter.persistent_notification.async_create",
+        new_callable=MagicMock,
+    ) as notify:
+        await reporter.async_report([record])
+        notify.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_telemetry_notifies_when_api_errors_appear_after_fingerprint_stored() -> None:
+    hass = MagicMock()
+    hass.config.version = "2024.12.0"
+    entry = _entry_with_coordinator(telemetry=True)
+
+    record = build_discovery_record(
+        device_type="heaters_and_pilot_wires",
+        bff_device_type="heaters_and_pilot_wires",
+        capabilities=[
+            "change_thermostat_target_temperature",
+            "check_thermostat_target_temperature",
+        ],
+        possible_values={},
+        manufacturer="Noirot",
+        model="radiator",
+        firmware_version="2.15.0",
+        supported_by_integration=True,
+    )
+
+    reporter = EnkiTelemetryReporter(hass, entry)
+    reporter._store.async_load = AsyncMock(return_value={"fingerprints": ["already-known-fp"]})  # type: ignore[method-assign]
+    reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
+
+    from enki.domain.profile import profile_fingerprint, profile_to_export_dict
+
+    export = profile_to_export_dict(record, integration_version="1.6.6", ha_version="2025.1")
+    fingerprint = profile_fingerprint(export)
+    reporter._store.async_load = AsyncMock(return_value={"fingerprints": [fingerprint]})  # type: ignore[method-assign]
+
+    entry.runtime_data.api.read_errors_for_fingerprint.return_value = {
+        "heating/check_thermostat_target_temperature": "HTTP 500",
+    }
+
+    with patch(
+        "enki.telemetry.reporter.persistent_notification.async_create",
+        new_callable=MagicMock,
+    ) as notify:
+        await reporter.async_report([record])
+        notify.assert_called_once()
+
+
+@pytest.mark.asyncio
 async def test_telemetry_tolerates_corrupt_storage() -> None:
     hass = MagicMock()
     hass.config.version = "2024.12.0"
     hass.config.language = "en"
-    entry = MagicMock()
-    entry.entry_id = "entry1"
-    entry.options = {CONF_TELEMETRY: True}
+    entry = _entry_with_coordinator(telemetry=True)
 
     reporter = EnkiTelemetryReporter(hass, entry)
     reporter._store.async_load = AsyncMock(return_value={"fingerprints": None})  # type: ignore[method-assign]

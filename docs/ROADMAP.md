@@ -1,34 +1,31 @@
-# Feuille de route (vue détaillée)
+# Roadmap (detailed view)
 
-Version courte pour HACS : [README § Feuille de route](../README.md#feuille-de-route).  
-Détail par appareil : [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md).
+Short version: [README](../README.md) · detailed view below.
 
 | | |
 |---|---|
-| **Dernière release GitHub** | [v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
-| **Version `manifest.json` (dépôt)** | 1.5.0 |
+| **Latest GitHub release** | [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
+| **Repository `manifest.json`** | 1.6.5 |
 
-**Écart release / dépôt :** la [dernière release GitHub](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) (v1.3.3) n’inclut pas encore RGB (HS), chauffage, fuite ni volets. Le dépôt `main` est en **1.5.0** : RGB, clés gateway APK 2.25.1, chauffage / fuite / volets (beta), filtre fabricant Enki.
+## Status by device
 
-## Statut par appareil
-
-| Statut | Appareil | Fonctionnalités |
+| Status | Device | Features |
 |--------|----------|-------------------|
-| ✅ Supporté | Ventilateurs Inspire (Siroco+, Cadix, …) | ventilateur, lumière kit, vitesse, sens, modes (selon référentiel) |
-| ✅ Supporté | Luminaires Enki (Eglo, Lexman, …) | ON/OFF, luminosité, blanc variable, couleur RGB (HS) si `change_hue` + `change_saturation` |
-| ✅ Supporté | Prises / interrupteurs (Edisio, Equation, …) | ON/OFF via `switch-electrical-power` |
-| ✅ Supporté | Panneaux solaires Envertech-Lexman | production (W) via dashboard BFF |
-| ✅ Supporté | Capteurs mouvement / ouverture / vibration (Lexman, …) | `binary_sensor` |
-| ✅ Supporté | Thermomètres Enki (Sedea, …) | température, humidité, batterie |
-| ✅ Supporté | Sirènes Lexman | `switch` ON/OFF |
-| ✅ Supporté | Relais ON/OFF Equation | ON/OFF (comme prises Edisio) |
-| 🔬 Beta | Volets roulants (Evology, Nodon, …) | `cover` « Volet (beta) » si volet actif dans l’app ; clé `ENKI_ACCESS_MOTORIZATION_API_KEY` (APK 2.25.1) ; peu testé en conditions réelles |
-| 🔬 Beta | Détecteur fuite Lexman (v1.5.0+) | `binary_sensor` fuite + `sensor` batterie ; clés `ENKI_WATER_SENSOR_API_KEY` et `ENKI_BATTERY_HEALTH_API_KEY` (APK 2.25.1) |
-| 🔬 Beta | Fil pilote Equation (v1.5.0+) | entité `select` (modes confort / éco / hors gel) ; clé `ENKI_HEATING_API_KEY` (APK 2.25.1) |
-| 🔬 Beta | Radiateur Noirot (v1.5.0+) | `climate` + détection fenêtre / présence ; clé `ENKI_HEATING_API_KEY` (APK 2.25.1) |
-| 🔜 Bientôt | Radiateurs ACOVA ARLAN | allowlist fabricant OK, pas de matériel de test |
-| 🔬 Beta | Scénarios Enki (« Ouvrir Salon », …) | `button` (v1.6.0+) |
-| ⏳ Pas prévu | Alarme Enki | pas d’API identifiée |
-| ✅ Prérequis OK | Store HACS global | CI HACS + Hassfest vertes, releases publiées — [PR `hacs/default` à ouvrir](HACS.md#store-hacs-par-défaut) |
+| ✅ Supported | Inspire fans (Siroco+, Cadix, …) | fan, LED kit light, speed, direction, modes (per referentiel) |
+| ✅ Supported | Enki lights (Eglo, Lexman, …) | ON/OFF, brightness, tunable white, RGB (HS) if `change_hue` + `change_saturation` |
+| ✅ Supported | Outlets / switches (Edisio, Equation, …) | ON/OFF via `switch-electrical-power` |
+| ✅ Supported | Envertech-Lexman solar panels | production (W) via BFF dashboard |
+| ✅ Supported | Motion / contact / vibration sensors (Lexman, …) | `binary_sensor` |
+| ✅ Supported | Enki thermometers (Sedea, …) | temperature, humidity, battery |
+| ✅ Supported | Lexman sirens | `switch` ON/OFF |
+| ✅ Supported | Equation ON/OFF relay | ON/OFF (like Edisio outlets) |
+| 🔬 Beta | Roller shutters (Evology, Nodon, …) | `cover` “Shutter (beta)” if active in the app; `ENKI_ACCESS_MOTORIZATION_API_KEY` (APK 2.25.1); limited real-world testing |
+| 🔬 Beta | Lexman water leak detector (v1.5.0+) | leak `binary_sensor` + battery `sensor`; `ENKI_WATER_SENSOR_API_KEY` and `ENKI_BATTERY_HEALTH_API_KEY` (APK 2.25.1) |
+| 🔬 Beta | Equation pilot wire (v1.5.0+) | `select` entity (comfort / eco / frost protection modes); `ENKI_HEATING_API_KEY` (APK 2.25.1) |
+| 🔬 Beta | Noirot radiator (v1.5.0+) | `climate` + window / presence detection; `ENKI_HEATING_API_KEY` (APK 2.25.1) |
+| 🔜 Soon | ACOVA ARLAN radiators | manufacturer allowlist OK, no test hardware |
+| 🔬 Beta | Enki scenarios (“Open living room”, …) | `button` (v1.6.0+) |
+| ⏳ Not planned | Enki alarm | no API identified |
+| ✅ Prerequisite OK | Default HACS store | CI HACS + Hassfest green, releases published — [PR to `hacs/default`](HACS.md#default-hacs-store) |
 
-**Hors périmètre :** Zigbee tiers appairé sur la box (Sonoff, Tuya, Aqara, IKEA, …) → [Zigbee2MQTT](https://www.zigbee2mqtt.io/) ou ZHA. Seules les marques **Enki / Leroy Merlin** listées dans [`lib/enki_scope.py`](../custom_components/enki/lib/enki_scope.py) sont importées.
+**Out of scope:** third-party Zigbee on the hub (Sonoff, Tuya, Aqara, IKEA, …) → [Zigbee2MQTT](https://www.zigbee2mqtt.io/) or ZHA. Only **Enki / Leroy Merlin** brands in [`lib/enki_scope.py`](../custom_components/enki/lib/enki_scope.py) are imported.

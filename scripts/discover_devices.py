@@ -21,26 +21,35 @@ from enki_bootstrap import bootstrap_api_client, load_module  # noqa: E402
 
 client_mod = bootstrap_api_client()
 profile_mod = load_module("enki.domain.profile")
+enrichment_mod = load_module("enki.domain.telemetry_enrichment")
 EnkiAPI = client_mod.EnkiAPI
 profile_fingerprint = profile_mod.profile_fingerprint
 profile_to_export_dict = profile_mod.profile_to_export_dict
+enrich_telemetry_export = enrichment_mod.enrich_telemetry_export
 
 
-async def main(username: str, password: str, export: bool) -> None:
+async def main(username: str, password: str, export_json: bool) -> None:
     api = EnkiAPI(username, password)
     await api.async_connect()
     await api.async_get_devices()
 
-    profiles = [
-        profile_to_export_dict(
+    profiles = []
+    for record in api.discovery_records:
+        profile_export = profile_to_export_dict(
             record,
             integration_version="dev",
             ha_version="n/a",
         )
-        for record in api.discovery_records
-    ]
+        fingerprint = profile_fingerprint(profile_export)
+        profiles.append(
+            enrich_telemetry_export(
+                profile_export,
+                record,
+                api_read_errors=api.read_errors_for_fingerprint(fingerprint) or None,
+            )
+        )
 
-    if export:
+    if export_json:
         print(json.dumps(profiles, indent=2, sort_keys=True))
     else:
         for profile in profiles:

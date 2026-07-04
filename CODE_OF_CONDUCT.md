@@ -1,37 +1,37 @@
-# Code de conduite
+# Code of Conduct
 
-## Notre engagement
+## Our pledge
 
-Nous nous engageons à faire de la participation à ce projet une expérience sans harcèlement pour tous, quel que soit l’âge, le corps, le handicap, l’origine ethnique, l’identité et l’expression de genre, le niveau d’expérience, la nationalité, l’apparence, la race, la religion ou l’identité et l’orientation sexuelles.
+We pledge to make participation in this project a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-## Nos standards
+## Our standards
 
-Comportements qui contribuent à un environnement positif :
+Examples of behavior that contributes to a positive environment:
 
-- Faire preuve d’empathie et de bienveillance
-- Respecter les opinions et expériences différentes
-- Accepter les critiques constructives
-- Se concentrer sur ce qui est meilleur pour la communauté
+- Showing empathy and kindness toward others
+- Respecting differing opinions and experiences
+- Accepting constructive criticism gracefully
+- Focusing on what is best for the community
 
-Comportements inacceptables :
+Examples of unacceptable behavior:
 
-- Langage ou imagerie sexualisés, attentions ou avances non désirées
-- Trolling, insultes, attaques personnelles ou politiques
-- Harcèlement public ou privé
-- Publication d’informations privées d’autrui sans permission
+- Sexualized language or imagery, and unwelcome sexual attention or advances
+- Trolling, insulting or derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information without permission
 
-## Responsabilités
+## Enforcement responsibilities
 
-Les mainteneurs appliquent les standards et peuvent supprimer, modifier ou rejeter contributions, issues et commentaires ne respectant pas ce code.
+Maintainers enforce these standards and may remove, edit, or reject contributions, issues, and comments that do not align with this code.
 
-## Portée
+## Scope
 
-Ce code s’applique dans l’espace du projet et lorsqu’une personne représente le projet en public.
+This code applies within project spaces and when an individual represents the project in public.
 
-## Application
+## Enforcement
 
-Signaler un abus à **cyrilcolinet** via [GitHub](https://github.com/cyrilcolinet) ou les issues privées du dépôt. Toute plainte sera examinée et traitée de façon proportionnée.
+Report abuse to **cyrilcolinet** via [GitHub](https://github.com/cyrilcolinet) or private repository issues. All complaints will be reviewed and handled proportionately.
 
 ## Attribution
 
-Adapté du [Contributor Covenant](https://www.contributor-covenant.org), version 2.1.
+Adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1.

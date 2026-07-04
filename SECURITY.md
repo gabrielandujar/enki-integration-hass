@@ -1,23 +1,23 @@
-# Sécurité
+# Security
 
-## Signaler une vulnérabilité
+## Reporting a vulnerability
 
-**Ne pas** ouvrir d’issue publique pour un problème de sécurité.
+**Do not** open a public issue for a security problem.
 
-1. Ouvrir un [GitHub Security Advisory](https://github.com/cyrilcolinet/enki-integration-hass/security/advisories/new) (recommandé)
-2. Ou contacter le mainteneur via GitHub en privé
+1. Open a [GitHub Security Advisory](https://github.com/cyrilcolinet/enki-integration-hass/security/advisories/new) (recommended)
+2. Or contact the maintainer privately on GitHub
 
-Délai de réponse visé : 7 jours ouvrés.
+Target response time: 7 business days.
 
-## Périmètre
+## Scope
 
-- Intégration `custom_components/enki/`
-- Scripts et workflows du dépôt
+- Integration `custom_components/enki/`
+- Repository scripts and workflows
 
-Hors périmètre : l’API cloud Enki elle-même, l’application mobile, la box Enki.
+Out of scope: the Enki cloud API itself, the mobile app, the Enki hub.
 
-## Bonnes pratiques utilisateur
+## User best practices
 
-- Ne pas committer `.env` ou identifiants Enki
-- Utiliser un compte Enki dédié aux tests si possible
-- L’intégration stocke le mot de passe dans les entrées de configuration HA — protégez votre instance
+- Do not commit `.env` or Enki credentials
+- Use a dedicated Enki test account when possible
+- The integration stores the password in HA config entries — protect your instance

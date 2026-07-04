@@ -10,7 +10,12 @@ import aiohttp
 from ..const import DEVICE_TYPE_LIGHTS, LOGGER
 from ..domain.capabilities import EnkiCapabilityProfile
 from ..domain.models import EnkiDevice, EnkiDiscoveryRecord, EnkiScenario
-from ..domain.profile import build_discovery_record, integration_supports_device
+from ..domain.profile import (
+    build_discovery_record,
+    integration_supports_device,
+    profile_fingerprint,
+    profile_to_export_dict,
+)
 from ..exceptions import EnkiApiNotFoundError, EnkiConnectionError
 from ..lib.bff import parse_bff_power
 from ..lib.conversion import (
@@ -45,6 +50,8 @@ class EnkiAPI:
         self._discovery_records: list[EnkiDiscoveryRecord] = []
         self._referentiel_cache: dict[str, dict[str, Any]] = {}
         self._scenarios: tuple[EnkiScenario, ...] = ()
+        self._node_fingerprints: dict[str, str] = {}
+        self._profile_read_errors: dict[str, dict[str, str]] = {}
 
     async def async_close(self) -> None:
         """Close the underlying HTTP session."""
@@ -92,6 +99,8 @@ class EnkiAPI:
         homes = await http.get_homes()
         devices: list[EnkiDevice] = []
         self._discovery_records = []
+        self._node_fingerprints.clear()
+        self._profile_read_errors.clear()
         for home_id in homes:
             home_devices, records = await self._discover_home(http, home_id)
             devices.extend(home_devices)
@@ -101,6 +110,30 @@ class EnkiAPI:
     @property
     def discovery_records(self) -> list[EnkiDiscoveryRecord]:
         return list(self._discovery_records)
+
+    def read_errors_for_fingerprint(self, fingerprint: str) -> dict[str, str]:
+        """Anonymized API read failures from the last poll (no node or home ids)."""
+        return dict(self._profile_read_errors.get(fingerprint, {}))
+
+    def _register_node_profile(self, node_id: str, record: EnkiDiscoveryRecord) -> None:
+        export = profile_to_export_dict(record, integration_version="", ha_version="")
+        self._node_fingerprints[node_id] = profile_fingerprint(export)
+
+    def _note_read_error(
+        self,
+        node_id: str,
+        *,
+        service: str,
+        capability: str,
+        err: Exception,
+    ) -> None:
+        fingerprint = self._node_fingerprints.get(node_id)
+        if not fingerprint:
+            return
+        status = getattr(err, "status", None)
+        label = f"HTTP {status}" if status else err.__class__.__name__
+        key = f"{service}/{capability}"
+        self._profile_read_errors.setdefault(fingerprint, {})[key] = label
 
     @property
     def scenarios(self) -> tuple[EnkiScenario, ...]:
@@ -255,6 +288,7 @@ class EnkiAPI:
             firmware_version=str(firmware) if firmware else None,
             supported_by_integration=supported,
         )
+        self._register_node_profile(node_id, record)
 
         last_reported: dict[str, Any] = {}
         if item.get("isEnabled", True):
@@ -315,6 +349,12 @@ class EnkiAPI:
                     state["light_power"] = light_state["power"]
             except EnkiConnectionError as err:
                 LOGGER.debug("Light state skipped for node %s: %s", node_id, err)
+                self._note_read_error(
+                    node_id,
+                    service="lighting",
+                    capability="check-light-state",
+                    err=err,
+                )
 
         if profile.supports_electrical_power:
             try:
@@ -325,6 +365,12 @@ class EnkiAPI:
                     state["power"] = state["electrical_power"]
             except EnkiConnectionError as err:
                 LOGGER.debug("Electrical power skipped for node %s: %s", node_id, err)
+                self._note_read_error(
+                    node_id,
+                    service="power",
+                    capability="check-electrical-power",
+                    err=err,
+                )
 
         if profile.supports_electrical_consumption:
             try:
@@ -336,6 +382,12 @@ class EnkiAPI:
                         state["electrical_consumption_unit"] = unit
             except EnkiConnectionError as err:
                 LOGGER.debug("Electrical consumption skipped for node %s: %s", node_id, err)
+                self._note_read_error(
+                    node_id,
+                    service="consumption",
+                    capability="check-instant-consumption",
+                    err=err,
+                )
 
         if profile.supports_fan_speed:
             try:
@@ -343,6 +395,12 @@ class EnkiAPI:
                 state["fan_speed"] = data["lastReportedValue"]
             except EnkiConnectionError as err:
                 LOGGER.debug("Fan speed skipped for node %s: %s", node_id, err)
+                self._note_read_error(
+                    node_id,
+                    service="airflow",
+                    capability="check-fan-speed",
+                    err=err,
+                )
 
         if profile.supports_airflow_mode:
             try:
@@ -350,6 +408,12 @@ class EnkiAPI:
                 state["airflow_mode"] = data["lastReportedValue"]
             except EnkiConnectionError as err:
                 LOGGER.debug("Airflow mode skipped for node %s: %s", node_id, err)
+                self._note_read_error(
+                    node_id,
+                    service="airflow",
+                    capability="check-airflow-mode",
+                    err=err,
+                )
 
         if profile.is_inverter:
             state["power_production"] = device.power_production
@@ -387,6 +451,12 @@ class EnkiAPI:
                     node_id,
                     err,
                 )
+                self._note_read_error(
+                    node_id,
+                    service=read.transport_id,
+                    capability=read.capability,
+                    err=err,
+                )
                 return None
             if data and "lastReportedValue" in data:
                 return read.state_key, data["lastReportedValue"]
@@ -411,6 +481,12 @@ class EnkiAPI:
                 state["fan_speed"] = speed_data["lastReportedValue"]
         except EnkiConnectionError as err:
             LOGGER.debug("Fan speed skipped for node %s: %s", node_id, err)
+            self._note_read_error(
+                node_id,
+                service="airflow",
+                capability="check-fan-speed",
+                err=err,
+            )
 
         try:
             mode_data = await http.airflow_get(home_id, node_id, "check-airflow-mode")
@@ -418,6 +494,12 @@ class EnkiAPI:
                 state["airflow_mode"] = mode_data["lastReportedValue"]
         except EnkiConnectionError as err:
             LOGGER.debug("Airflow mode skipped for node %s: %s", node_id, err)
+            self._note_read_error(
+                node_id,
+                service="airflow",
+                capability="check-airflow-mode",
+                err=err,
+            )
 
         rotation, rotation_supported = await self._read_fan_rotation(http, home_id, node_id)
         state["airflow_rotation"] = rotation
@@ -433,6 +515,12 @@ class EnkiAPI:
                 state["power"] = last_reported.get("power")
         except EnkiConnectionError as err:
             LOGGER.debug("Fan light state skipped for node %s: %s", node_id, err)
+            self._note_read_error(
+                node_id,
+                service="lighting",
+                capability="check-light-state",
+                err=err,
+            )
 
         try:
             power_details = await http.get_electrical_power(home_id, node_id)
@@ -440,6 +528,12 @@ class EnkiAPI:
             state["electrical_endpoints"] = power_details.get("endpoints", [])
         except EnkiConnectionError as err:
             LOGGER.debug("Electrical power skipped for fan node %s: %s", node_id, err)
+            self._note_read_error(
+                node_id,
+                service="power",
+                capability="check-electrical-power",
+                err=err,
+            )
         return state
 
     async def _read_fan_rotation(

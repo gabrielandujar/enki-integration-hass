@@ -1,166 +1,164 @@
-# Appareils et fonctionnalités supportés
+# Supported devices and features
 
-Détail par type d’appareil et entités Home Assistant créées. L’intégration détecte les appareils via leurs **capabilities** API (comme l’app mobile), pas seulement par modèle.
+Detail by device type and Home Assistant entities created. The integration detects devices via API **capabilities** (like the mobile app), not model names alone.
 
 | | |
 |---|---|
-| **Dernière release GitHub** | [v1.3.3](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
-| **Version `manifest.json` (dépôt)** | 1.5.0 |
+| **Latest GitHub release** | [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
+| **Repository `manifest.json`** | 1.6.5 |
 
-**Écart release / dépôt :** la [dernière release GitHub](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) (v1.3.3) n’inclut pas encore RGB (HS), chauffage, fuite ni volets. Le dépôt `main` est en **1.5.0** : RGB, clés gateway APK 2.25.1, chauffage / fuite / volets (beta), filtre fabricant Enki.
+Summary: [ROADMAP.md](ROADMAP.md)
 
-Vue synthèse : [ROADMAP.md](ROADMAP.md) · version courte (HACS) : [README § Feuille de route](../README.md#feuille-de-route)
+## Scope
 
-## Périmètre
+This integration covers **only the Enki / Leroy Merlin ecosystem**: Lexman, Equation, Inspire, Noirot, Edisio, Eglo, Sedea, Evology, Nodon, ACOVA, Envertech, etc. (exact list: [`lib/enki_scope.py`](../custom_components/enki/lib/enki_scope.py)).
 
-Cette intégration couvre **uniquement l’écosystème Enki / Leroy Merlin** : Lexman, Equation, Inspire, Noirot, Edisio, Eglo, Sedea, Evology, Nodon, ACOVA, Envertech, etc. (liste exacte : [`lib/enki_scope.py`](../custom_components/enki/lib/enki_scope.py)).
+**Important:** many of these devices use **Zigbee radio** via the Enki hub — that is expected and in scope. However, any **third-party Zigbee** on the hub (Sonoff, Tuya, Aqara, IKEA, …) or any node **without a known Enki manufacturer** is **skipped** at discovery: integrate them via **Zigbee2MQTT** or **ZHA**, not this repo.
 
-**Important :** beaucoup de ces appareils utilisent **Zigbee en radio** via la box Enki — c’est normal et ils restent dans le périmètre. En revanche, tout **Zigbee tiers** appairé sur la box (Sonoff, Tuya, Aqara, IKEA, …) ou tout nœud **sans fabricant Enki connu** est **ignoré** à la découverte : intégrez-les via **Zigbee2MQTT** ou **ZHA**, pas ce dépôt.
+## Inspire ceiling fans (Siroco+, Aruba+, Cadix, Radix, …)
 
-## Ventilateurs Inspire (Siroco+, Aruba+, Cadix, Radix, …)
+**HA entities:** `fan` + `light` (LED kit)
 
-**Entités HA :** `fan` + `light` (kit LED)
-
-| Fonction | Détail |
+| Function | Detail |
 |----------|--------|
-| Marche / arrêt | Vitesse 0 ou coupure moteur |
-| Vitesse | Jusqu’à 6 niveaux (mapping pourcentage HA ; max selon référentiel) |
-| Sens de rotation | Été / hiver si `change_fan_rotation_direction` (API `CLOCKWISE` / `COUNTERCLOCKWISE`) |
-| Modes | Presets HA dérivés du référentiel : `manual`, `breeze`, et selon modèle `ventilation`, `boost`, `auto`, `sleep` (libellé UI « Nuit ») |
+| On / off | Speed 0 or motor power cut |
+| Speed | Up to 6 levels (HA percentage mapping; max from referentiel) |
+| Rotation direction | Summer / winter if `change_fan_rotation_direction` (API `CLOCKWISE` / `COUNTERCLOCKWISE`) |
+| Modes | HA presets from referentiel: `manual`, `breeze`, and per model `ventilation`, `boost`, `auto`, `sleep` (UI label “Night”) |
 
-Le ventilateur et sa lumière sont **indépendants** : allumer l’un n’allume pas l’autre.
+Fan and light kit are **independent**: turning one on does not turn the other on.
 
-## Luminaires Enki (Eglo, Lexman, …)
+## Enki lights (Eglo, Lexman, …)
 
-**Entité HA :** `light`
+**HA entity:** `light`
 
-| Fonction | Détail |
+| Function | Detail |
 |----------|--------|
-| Marche / arrêt | ON / OFF |
-| Luminosité | Si `change_brightness` ou `change_light_state` |
-| Blanc variable | Température de couleur (`colorTemperature`, ex. `T3500K`) si annoncée |
-| Couleur RGB | Mode HS si `change_hue` + `change_saturation` (depuis manifest **1.4.0**, pas dans la release v1.3.3) |
+| On / off | ON / OFF |
+| Brightness | If `change_brightness` or `change_light_state` |
+| Tunable white | Color temperature (`colorTemperature`, e.g. `T3500K`) when advertised |
+| RGB color | HS mode if `change_hue` + `change_saturation` (since manifest **1.4.0**) |
 
-## Prises, relais et interrupteurs (Edisio, Equation, …)
+## Outlets, relays, and switches (Edisio, Equation, …)
 
-**Entité HA :** `light` ON/OFF (API `switch-electrical-power`, pas l’API lighting)
+**HA entity:** `light` ON/OFF (API `switch-electrical-power`, not lighting API)
 
-| Modèle / type | Statut |
+| Model / type | Status |
 |---------------|--------|
-| Prises Edisio | ✅ ON/OFF, ✅ conso instantanée (W) |
-| Relais ON/OFF Equation ([profil](./devices/63a053851a423d4a245a877c.json)) | ✅ ON/OFF, ✅ conso instantanée (W) |
+| Edisio outlets | ✅ ON/OFF, ✅ instant consumption (W) |
+| Equation ON/OFF relay ([profile](./devices/63a053851a423d4a245a877c.json)) | ✅ ON/OFF, ✅ instant consumption (W) |
 
-Les nœuds multi-circuits peuvent créer **une entité par circuit** (endpoint BFF). Timers (`switch_electrical_power_in`, …) : pas encore exposés.
+Multi-circuit nodes may create **one entity per circuit** (BFF endpoint). Timers (`switch_electrical_power_in`, …): not exposed yet.
 
-## Scénarios Enki (v1.6.0+)
+## Enki scenarios (v1.6.0+)
 
-**Entités HA :** `button` (un bouton par scénario cloud)
+**HA entities:** `button` (one button per cloud scenario)
 
-| Fonction | Détail |
+| Function | Detail |
 |----------|--------|
-| Lister | `GET /api-enki-scenario-prod/v1/scenarios?homeId=…` |
-| Lancer | `POST …/scenarios/{id}/activate` |
+| List | `GET /api-enki-scenario-prod/v1/scenarios?homeId=…` |
+| Run | `POST …/scenarios/{id}/activate` |
 
-Les scénarios sont rafraîchis à chaque poll du coordinateur. Ils apparaissent sous l’appareil virtuel **Enki scenarios**.
+Scenarios refresh on each coordinator poll. They appear under the virtual device **Enki scenarios**.
 
-## Panneaux solaires (Envertech-Lexman)
+## Solar panels (Envertech-Lexman)
 
-**Entité HA :** `sensor` (production W)
+**HA entity:** `sensor` (production W)
 
-| Fonction | Détail |
+| Function | Detail |
 |----------|--------|
-| Production instantanée | Valeur lue sur le dashboard BFF (`description.value`) |
+| Instant production | Value from BFF dashboard (`description.value`) |
 
-## Capteurs Enki (Lexman, Sedea, …)
+## Enki sensors (Lexman, Sedea, …)
 
-Micro-services alignés sur [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki) (clés gateway déjà dans `const.py`).
+Micro-services aligned with [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki) (gateway keys already in `const.py`).
 
-### Mouvement / ouverture / vibration
+### Motion / contact / vibration
 
-**Entités HA :** `binary_sensor`
+**HA entities:** `binary_sensor`
 
-| Capabilité API | Entité |
+| API capability | Entity |
 |----------------|--------|
-| `check_motion_detection` / `check_motion_detector_state` | Mouvement |
-| `check_contact_sensor_state` | Contact (ouvert / fermé) |
+| `check_motion_detection` / `check_motion_detector_state` | Motion |
+| `check_contact_sensor_state` | Contact (open / closed) |
 | `check_vibration_detection` | Vibration |
 
-### Température / humidité / batterie
+### Temperature / humidity / battery
 
-**Entités HA :** `sensor`
+**HA entities:** `sensor`
 
-| Capabilité API | Entité |
+| API capability | Entity |
 |----------------|--------|
-| `check_current_temperature` | Température (°C) — sauf thermostats (température sur `climate`) |
-| `check_current_humidity` | Humidité (%) |
-| `check_battery_health` | Batterie (%, mapping Enki) |
+| `check_current_temperature` | Temperature (°C) — except thermostats (temperature on `climate`) |
+| `check_current_humidity` | Humidity (%) |
+| `check_battery_health` | Battery (%, Enki mapping) |
 
-Thermomètres **Sedea** (écran) : température, humidité, batterie.
+**Sedea** thermometers (display): temperature, humidity, battery.
 
-### Sirène Lexman
+### Lexman siren
 
-**Entité HA :** `switch` (ON/OFF via `switch_siren_status`)
+**HA entity:** `switch` (ON/OFF via `switch_siren_status`)
 
-### Réglages capteur contact
+### Contact sensor settings
 
-**Entités HA :** `switch` (activation détection), `number` (sensibilité vibration 1–5)
+**HA entities:** `switch` (detection enable), `number` (vibration sensitivity 1–5)
 
-### Fuite d’eau (Lexman) — beta (v1.5.0+)
+### Water leak (Lexman) — beta (v1.5.0+)
 
-**Entités HA :** `binary_sensor` (fuite), `sensor` (batterie)
+**HA entities:** `binary_sensor` (leak), `sensor` (battery)
 
-**Profil :** [651eada55b3a798ef6b6bc5c.json](./devices/651eada55b3a798ef6b6bc5c.json)
+**Profile:** [651eada55b3a798ef6b6bc5c.json](./devices/651eada55b3a798ef6b6bc5c.json)
 
-| Capabilité | Service | Statut actuel |
+| Capability | Service | Current status |
 |------------|---------|---------------|
-| `check_battery_health` | `battery-health` | ✅ clé APK 2.25.1 |
-| `check_water_sensor_state` | `water-leak-detector` | ✅ clé APK 2.25.1 |
+| `check_battery_health` | `battery-health` | ✅ APK 2.25.1 key |
+| `check_water_sensor_state` | `water-leak-detector` | ✅ APK 2.25.1 key |
 
-## Chauffage — beta (v1.5.0+)
+## Heating — beta (v1.5.0+)
 
-| Modèle | Entités HA | Profil |
+| Model | HA entities | Profile |
 |--------|------------|--------|
-| Fil pilote Equation | `select` (COMFORT, ECO, FROST_PROTECTION, OFF, …) | [63a054c81a423d4a245a877e.json](./devices/63a054c81a423d4a245a877e.json) |
-| Radiateur Noirot | `climate`, `binary_sensor` (fenêtre, présence), `switch` (modes détection) | [67a4b12bae1eca4709a45680.json](./devices/67a4b12bae1eca4709a45680.json) |
+| Equation pilot wire | `select` (COMFORT, ECO, FROST_PROTECTION, OFF, …) | [63a054c81a423d4a245a877e.json](./devices/63a054c81a423d4a245a877e.json) |
+| Noirot radiator | `climate`, `binary_sensor` (window, presence), `switch` (detection modes) | [67a4b12bae1eca4709a45680.json](./devices/67a4b12bae1eca4709a45680.json) |
 
-**Clés API :** remplies depuis l’APK Enki 2.25.1 (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY`). Mise à jour : [DEVELOPMENT.md](DEVELOPMENT.md) · détail API : [API.md](API.md#heating-and-water-sensors-manifest--150).
+**API keys:** from Enki APK 2.25.1 (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY`). Update: [DEVELOPMENT.md](DEVELOPMENT.md) · API detail: [API.md](API.md#heating-and-water-sensors-manifest--150).
 
-Catalogue JSON : [docs/devices/README.md](./devices/README.md)
+JSON catalogue: [docs/devices/README.md](./devices/README.md)
 
-## Volets roulants — beta (Evology, Nodon, …)
+## Roller shutters — beta (Evology, Nodon, …)
 
-**Entité HA :** `cover` « Volet (beta) »
+**HA entity:** `cover` “Shutter (beta)”
 
-| Fonction | Détail |
+| Function | Detail |
 |----------|--------|
-| Ouverture / fermeture | Commandes cover HA |
+| Open / close | HA cover commands |
 | Position | 0–100 % via `change-shutter-position` |
 
-**État actuel :** clé `ENKI_ACCESS_MOTORIZATION_API_KEY` incluse (APK 2.25.1). Micro-service : `api-enki-rolling-prod` (plus `access-and-motorizations`). Entité **« Volet (beta) »** si le volet est actif dans l’app Enki.
+**Current state:** `ENKI_ACCESS_MOTORIZATION_API_KEY` included (APK 2.25.1). Micro-service: `api-enki-rolling-prod` (not `access-and-motorizations`). **“Shutter (beta)”** entity if the shutter is active in the Enki app.
 
-Retours contributeurs réseau : [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md).
+Contributor network feedback: [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md).
 
-### Pour les testeurs (volets)
+### For testers (covers)
 
-1. Mettre à jour l’intégration Enki (**v1.5.0+**) via HACS, puis redémarrer Home Assistant.
-2. Vérifier l’entité **« Volet (beta) »** sous Enki.
-3. Tester ouvrir / fermer / positionner vs l’app mobile Enki.
-4. Remonter le résultat (modèle, version HA, version intégration, extrait journaux `enki` si échec).
+1. Update the Enki integration (**v1.5.0+**) via HACS, then restart Home Assistant.
+2. Check the **“Shutter (beta)”** entity under Enki.
+3. Test open / close / position vs the Enki mobile app.
+4. Report results (model, HA version, integration version, `enki` log excerpt if it fails).
 
-## Fonctionnalités transverses
+## Cross-cutting features
 
-- **Auth OAuth** — refresh token Keycloak ; notification HA si identifiants invalides
-- **Télémétrie opt-in** — notification pour profils inconnus, lien GitHub pré-rempli (rien n’est envoyé sans clic)
-- **Notifications opérationnelles** — échec login, clé gateway 403, cloud inaccessible ([API.md](API.md#operational-notifications))
-- **Diagnostics** — export JSON anonymisé depuis l’UI Enki
+- **OAuth auth** — Keycloak refresh token; HA notification on invalid credentials
+- **Opt-in telemetry** — notification for unknown profiles, pre-filled GitHub link (nothing sent without a click)
+- **Operational notifications** — login failure, gateway key 403, cloud unreachable ([API.md](API.md#operational-notifications))
+- **Diagnostics** — anonymized JSON export from Enki UI
 
-## En cours / non supporté
+## In progress / not supported
 
-| Statut | Sujet |
+| Status | Topic |
 |--------|--------|
-| Beta | Volets, chauffage, fuite d’eau, scénarios — clés APK 2.25.1, retours bienvenus |
-| Bientôt | Radiateurs ACOVA ARLAN (même API heating si capabilities compatibles) |
-| Non planifié | Alarme Enki (pas d’API identifiée) |
-| Hors périmètre | Box Enki, appairage, compte Leroy Merlin → [support Enki](https://support.enki-home.com/) |
+| Beta | Covers, heating, water leak, scenarios — APK 2.25.1 keys, feedback welcome |
+| Soon | ACOVA ARLAN radiators (same heating API if capabilities match) |
+| Not planned | Enki alarm (no API identified) |
+| Out of scope | Enki hub, pairing, Leroy Merlin account → [Enki support](https://support.enki-home.com/) |
 
-Documentation API : [API.md](API.md)
+API documentation: [API.md](API.md)

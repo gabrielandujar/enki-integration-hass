@@ -1,17 +1,17 @@
-# Contribuer
+# Contributing
 
-Merci de contribuer. Pour l’installation locale, les tests et la CI, voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Thanks for contributing. For local setup, tests, and CI, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-## Avant de coder
+## Before you code
 
-1. Vérifier les [issues ouvertes](https://github.com/cyrilcolinet/enki-integration-hass/issues)
-2. Nouvel appareil Enki : **feature request** avec le résultat de `scripts/discover_devices.py` (sans mot de passe)
-3. Contexte API : [docs/API.md](docs/API.md)
-4. Clés gateway (APK) : [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (`extract_gateway_keys.py`) · validation volets : [docs/BETA_VOLETS_KEY.md](docs/BETA_VOLETS_KEY.md)
+1. Check [open issues](https://github.com/cyrilcolinet/enki-integration-hass/issues)
+2. New Enki device: open a **feature request** with output from `scripts/discover_devices.py` (no password)
+3. API context: [docs/API.md](docs/API.md)
+4. Gateway keys (APK): [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (`extract_gateway_keys.py`) · cover validation: [docs/BETA_VOLETS_KEY.md](docs/BETA_VOLETS_KEY.md)
 
-## Qualité attendue
+## Quality bar
 
-Avant toute PR :
+Before any PR:
 
 ```bash
 ruff check .
@@ -19,34 +19,34 @@ ruff format .
 pytest tests/unit -v
 ```
 
-La CI fait la même chose + Hassfest + HACS.
+CI runs the same checks plus Hassfest and HACS.
 
-## Organisation du code
+## Code layout
 
-- **`api/`** — auth, transport HTTP, client REST Enki
-- **`domain/`** — modèles et capacités (aucun import Home Assistant)
-- **`lib/`** — conversion et parsing purs, testables sans HA
-- **`platforms/`** — logique partagée des plateformes (pas les fichiers loader HA)
-- **`telemetry/`** — opt-in profils appareils et nudge legacy
-- **Racine** — loaders plateforme HA (`fan.py`, `light.py`, `sensor.py`, `binary_sensor.py`, `climate.py`, `cover.py`, `number.py`, `select.py`, `switch.py`) + `config_flow.py` — liste complète dans `__init__.py` → `PLATFORMS`
+- **`api/`** — auth, HTTP transport, Enki REST client
+- **`domain/`** — models and capabilities (no Home Assistant imports)
+- **`lib/`** — pure conversion and parsing, testable without HA
+- **`platforms/`** — shared platform logic (not HA loader files)
+- **`telemetry/`** — opt-in device profiles and legacy nudge
+- **Root** — HA platform loaders (`fan.py`, `light.py`, `sensor.py`, `binary_sensor.py`, `climate.py`, `cover.py`, `number.py`, `select.py`, `switch.py`) + `config_flow.py` — full list in `__init__.py` → `PLATFORMS`
 
-Imports publics via les `__init__.py` de chaque package (`from enki.api import EnkiAPI`, etc.).
+Public imports via each package `__init__.py` (`from enki.api import EnkiAPI`, etc.).
 
-## Langue
+## Language
 
-- **Code Python** (commentaires, docstrings, noms de symboles) : **anglais**
-- **Documentation Markdown** (`README.md`, `docs/`, `CONTRIBUTING.md`, …) : **français**
-- **Textes utilisateur Home Assistant** (notifications, config flow, traductions `strings.json`) : **français** (fichiers de traduction HA)
+- **Python code** (comments, docstrings, symbol names): **English**
+- **Markdown documentation** (`README.md`, `docs/`, `CONTRIBUTING.md`, …): **English**
+- **Home Assistant UI strings** (notifications, config flow, `strings.json`, translations): **French and English** via HA translation files (`translations/fr.json`, `translations/en.json`)
 
 ## Pull requests
 
-- Une PR = un sujet
-- Commit impératif (`fix:`, `feat:`, `docs:`)
-- Tests unitaires pour la logique modifiée
-- Pas de credentials dans le code ou les commits
+- One PR = one topic
+- Conventional commits (`fix:`, `feat:`, `docs:`)
+- Unit tests for changed logic
+- No credentials in code or commits
 
-Modèle : [.github/pull_request_template.md](.github/pull_request_template.md)
+Template: [.github/pull_request_template.md](.github/pull_request_template.md)
 
-## Code de conduite
+## Code of conduct
 
 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)

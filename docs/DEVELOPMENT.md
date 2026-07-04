@@ -1,124 +1,124 @@
-# Développement
+# Development
 
-Documentation technique pour contribuer, tester et publier l’intégration.
+Technical documentation for contributing, testing, and releasing the integration.
 
-## Prérequis
+## Prerequisites
 
 - Python 3.12+
-- Home Assistant 2024.12+ (pour tester sur une instance réelle)
+- Home Assistant 2024.12+ (for testing on a real instance)
 
 ```bash
 git clone https://github.com/cyrilcolinet/enki-integration-hass.git
 cd enki-integration-hass
 python3 -m venv .venv
-source .venv/bin/activate   # Windows : .venv\Scripts\activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 ```
 
-## Tests unitaires
+## Unit tests
 
-Sans compte Enki ni matériel :
+Without an Enki account or hardware:
 
 ```bash
 pytest tests/unit -v
 ```
 
-## Lint et format
+## Lint and format
 
 ```bash
 ruff check .
-ruff format --check .   # ou ruff format . pour corriger
+ruff format --check .   # or ruff format . to fix
 ```
 
-## Scripts locaux (hors Home Assistant)
+## Local scripts (outside Home Assistant)
 
-Les scripts dans `scripts/` s’exécutent **sur votre machine de dev**, pas dans le conteneur HA. Ils parlent directement à l’API Enki cloud (ou analysent un APK). Home Assistant n’a pas besoin d’être installé — seulement Python 3 et `pip install -r requirements-dev.txt`.
+Scripts in `scripts/` run **on your dev machine**, not inside the HA container. They talk directly to the Enki cloud API (or parse an APK). Home Assistant is not required — only Python 3 and `pip install -r requirements-dev.txt`.
 
 | Script | Usage |
 |--------|--------|
-| `scripts/fetch_gateway_keys.py` | Vérifie le login et lit `mobile-config` `/settings` (pas les clés gateway) |
-| `scripts/extract_gateway_keys.py` | Extrait les clés gateway depuis un APK (jadx + DI module) ; `--apply` met à jour `const.py` |
-| `scripts/discover_devices.py` | Exporte les profils appareils anonymisés du compte |
+| `scripts/fetch_gateway_keys.py` | Verify login and read `mobile-config` `/settings` (not gateway keys) |
+| `scripts/extract_gateway_keys.py` | Extract gateway keys from an APK (jadx + DI module); `--apply` updates `const.py` |
+| `scripts/discover_devices.py` | Export anonymized device profiles from the account |
 
 ```bash
 source .venv/bin/activate
 python3 scripts/fetch_gateway_keys.py
-python3 scripts/extract_gateway_keys.py chemin/vers/enki.apk
-python3 scripts/extract_gateway_keys.py chemin/vers/enki.apk --apply --update-known
-python3 scripts/discover_devices.py votre@email.com 'mot-de-passe'
+python3 scripts/extract_gateway_keys.py path/to/enki.apk
+python3 scripts/extract_gateway_keys.py path/to/enki.apk --apply --update-known
+python3 scripts/discover_devices.py your@email.com 'password'
 ```
 
-Les clés gateway sont embarquées dans l’APK (une par micro-service). Utiliser `extract_gateway_keys.py --apply` après chaque mise à jour de l’app Enki.
+Gateway keys are embedded in the APK (one per micro-service). Run `extract_gateway_keys.py --apply` after each Enki app update.
 
-## Langue du dépôt
+## Repository language
 
-- **Code Python** (commentaires, docstrings) : anglais — voir [CONTRIBUTING.md](../CONTRIBUTING.md#langue)
-- **Markdown** (`docs/`, `README.md`, …) : français
-- **UI Home Assistant** (`strings.json`, traductions) : français
+- **Python code** (comments, docstrings): English — see [CONTRIBUTING.md](../CONTRIBUTING.md#language)
+- **Markdown** (`docs/`, `README.md`, …): English
+- **Home Assistant UI** (`strings.json`, translations): French and English via translation files
 
-## Tests sur l’API réelle (optionnel)
+## Real API tests (optional)
 
-1. Copier `.env.example` vers `.env`
-2. Renseigner `ENKI_USERNAME`, `ENKI_PASSWORD`, `ENKI_HOME_ID`, `ENKI_NODE_ID`
-3. Les IDs se récupèrent avec :
+1. Copy `.env.example` to `.env`
+2. Fill in `ENKI_USERNAME`, `ENKI_PASSWORD`, `ENKI_HOME_ID`, `ENKI_NODE_ID`
+3. Retrieve IDs with:
 
 ```bash
 python3 scripts/discover_devices.py <email> <password>
 ```
 
-4. Lancer les tests :
+4. Run tests:
 
 ```bash
 set -a && source .env && set +a
 pytest tests/integration -v -m integration
 ```
 
-Les tests live remettent le ventilateur et la lumière à l’arrêt en fin de session.
+Live tests restore the fan and light to off at the end of the session.
 
-## Tester dans Home Assistant
+## Testing in Home Assistant
 
-Copier `custom_components/enki/` dans le dossier `config/custom_components/` de votre instance de dev, redémarrer, ajouter l’intégration via l’UI.
+Copy `custom_components/enki/` into your dev instance `config/custom_components/`, restart, add the integration via the UI.
 
 ## CI
 
-Workflow unique : [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+Single workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 
-Déclenché sur chaque push vers `main` et chaque pull request :
+Triggered on every push to `main` and every pull request:
 
-| Job | Rôle |
+| Job | Role |
 |-----|------|
 | Lint | Ruff check + format |
 | Unit tests | `pytest tests/unit` |
-| Hassfest | Validation intégration HA |
-| HACS | Validation dépôt (éligibilité store par défaut) |
+| Hassfest | HA integration validation |
+| HACS | Repository validation (default store eligibility) |
 
-Tests live : uniquement via `workflow_dispatch` avec secrets `ENKI_*` configurés sur le dépôt.
+Live tests: only via `workflow_dispatch` with `ENKI_*` secrets configured on the repo.
 
-## Publier une release
+## Publishing a release
 
-1. Mettre à jour `custom_components/enki/manifest.json` avec la version cible (ex. `1.5.0`)
-2. Taguer et pousser :
+1. Update `custom_components/enki/manifest.json` with the target version (e.g. `1.6.5`)
+2. Tag and push:
 
 ```bash
-git tag v1.5.0
-git push origin v1.5.0
+git tag v1.6.5
+git push origin v1.6.5
 ```
 
-3. Créer la **GitHub Release** depuis le tag — le workflow [`release.yml`](../.github/workflows/release.yml) attache `enki.zip` avec la version du tag injectée dans le manifest du ZIP (sans commit automatique sur le dépôt).
+3. Create the **GitHub Release** from the tag — the [`release.yml`](../.github/workflows/release.yml) workflow attaches `enki.zip` with the tag version injected into the ZIP manifest (no automatic commit on the repo).
 
-La validation APK en CI release est **désactivée pour le moment**. En local, après une mise à jour de l’app Enki : `python3 scripts/extract_gateway_keys.py chemin/vers/enki.apk --check` puis `--apply --update-known` si besoin.
+APK validation in CI release is **disabled for now**. Locally, after an Enki app update: `python3 scripts/extract_gateway_keys.py path/to/enki.apk --check` then `--apply --update-known` if needed.
 
-## Documentation technique
+## Technical documentation
 
-| Document | Contenu |
+| Document | Content |
 |----------|---------|
-| [API.md](API.md) | Endpoints cloud Enki (reverse engineering) |
-| [HACS.md](HACS.md) | Checklist publication HACS |
-| [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md) | Matériel et statut réel par appareil |
+| [API.md](API.md) | Enki cloud endpoints (reverse engineering) |
+| [HACS.md](HACS.md) | HACS publication checklist |
+| [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md) | Hardware and per-device status |
 
-## Structure du code
+## Code structure
 
-Home Assistant exige que les **loaders de plateforme** et `config_flow.py` restent à la racine de `custom_components/enki/`. Le reste est organisé par couche :
+Home Assistant requires **platform loaders** and `config_flow.py` at the root of `custom_components/enki/`. Everything else is organized by layer:
 
 ```
 custom_components/enki/
@@ -127,17 +127,17 @@ custom_components/enki/
 ├── number.py, select.py, sensor.py, switch.py, diagnostics.py
 ├── const.py, exceptions.py, strings.json, translations/, brand/
 │
-├── api/                    # couche cloud
+├── api/                    # cloud layer
 │   ├── client.py           # discovery + REST commands
 │   ├── auth.py             # OAuth Keycloak
 │   ├── transport.py        # HTTP per micro-service
 │   ├── gateway_registry.py # APK micro-service catalogue
 │   └── gateway_keys.py     # runtime key store + mobile-config settings path
 │
-├── domain/                 # modèle métier (sans import HA)
+├── domain/                 # business model (no HA import)
 │   ├── models.py, capabilities.py, state.py, profile.py
 │
-├── platforms/              # logique interne partagée
+├── platforms/              # shared internal logic
 │   ├── light/behavior.py
 │   └── fan/airflow.py
 │
@@ -145,21 +145,21 @@ custom_components/enki/
 │   ├── reporter.py
 │   └── nudge.py
 │
-└── lib/                    # fonctions pures (0 import HA)
+└── lib/                    # pure functions (0 HA import)
     ├── conversion.py, bff.py, battery.py, capability_path.py
     ├── heating.py, shutter.py, enki_scope.py
 ```
 
-Plateformes enregistrées dans `__init__.py` → `PLATFORMS` : `binary_sensor`, `climate`, `cover`, `fan`, `light`, `number`, `select`, `sensor`, `switch`.
+Platforms registered in `__init__.py` → `PLATFORMS`: `binary_sensor`, `climate`, `cover`, `fan`, `light`, `number`, `select`, `sensor`, `switch`.
 
-### Conventions d’import
+### Import conventions
 
-| Package | Rôle | Exemple |
+| Package | Role | Example |
 |---------|------|---------|
-| `enki.api` | Client cloud public | `from enki.api import EnkiAPI` |
-| `enki.domain` | Modèle et capacités | `from enki.domain.models import EnkiDevice` |
-| `enki.lib` | Helpers testables sans HA | `from enki.lib.conversion import speed_to_percentage` |
-| `enki.platforms.fan` | Logique ventilateur | `from enki.platforms.fan.airflow import preset_to_enki_airflow_mode` |
-| `enki.telemetry` | Opt-in télémétrie | `from enki.telemetry import EnkiTelemetryReporter` |
+| `enki.api` | Public cloud client | `from enki.api import EnkiAPI` |
+| `enki.domain` | Model and capabilities | `from enki.domain.models import EnkiDevice` |
+| `enki.lib` | Helpers testable without HA | `from enki.lib.conversion import speed_to_percentage` |
+| `enki.platforms.fan` | Fan logic | `from enki.platforms.fan.airflow import preset_to_enki_airflow_mode` |
+| `enki.telemetry` | Opt-in telemetry | `from enki.telemetry import EnkiTelemetryReporter` |
 
-Voir aussi [CONTRIBUTING.md](../CONTRIBUTING.md) pour les conventions de PR.
+See also [CONTRIBUTING.md](../CONTRIBUTING.md) for PR conventions.
