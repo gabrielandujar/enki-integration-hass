@@ -5,7 +5,7 @@ Do not edit manually — refresh with:
 
 Source APK: Enki 2.25.1 (most keys). POWER and AIRFLOW verified against live
 api-enki-power-prod / api-enki-airflow-prod traffic (APK 2.25.1 extractor
-misassigned those two slugs — see #45).
+misassigned those two slugs — see #45). THERMOSTAT from zlo.java repository.
 """
 
 # Wired micro-services (used by the integration today).
@@ -78,7 +78,7 @@ ENKI_STATION_METEO_NETATMO_API_KEY = "LqJFYagwqDEZuAfXdTGAXbL1P7Sb4MGM"
 ENKI_SURVOLTAGE_API_KEY = "eUpjduUizxGzuq6wYgTomoKBoOlzIWlA"
 ENKI_TAHOMA_API_KEY = "zafWVW3o0yvcoteizdxSZWMgIcS57lut"
 ENKI_TAPO_API_KEY = "IVVrlDVLGYEiG99KGpXHo7vIsZSLdT5O"
-ENKI_THERMOSTAT_API_KEY = ""
+ENKI_THERMOSTAT_API_KEY = "2t3Qtt6jSI98PQc89kIlvDo7maleKL8l"
 ENKI_USER_DATA_AGG_API_KEY = "VmJZYIucXW1cbd5TnSt9TwiX4xOpvzBI"
 ENKI_USER_INFORMATION_API_KEY = "eUpjduUizxGzuq6wYgTomoKBoOlzIWlA"
 ENKI_USER_PREFERENCES_API_KEY = "3zAlnfKYWvD1A1je7rgu7sktc0lmRBun"

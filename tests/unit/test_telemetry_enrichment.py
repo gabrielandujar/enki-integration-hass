@@ -37,7 +37,7 @@ def test_noirot_profile_does_not_need_telemetry_without_api_errors() -> None:
 
 def test_supported_profile_needs_telemetry_when_api_errors_present() -> None:
     record = _noirot_record()
-    errors = {"heating/check_thermostat_target_temperature": "HTTP 500"}
+    errors = {"thermostat/check_thermostat_target_temperature": "HTTP 500"}
     assert discovery_record_needs_telemetry(record, api_read_errors=errors) is True
 
 
@@ -47,12 +47,12 @@ def test_enrich_export_includes_platforms_and_api_errors() -> None:
     enriched = enrich_telemetry_export(
         export,
         record,
-        api_read_errors={"heating/check_thermostat_target_temperature": "HTTP 500"},
+        api_read_errors={"thermostat/check_thermostat_target_temperature": "HTTP 500"},
         last_poll_state={"thermostat_target_temperature": 21.0},
     )
     assert "climate" in enriched["ha_platforms"]
     assert enriched["telemetry_reason"] == "api_read_errors"
-    assert "HTTP 500" in enriched["api_read_errors"]["heating/check_thermostat_target_temperature"]
+    assert "HTTP 500" in enriched["api_read_errors"]["thermostat/check_thermostat_target_temperature"]
     assert enriched["last_poll_state"]["thermostat_target_temperature"] == 21.0
 
 
@@ -61,7 +61,7 @@ def test_github_issue_body_is_english_and_includes_api_errors() -> None:
     export = enrich_telemetry_export(
         profile_to_export_dict(record, integration_version="1.6.5", ha_version="2025.1"),
         record,
-        api_read_errors={"heating/check_thermostat_target_temperature": "HTTP 500"},
+        api_read_errors={"thermostat/check_thermostat_target_temperature": "HTTP 500"},
         last_poll_state={"thermostat_target_temperature": 21.0},
     )
     body = format_github_issue_body(export, "abc123")

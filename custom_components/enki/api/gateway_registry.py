@@ -236,7 +236,7 @@ ENKI_MICRO_SERVICES: tuple[EnkiMicroService, ...] = (
         "heating",
         "/api-enki-heating-prod/v1/heating",
         wired=True,
-        notes="",
+        notes="schedules / modes / wizard only (APK xdd) — not per-node thermostat reads",
     ),
     EnkiMicroService(
         "api-enki-home-prod",
@@ -553,10 +553,10 @@ ENKI_MICRO_SERVICES: tuple[EnkiMicroService, ...] = (
     EnkiMicroService(
         "api-enki-thermostat-prod",
         "ENKI_THERMOSTAT_API_KEY",
-        "",
-        "/api-enki-thermostat-prod/v1/thermostat",
-        wired=False,
-        notes="wired thermostats / Vertuo",
+        "thermostat",
+        "/api-enki-thermostat-prod/v1/heating",
+        wired=True,
+        notes="Noirot / fil pilote / thermostat reads (APK fmo → zlo.java)",
     ),
     EnkiMicroService(
         "api-enki-user-data-agg-prod",

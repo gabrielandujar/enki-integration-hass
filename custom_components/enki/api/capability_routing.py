@@ -20,20 +20,11 @@ class CapabilityRead:
     skip: Callable[[EnkiCapabilityProfile], bool] | None = None
 
 
-def _skip_thermostat_temperature(profile: EnkiCapabilityProfile) -> bool:
-    return profile.supports_thermostat
-
-
-def _skip_non_thermostat_temperature(profile: EnkiCapabilityProfile) -> bool:
-    return not profile.supports_thermostat
-
-
 CAPABILITY_READS: tuple[CapabilityRead, ...] = (
     CapabilityRead(
         "temperature_humidity",
         "check_current_temperature",
         "current_temperature",
-        skip=_skip_thermostat_temperature,
     ),
     CapabilityRead("temperature_humidity", "check_current_humidity", "current_humidity"),
     CapabilityRead("battery_health", "check_battery_health", "battery_health"),
@@ -59,21 +50,19 @@ CAPABILITY_READS: tuple[CapabilityRead, ...] = (
     ),
     CapabilityRead("siren", "check_siren_global_state", "siren_global_state"),
     CapabilityRead("water_sensor", "check_water_sensor_state", "water_sensor_state"),
-    CapabilityRead("heating", "check_pilot_wire_state", "pilot_wire_state"),
+    CapabilityRead("thermostat", "check_pilot_wire_state", "pilot_wire_state"),
     CapabilityRead(
-        "heating",
+        "thermostat",
         "check_thermostat_target_temperature",
         "thermostat_target_temperature",
     ),
-    CapabilityRead("heating", "check_thermostat_running_state", "thermostat_running_state"),
+    CapabilityRead("thermostat", "check_thermostat_running_state", "thermostat_running_state"),
+    CapabilityRead("thermostat", "check_window_open_detection", "window_open_detection"),
     CapabilityRead(
-        "heating",
-        "check_current_temperature",
-        "current_temperature",
-        skip=_skip_non_thermostat_temperature,
+        "thermostat",
+        "check_window_open_detection_mode",
+        "window_open_detection_mode",
     ),
-    CapabilityRead("heating", "check_window_open_detection", "window_open_detection"),
-    CapabilityRead("heating", "check_window_open_detection_mode", "window_open_detection_mode"),
-    CapabilityRead("heating", "check_occupancy", "occupancy"),
-    CapabilityRead("heating", "check_occupancy_mode", "occupancy_mode"),
+    CapabilityRead("presence_detector", "check_occupancy", "occupancy"),
+    CapabilityRead("presence_detector", "check_occupancy_mode", "occupancy_mode"),
 )
