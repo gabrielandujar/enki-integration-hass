@@ -99,6 +99,8 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         speed = self._device.reported.fan_speed
         if speed is not None:
             return speed > 0
+        if self._device.profile.supports_fan_speed:
+            return False
         return self._device.reported.electrical_power == "ON"
 
     @property
@@ -147,40 +149,41 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         if preset_mode is not None and self._supports_preset_mode():
             await self.async_set_preset_mode(preset_mode)
 
-        if self._device.reported.fan_speed is None:
-            if percentage is None or percentage > 0:
-                await self.coordinator.api.async_switch_electrical_power(
-                    self._device.home_id,
-                    self._device.node_id,
-                    "ON",
-                )
-                self.coordinator.update_cached_value(
-                    self._device.node_id,
-                    "electrical_power",
-                    "ON",
-                )
+        if self._device.profile.supports_fan_speed:
+            if percentage is not None and percentage > 0:
+                speed = percentage_to_ordered_list_item(self._ordered_speeds, percentage)
+            else:
+                speed = max(1, self._device.reported.fan_speed or 1)
+            await self._set_speed(speed)
             return
 
-        if percentage is not None and percentage > 0:
-            speed = percentage_to_ordered_list_item(self._ordered_speeds, percentage)
-        else:
-            speed = max(1, self._device.reported.fan_speed or 1)
-        await self._set_speed(speed)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        if self._device.reported.fan_speed is None:
+        if percentage is None or percentage > 0:
             await self.coordinator.api.async_switch_electrical_power(
                 self._device.home_id,
                 self._device.node_id,
-                "OFF",
+                "ON",
             )
             self.coordinator.update_cached_value(
                 self._device.node_id,
                 "electrical_power",
-                "OFF",
+                "ON",
             )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        if self._device.profile.supports_fan_speed:
+            await self._set_speed(0)
             return
-        await self._set_speed(0)
+
+        await self.coordinator.api.async_switch_electrical_power(
+            self._device.home_id,
+            self._device.node_id,
+            "OFF",
+        )
+        self.coordinator.update_cached_value(
+            self._device.node_id,
+            "electrical_power",
+            "OFF",
+        )
 
     async def async_set_percentage(self, percentage: int) -> None:
         if percentage == 0:

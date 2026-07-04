@@ -48,7 +48,71 @@ _HA_STUBS = [
     "homeassistant.components.diagnostics",
     "homeassistant.components.persistent_notification",
     "homeassistant.components.sensor",
+    "homeassistant.util",
 ]
 
 for module_name in _HA_STUBS:
     sys.modules.setdefault(module_name, MagicMock())
+
+
+class _HaEntity:
+    """Minimal HA Entity stand-in for unit tests."""
+
+
+class _CoordinatorEntity(_HaEntity):
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+
+    def __class_getitem__(cls, _item):
+        return cls
+
+
+class _FanEntity(_HaEntity):
+    pass
+
+
+class _FanEntityFeature:
+    SET_SPEED = 1
+    TURN_ON = 2
+    TURN_OFF = 4
+    DIRECTION = 8
+    PRESET_MODE = 16
+
+
+_update_coordinator = sys.modules["homeassistant.helpers.update_coordinator"]
+_update_coordinator.CoordinatorEntity = _CoordinatorEntity
+
+_fan = sys.modules["homeassistant.components.fan"]
+_fan.FanEntity = _FanEntity
+_fan.FanEntityFeature = _FanEntityFeature
+_fan.DIRECTION_FORWARD = "forward"
+_fan.DIRECTION_REVERSE = "reverse"
+
+_core = sys.modules["homeassistant.core"]
+_core.callback = lambda fn: fn
+
+_device_registry = sys.modules["homeassistant.helpers.device_registry"]
+_device_registry.DeviceInfo = dict
+
+
+def _ordered_list_item_to_percentage(speeds: list[int], speed: int) -> int:
+    if not speeds:
+        return 0
+    try:
+        index = speeds.index(speed)
+    except ValueError:
+        return 0
+    return round((index + 1) * 100 / len(speeds))
+
+
+def _percentage_to_ordered_list_item(speeds: list[int], percentage: int) -> int:
+    if not speeds or percentage <= 0:
+        return 0
+    index = max(0, min(len(speeds) - 1, round(percentage * len(speeds) / 100) - 1))
+    return speeds[index]
+
+
+_percentage = MagicMock()
+_percentage.ordered_list_item_to_percentage = _ordered_list_item_to_percentage
+_percentage.percentage_to_ordered_list_item = _percentage_to_ordered_list_item
+sys.modules["homeassistant.util.percentage"] = _percentage
