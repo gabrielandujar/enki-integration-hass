@@ -175,9 +175,7 @@ async def test_telemetry_notifies_when_api_errors_appear_after_fingerprint_store
     )
 
     reporter = EnkiTelemetryReporter(hass, entry)
-    reporter._store.async_load = AsyncMock(
-        return_value={"fingerprints": ["already-known-fp"]}
-    )  # type: ignore[method-assign]
+    reporter._store.async_load = AsyncMock(return_value={"fingerprints": ["already-known-fp"]})  # type: ignore[method-assign]
     reporter._store.async_save = AsyncMock()  # type: ignore[method-assign]
 
     from enki.domain.profile import profile_fingerprint, profile_to_export_dict
