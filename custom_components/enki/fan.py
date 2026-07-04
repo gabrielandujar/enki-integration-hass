@@ -46,7 +46,7 @@ async def async_setup_entry(
 
 
 class EnkiFanEntity(EnkiEntity, FanEntity):
-    """Ceiling fan motor controlled via api-enki-airflow-prod."""
+    """Ceiling fan motor (airflow-prod or power-prod depending on referentiel)."""
 
     _attr_translation_key = "ceiling_fan"
 
@@ -62,7 +62,9 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
 
     @property
     def supported_features(self) -> FanEntityFeature:
-        features = FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+        features = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+        if self._device.profile.supports_fan_speed_control:
+            features |= FanEntityFeature.SET_SPEED
         if self._supports_direction():
             features |= FanEntityFeature.DIRECTION
         if self._supports_preset_mode():
@@ -96,15 +98,26 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
 
     @property
     def is_on(self) -> bool:
-        speed = self._device.reported.fan_speed
+        profile = self._device.profile
+        reported = self._device.reported
+        speed = reported.fan_speed
         if speed is not None:
             return speed > 0
-        if self._device.profile.supports_fan_speed:
+        if profile.supports_fan_speed_control:
             return False
-        return self._device.reported.electrical_power == "ON"
+        if profile.supports_electrical_power:
+            if (motor_endpoint := profile.fan_motor_endpoint) is not None:
+                power = reported.endpoint_power(motor_endpoint)
+                if power is not None:
+                    return power == "ON"
+            if reported.electrical_power is not None:
+                return reported.electrical_power == "ON"
+        return False
 
     @property
     def percentage(self) -> int | None:
+        if not self._device.profile.supports_fan_speed_control:
+            return None
         speed = self._device.reported.fan_speed
         if speed is None:
             return None
@@ -149,7 +162,7 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         if preset_mode is not None and self._supports_preset_mode():
             await self.async_set_preset_mode(preset_mode)
 
-        if self._device.profile.supports_fan_speed:
+        if self._device.profile.supports_fan_speed_control:
             if percentage is not None and percentage > 0:
                 speed = percentage_to_ordered_list_item(self._ordered_speeds, percentage)
             else:
@@ -158,34 +171,17 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
             return
 
         if percentage is None or percentage > 0:
-            await self.coordinator.api.async_switch_electrical_power(
-                self._device.home_id,
-                self._device.node_id,
-                "ON",
-            )
-            self.coordinator.update_cached_value(
-                self._device.node_id,
-                "electrical_power",
-                "ON",
-            )
+            await self._set_motor_power("ON")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        if self._device.profile.supports_fan_speed:
+        if self._device.profile.supports_fan_speed_control:
             await self._set_speed(0)
             return
-
-        await self.coordinator.api.async_switch_electrical_power(
-            self._device.home_id,
-            self._device.node_id,
-            "OFF",
-        )
-        self.coordinator.update_cached_value(
-            self._device.node_id,
-            "electrical_power",
-            "OFF",
-        )
+        await self._set_motor_power("OFF")
 
     async def async_set_percentage(self, percentage: int) -> None:
+        if not self._device.profile.supports_fan_speed_control:
+            return
         if percentage == 0:
             await self.async_turn_off()
             return
@@ -196,6 +192,22 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         node_id = self._device.node_id
         await self.coordinator.api.async_set_fan_speed(home_id, node_id, speed)
         self.coordinator.update_cached_value(node_id, "fan_speed", speed)
+
+    async def _set_motor_power(self, power: str) -> None:
+        profile = self._device.profile
+        node_id = self._device.node_id
+        endpoint = profile.fan_motor_endpoint
+        await self.coordinator.api.async_switch_electrical_power(
+            self._device.home_id,
+            node_id,
+            power,
+            endpoint=endpoint,
+        )
+        if endpoint is not None:
+            self.coordinator.update_endpoint_power(node_id, endpoint, power)
+            return
+        self.coordinator.update_cached_value(node_id, "electrical_power", power)
+        self.coordinator.update_cached_value(node_id, "power", power)
 
     def _supports_direction(self) -> bool:
         if self._device.reported.airflow_rotation_supported:
