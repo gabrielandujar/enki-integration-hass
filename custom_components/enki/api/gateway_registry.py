@@ -81,10 +81,10 @@ ENKI_MICRO_SERVICES: tuple[EnkiMicroService, ...] = (
     EnkiMicroService(
         "api-enki-command-override-prod",
         "ENKI_COMMAND_OVERRIDE_API_KEY",
-        "",
-        "/api-enki-command-override-prod/v1/command-override",
-        wired=False,
-        notes="",
+        "command_override",
+        "/api-enki-command-override-prod/v1",
+        wired=True,
+        notes="Thermostat setpoint derogations — POST override-commands (APK c7i / zgg.java)",
     ),
     EnkiMicroService(
         "api-enki-consent-prod",
