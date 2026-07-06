@@ -5,7 +5,7 @@ Detail by device type and Home Assistant entities created. The integration detec
 | | |
 |---|---|
 | **Latest GitHub release** | [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
-| **Repository `manifest.json`** | 1.6.5 |
+| **Repository `manifest.json`** | 1.6.11 |
 
 Summary: [ROADMAP.md](ROADMAP.md)
 
@@ -46,7 +46,7 @@ Fan and light kit are **independent**: turning one on does not turn the other on
 | Model / type | Status |
 |---------------|--------|
 | Edisio outlets | ✅ ON/OFF, ✅ instant consumption (W) |
-| Equation ON/OFF relay ([profile](./devices/63a053851a423d4a245a877c.json)) | ✅ ON/OFF, ✅ instant consumption (W) |
+| Equation ON/OFF relay | ✅ ON/OFF stable v1.6.8+ (instant consumption may stay unknown) |
 
 Multi-circuit nodes may create **one entity per circuit** (BFF endpoint). Timers (`switch_electrical_power_in`, …): not exposed yet.
 
@@ -103,27 +103,31 @@ Micro-services aligned with [StephaneBranly/ha-enki](https://github.com/Stephane
 
 **HA entities:** `switch` (detection enable), `number` (vibration sensitivity 1–5)
 
-### Water leak (Lexman) — beta (v1.5.0+)
+### Water leak (Lexman) — beta
 
 **HA entities:** `binary_sensor` (leak), `sensor` (battery)
 
-**Profile:** [651eada55b3a798ef6b6bc5c.json](./devices/651eada55b3a798ef6b6bc5c.json)
+**Profile:** referentiel `651eada55b3a798ef6b6bc5c` (Lexman) · Field validation: [#36](https://github.com/cyrilcolinet/enki-integration-hass/issues/36)
 
 | Capability | Service | Current status |
 |------------|---------|---------------|
-| `check_battery_health` | `battery-health` | ✅ APK 2.25.1 key |
-| `check_water_sensor_state` | `water-leak-detector` | ✅ APK 2.25.1 key |
+| `check_battery_health` | `battery-health` | ✅ stable (APK 2.25.1 key) |
+| `check_water_sensor_state` | `water-leak-detector` | 🔬 beta — reads OK remotely; on-site wet test pending |
 
-## Heating — beta (v1.5.0+)
+## Heating — stable (v1.6.8+)
 
-| Model | HA entities | Profile |
-|--------|------------|--------|
-| Equation pilot wire | `select` (COMFORT, ECO, FROST_PROTECTION, OFF, …) | [63a054c81a423d4a245a877e.json](./devices/63a054c81a423d4a245a877e.json) |
-| Noirot radiator | `climate`, `binary_sensor` (window, presence), `switch` (detection modes) | [67a4b12bae1eca4709a45680.json](./devices/67a4b12bae1eca4709a45680.json) |
+Validated on real hardware (Noirot radiator, Equation pilot wire, Equation relay) since v1.6.8.
 
-**API keys:** from Enki APK 2.25.1 (`ENKI_HEATING_API_KEY`, `ENKI_WATER_SENSOR_API_KEY`). Update: [DEVELOPMENT.md](DEVELOPMENT.md) · API detail: [API.md](API.md#heating-and-water-sensors-manifest--150).
+| Model | HA entities | Referentiel deviceId |
+|--------|------------|----------------------|
+| Equation pilot wire | `select` (COMFORT, ECO, FROST_PROTECTION, OFF, …) | `63a054c81a423d4a245a877e` |
+| Noirot radiator | `climate`, `binary_sensor` (window, presence), `switch` (detection modes) | `67a4b12bae1eca4709a45680` |
 
-JSON catalogue: [docs/devices/README.md](./devices/README.md)
+**API routing:** `api-enki-thermostat-prod` for setpoint / pilot wire / window detection; `api-enki-presence-detector-prod` for occupancy (APK 2.25.1). Keys in `const.py` — update: [DEVELOPMENT.md](DEVELOPMENT.md) · API detail: [API.md](API.md#heating-and-water-sensors-manifest--150).
+
+**Note:** instant consumption sensors may stay `unknown` if `consumption-prod` returns no value — controls still work.
+
+API detail: [API.md](API.md#heating-and-water-sensors-manifest--150)
 
 ## Roller shutters — beta (Evology, Nodon, …)
 
@@ -152,11 +156,24 @@ Contributor network feedback: [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md).
 - **Operational notifications** — login failure, gateway key 403, cloud unreachable ([API.md](API.md#operational-notifications))
 - **Diagnostics** — anonymized JSON export from Enki UI
 
+## Device info (firmware, connectivity)
+
+Since **1.6.11**, metadata from the Enki app device screen is exposed when the referentiel advertises the capability:
+
+| Info | Source API | HA surface |
+|------|------------|------------|
+| Firmware version | `ota/version/{nodeId}` when `check_current_firmware_version` | Device `sw_version`, diagnostics poll state |
+| Update available | `ota/check/{nodeId}` when `ota_inventory` | `binary_sensor` (update) |
+| ESDK fan online | `esdk/states/{nodeId}` for ceiling fans | `binary_sensor` (connectivity) |
+
+Reads are best-effort (404 skipped) and driven by referentiel capabilities, not hard-coded per model.
+
 ## In progress / not supported
 
 | Status | Topic |
 |--------|--------|
-| Beta | Covers, heating, water leak, scenarios — APK 2.25.1 keys, feedback welcome |
+| ✅ Stable | Heating (Noirot, pilot wire, Equation relay) since v1.6.8 |
+| 🔬 Beta | Covers, Lexman water leak (on-site test), scenarios — feedback welcome |
 | Soon | ACOVA ARLAN radiators (same heating API if capabilities match) |
 | Not planned | Enki alarm (no API identified) |
 | Out of scope | Enki hub, pairing, Leroy Merlin account → [Enki support](https://support.enki-home.com/) |

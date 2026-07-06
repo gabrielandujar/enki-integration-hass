@@ -47,6 +47,7 @@ class EnkiEntity(CoordinatorEntity[EnkiCoordinator]):
     def device_info(self) -> DeviceInfo:
         """Group entities by physical node (node_id + serial for HA registry)."""
         metadata = self._device.last_reported_value
+        firmware = metadata.get("firmware_version") or metadata.get("version")
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.node_id)},
             name=self._device.device_name,
@@ -54,6 +55,7 @@ class EnkiEntity(CoordinatorEntity[EnkiCoordinator]):
             model=str(metadata.get("modelNumber", self._device.device_id))
             .replace("_", " ")
             .title(),
-            sw_version=metadata.get("version"),
+            model_id=self._device.device_id,
+            sw_version=str(firmware) if firmware else None,
             serial_number=metadata.get("eui64") or self._device.node_id,
         )

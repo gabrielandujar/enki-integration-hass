@@ -175,6 +175,43 @@ class EnkiHttpClient:
             home_id=home_id,
         )
 
+    async def get_ota_version(self, home_id: str, node_id: str) -> dict[str, Any]:
+        """Firmware version (APK t0i.c → ota/version/{nodeId})."""
+        if not self._service_api_key("ota"):
+            return {}
+        prefix = WIRED_PATH_PREFIXES["ota"]
+        return await self.get_json(
+            "ota",
+            f"{prefix}/ota/version/{node_id}",
+            home_id=home_id,
+            not_found_ok=True,
+        )
+
+    async def get_ota_check(self, home_id: str, node_id: str) -> dict[str, Any]:
+        """OTA update availability (APK t0i.d → ota/check/{nodeId})."""
+        if not self._service_api_key("ota"):
+            return {}
+        prefix = WIRED_PATH_PREFIXES["ota"]
+        return await self.get_json(
+            "ota",
+            f"{prefix}/ota/check/{node_id}",
+            home_id=home_id,
+            params={"isBlockingOrNoRetryNeeded": "false"},
+            not_found_ok=True,
+        )
+
+    async def get_esdk_connectivity(self, home_id: str, node_id: str) -> dict[str, Any]:
+        """ESDK fan hub link state (APK sq9.b → states/{nodeId})."""
+        if not self._service_api_key("esdk"):
+            return {}
+        prefix = WIRED_PATH_PREFIXES["esdk"]
+        return await self.get_json(
+            "esdk",
+            f"{prefix}/states/{node_id}",
+            home_id=home_id,
+            not_found_ok=True,
+        )
+
     async def get_referentiel_device(self, device_id: str) -> dict[str, Any]:
         """Referentiel metadata; ESDK fan nodes may return 404."""
         return await self.get_json(

@@ -105,7 +105,7 @@ def _build_binary_sensor_entities(
     device: EnkiDevice,
 ) -> list[EnkiBinarySensor]:
     profile = device.profile
-    if not profile.is_binary_sensor:
+    if not profile.is_binary_sensor and not _device_has_metadata_sensors(device):
         return []
 
     capabilities = profile.capabilities
@@ -124,6 +124,50 @@ def _build_binary_sensor_entities(
                 device_class=spec["device_class"],
             )
         )
+    entities.extend(_build_metadata_binary_sensors(coordinator, device))
+    return entities
+
+
+def _device_has_metadata_sensors(device: EnkiDevice) -> bool:
+    caps = set(device.capabilities)
+    return (
+        device.profile.is_fan
+        or "ota_inventory" in caps
+        or device.last_reported_value.get("firmware_update_available") is not None
+    )
+
+
+def _build_metadata_binary_sensors(
+    coordinator: EnkiCoordinator,
+    device: EnkiDevice,
+) -> list[EnkiBinarySensor]:
+    entities: list[EnkiBinarySensor] = []
+    caps = set(device.capabilities)
+
+    if device.profile.is_fan:
+        entities.append(
+            EnkiBinarySensor(
+                coordinator,
+                device,
+                state_key="node_connected",
+                suffix="connectivity",
+                translation_key="connectivity",
+                device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            )
+        )
+
+    if "ota_inventory" in caps:
+        entities.append(
+            EnkiBinarySensor(
+                coordinator,
+                device,
+                state_key="firmware_update_available",
+                suffix="firmware_update",
+                translation_key="firmware_update",
+                device_class=BinarySensorDeviceClass.UPDATE,
+            )
+        )
+
     return entities
 
 
@@ -165,6 +209,10 @@ class EnkiBinarySensor(EnkiEntity, BinarySensorEntity):
             raw = self._device.reported.window_open_detection
         elif raw is None and self._state_key == "occupancy":
             raw = self._device.reported.occupancy
+        elif raw is None and self._state_key == "node_connected":
+            raw = self._device.reported.node_connected
+        elif raw is None and self._state_key == "firmware_update_available":
+            raw = self._device.reported.firmware_update_available
 
         if isinstance(raw, str):
             mapped = _ENUM_TO_BOOL.get(raw.upper())

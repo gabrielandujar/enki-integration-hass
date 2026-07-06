@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
@@ -19,15 +19,24 @@ from ..domain.profile import (
 from ..domain.telemetry_coverage import discovery_record_needs_telemetry
 from ..domain.telemetry_enrichment import enrich_telemetry_export
 
+if TYPE_CHECKING:
+    from ..coordinator import EnkiCoordinator
+
 STORAGE_VERSION = 1
 
 
 class EnkiTelemetryReporter:
     """Notify once per new anonymized device profile (manual GitHub issue)."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        coordinator: EnkiCoordinator,
+    ) -> None:
         self._hass = hass
         self._entry = entry
+        self._coordinator = coordinator
         self._store = Store[dict[str, Any]](
             hass,
             STORAGE_VERSION,
@@ -44,7 +53,7 @@ class EnkiTelemetryReporter:
         reported = await self._load_reported()
         integration_version = _integration_version()
         ha_version = _ha_version(self._hass)
-        coordinator = self._entry.runtime_data
+        coordinator = self._coordinator
 
         new_count = 0
         for record in records:
@@ -74,10 +83,12 @@ class EnkiTelemetryReporter:
             needs_telemetry = discovery_record_needs_telemetry(
                 record,
                 api_read_errors=api_errors,
+                poll_state=poll_state,
             )
 
-            # Re-notify when API read errors appear on a profile seen earlier.
-            if fingerprint in reported and not (needs_telemetry and api_errors):
+            if fingerprint in reported:
+                if not needs_telemetry:
+                    self._dismiss_profile_notification(fingerprint)
                 continue
 
             if fingerprint not in reported:
@@ -96,6 +107,12 @@ class EnkiTelemetryReporter:
         LOGGER.info(
             "Notified about %s new Enki device profile(s) (opt-in telemetry)",
             new_count,
+        )
+
+    def _dismiss_profile_notification(self, fingerprint: str) -> None:
+        persistent_notification.async_dismiss(
+            self._hass,
+            notification_id=f"{DOMAIN}_profile_{fingerprint[:16]}",
         )
 
     def _notify_new_profile(self, export_dict: dict[str, Any], fingerprint: str) -> None:
