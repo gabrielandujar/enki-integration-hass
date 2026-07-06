@@ -740,14 +740,28 @@ class EnkiAPI:
         node_id: str,
         temperature: float,
     ) -> None:
-        """Set radiator / thermostat target temperature (°C)."""
-        await self.async_set_capability_value(
-            home_id,
-            node_id,
-            "thermostat",
-            "change_thermostat_target_temperature",
-            temperature,
-        )
+        """Set radiator / thermostat target temperature (°C).
+
+        Enki APK 2.25.1 uses command-override (DEROGATION) rather than a direct
+        thermostat-prod POST for this capability — see issue #48.
+        """
+        http = await self._get_http()
+        try:
+            await http.create_thermostat_setpoint_override(home_id, node_id, temperature)
+        except EnkiConnectionError as err:
+            if err.status not in {404, 405, 501}:
+                raise
+            LOGGER.debug(
+                "Command-override setpoint failed (%s), trying thermostat-prod POST",
+                err,
+            )
+            await self.async_set_capability_value(
+                home_id,
+                node_id,
+                "thermostat",
+                "change_thermostat_target_temperature",
+                temperature,
+            )
 
     async def async_set_light_power(self, home_id: str, node_id: str, on: bool) -> None:
         """Turn the ESDK fan light kit on or off (lighting API)."""

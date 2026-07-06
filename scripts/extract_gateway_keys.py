@@ -91,6 +91,7 @@ SHARED_INFRA_WRAPPERS = frozenset(
 # Retrofit client wrappers (alo) vs repository classes that embed the gateway key (zlo).
 REPOSITORY_CONSUMERS: dict[str, tuple[str, ...]] = {
     "alo": ("zlo",),
+    "une": ("zgg",),
 }
 JUNK_KEYS = frozenset({"0123456789ABCDEFGHIJKLMNOPQRSTUV"})
 INCOMPLETE_MARKERS = (

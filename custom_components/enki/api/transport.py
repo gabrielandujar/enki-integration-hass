@@ -11,6 +11,11 @@ import aiohttp
 from ..const import ENKI_BASE_URL, ENKI_USER_AGENT, LOGGER, REFERENTIEL_VERSION
 from ..exceptions import EnkiApiNotFoundError, EnkiConnectionError
 from ..lib.capability_path import capability_to_path_segment
+from ..lib.command_override import (
+    OVERRIDE_TYPE_DEROGATION,
+    THERMOSTAT_SETPOINT_CAPABILITY,
+    override_end_time_iso,
+)
 from ..lib.conversion import is_command_success_status
 from .auth import EnkiAuthSession
 from .gateway_keys import GatewayKeyStore
@@ -352,6 +357,37 @@ class EnkiHttpClient:
             f"{prefix}/{node_id}/{action}",
             home_id=home_id,
             not_found_ok=True,
+        )
+
+    async def create_thermostat_setpoint_override(
+        self,
+        home_id: str,
+        node_id: str,
+        temperature: float,
+        *,
+        end_time: str | None = None,
+    ) -> None:
+        """Create a DEROGATION override for thermostat target temperature (APK l66)."""
+        if not self._service_api_key("command_override"):
+            raise EnkiConnectionError(
+                "Command-override API key is not configured. "
+                "See docs/API.md and scripts/extract_gateway_keys.py.",
+                service="command_override",
+            )
+        prefix = WIRED_PATH_PREFIXES["command_override"]
+        payload = {
+            "homeId": home_id,
+            "nodeId": node_id,
+            "type": OVERRIDE_TYPE_DEROGATION,
+            "capabilityId": THERMOSTAT_SETPOINT_CAPABILITY,
+            "value": temperature,
+            "endTime": end_time or override_end_time_iso(),
+        }
+        await self.post_command(
+            "command_override",
+            f"{prefix}/override-commands",
+            home_id=home_id,
+            json=payload,
         )
 
     async def capability_post(
