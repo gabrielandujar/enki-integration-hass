@@ -309,12 +309,20 @@ class EnkiAPI:
         last_reported: dict[str, Any] = {}
         if item.get("isEnabled", True):
             last_reported = await self._refresh_device_state(http, skeleton, node_info)
-            await refresh_device_metadata(
-                http,
-                skeleton,
-                last_reported,
-                note_error=self._note_read_error,
-            )
+            try:
+                await refresh_device_metadata(
+                    http,
+                    skeleton,
+                    last_reported,
+                    note_error=self._note_read_error,
+                )
+            except Exception as err:  # noqa: BLE001 — metadata must never break discovery
+                LOGGER.debug(
+                    "Device metadata skipped for node %s: %s",
+                    node_id,
+                    err,
+                    exc_info=LOGGER.isEnabledFor(logging.DEBUG),
+                )
 
         if last_reported.get("firmware_version"):
             record = build_discovery_record(

@@ -100,6 +100,21 @@ async def test_refresh_device_metadata_fan_calls_ota_and_esdk() -> None:
 
 
 @pytest.mark.asyncio
+async def test_refresh_device_metadata_swallows_unexpected_errors() -> None:
+    http = MagicMock()
+    http.get_ota_version = AsyncMock(side_effect=RuntimeError("boom"))
+    http.get_ota_check = AsyncMock(return_value={"status": "FIRMWARE_ALREADY_UP_TO_DATE"})
+    http.get_esdk_connectivity = AsyncMock(return_value={"connected": True})
+
+    state: dict = {}
+    await refresh_device_metadata(http, _device(), state)
+
+    assert "firmware_version" not in state
+    assert state.get("firmware_update_available") is False
+    assert state.get("node_connected") is True
+
+
+@pytest.mark.asyncio
 async def test_refresh_device_metadata_skips_without_capabilities() -> None:
     http = MagicMock()
     http.get_ota_version = AsyncMock()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import TYPE_CHECKING, Any
 
 from ..const import LOGGER
@@ -69,7 +70,29 @@ async def refresh_device_metadata(
     *,
     note_error: Any | None = None,
 ) -> None:
-    """Best-effort metadata reads driven by referentiel capabilities and device type."""
+    """Best-effort metadata reads driven by referentiel capabilities and device type.
+
+    Failures are swallowed: missing fields are simply omitted from *state* so
+    discovery and entity polling never break.
+    """
+    try:
+        await _refresh_device_metadata_impl(http, device, state, note_error=note_error)
+    except Exception as err:  # noqa: BLE001 — metadata must never break discovery
+        LOGGER.debug(
+            "Device metadata skipped for node %s: %s",
+            device.node_id,
+            err,
+            exc_info=LOGGER.isEnabledFor(logging.DEBUG),
+        )
+
+
+async def _refresh_device_metadata_impl(
+    http: EnkiHttpClient,
+    device: EnkiDevice,
+    state: dict[str, Any],
+    *,
+    note_error: Any | None = None,
+) -> None:
     home_id = device.home_id
     node_id = device.node_id
     caps = set(device.capabilities)
@@ -79,9 +102,9 @@ async def refresh_device_metadata(
             return
         try:
             payload = await http.get_ota_version(home_id, node_id)
-        except EnkiConnectionError as err:
+        except Exception as err:  # noqa: BLE001
             LOGGER.debug("Firmware version skipped for node %s: %s", node_id, err)
-            if note_error is not None:
+            if note_error is not None and isinstance(err, EnkiConnectionError):
                 note_error(node_id, service="ota", capability=FIRMWARE_VERSION_CAPABILITY, err=err)
             return
         if payload:
@@ -92,9 +115,9 @@ async def refresh_device_metadata(
             return
         try:
             payload = await http.get_ota_check(home_id, node_id)
-        except EnkiConnectionError as err:
+        except Exception as err:  # noqa: BLE001
             LOGGER.debug("OTA check skipped for node %s: %s", node_id, err)
-            if note_error is not None:
+            if note_error is not None and isinstance(err, EnkiConnectionError):
                 note_error(node_id, service="ota", capability=OTA_INVENTORY_CAPABILITY, err=err)
             return
         if payload:
@@ -105,16 +128,24 @@ async def refresh_device_metadata(
             return
         try:
             payload = await http.get_esdk_connectivity(home_id, node_id)
-        except EnkiConnectionError as err:
+        except Exception as err:  # noqa: BLE001
             LOGGER.debug("ESDK connectivity skipped for node %s: %s", node_id, err)
-            if note_error is not None:
+            if note_error is not None and isinstance(err, EnkiConnectionError):
                 note_error(node_id, service="esdk", capability="node_connected", err=err)
             return
         if payload:
             merge_connectivity(state, payload)
 
-    await asyncio.gather(
+    results = await asyncio.gather(
         read_firmware_version(),
         read_ota_check(),
         read_esdk_connectivity(),
+        return_exceptions=True,
     )
+    for result in results:
+        if isinstance(result, Exception):
+            LOGGER.debug(
+                "Device metadata task failed for node %s: %s",
+                node_id,
+                result,
+            )
