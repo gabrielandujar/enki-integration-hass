@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 import aiohttp
@@ -29,6 +30,7 @@ from ..lib.enki_scope import device_in_enki_scope
 from ..lib.shutter import normalize_shutter_position
 from .auth import EnkiAuthSession
 from .capability_routing import CAPABILITY_READS, CapabilityRead
+from .device_metadata import refresh_device_metadata
 from .gateway_keys import GatewayKeyStore, fetch_mobile_config
 from .transport import EnkiHttpClient
 
@@ -85,15 +87,15 @@ class EnkiAPI:
         http = await self._get_http()
         await self._auth.connect(http.session)
 
-    async def async_fetch_mobile_settings(self) -> dict[str, Any]:
+    async def async_fetch_mobile_settings(self) -> dict[str, Any] | None:
         """Fetch Enki app settings (maintenance flags, min app version, …)."""
         http = await self._get_http()
         try:
             payload = await fetch_mobile_config(http)
         except EnkiConnectionError as err:
             LOGGER.debug("Mobile-config settings skipped: %s", err)
-            return {}
-        return payload if isinstance(payload, dict) else {}
+            return None
+        return payload if isinstance(payload, dict) else None
 
     async def async_get_devices(self) -> list[EnkiDevice]:
         """Discover all nodes across every home on the account."""
@@ -290,9 +292,9 @@ class EnkiAPI:
             supported = False
         else:
             supported = integration_supports_device(skeleton)
-        model = node_info.get("modelNumber") or device_info.get("modelNumber")
-        firmware = node_info.get("version") or device_info.get("version")
 
+        model = node_info.get("modelNumber") or device_info.get("modelNumber")
+        preliminary_firmware = node_info.get("version") or device_info.get("version")
         record = build_discovery_record(
             device_type=device_type,
             bff_device_type=bff_type,
@@ -300,7 +302,7 @@ class EnkiAPI:
             possible_values=possible_values,
             manufacturer=manufacturer_str,
             model=str(model) if model else None,
-            firmware_version=str(firmware) if firmware else None,
+            firmware_version=str(preliminary_firmware) if preliminary_firmware else None,
             supported_by_integration=supported,
         )
         self._register_node_profile(node_id, record)
@@ -308,6 +310,32 @@ class EnkiAPI:
         last_reported: dict[str, Any] = {}
         if item.get("isEnabled", True):
             last_reported = await self._refresh_device_state(http, skeleton, node_info)
+            try:
+                await refresh_device_metadata(
+                    http,
+                    skeleton,
+                    last_reported,
+                    note_error=self._note_read_error,
+                )
+            except Exception as err:  # noqa: BLE001 — metadata must never break discovery
+                LOGGER.debug(
+                    "Device metadata skipped for node %s: %s",
+                    node_id,
+                    err,
+                    exc_info=LOGGER.isEnabledFor(logging.DEBUG),
+                )
+
+        if last_reported.get("firmware_version"):
+            record = build_discovery_record(
+                device_type=device_type,
+                bff_device_type=bff_type,
+                capabilities=capabilities,
+                possible_values=possible_values,
+                manufacturer=manufacturer_str,
+                model=str(model) if model else None,
+                firmware_version=str(last_reported["firmware_version"]),
+                supported_by_integration=supported,
+            )
 
         self._register_poll_state(node_id, {**node_info, **last_reported})
 

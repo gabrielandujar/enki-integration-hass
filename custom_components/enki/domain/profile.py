@@ -73,6 +73,12 @@ _POLL_STATE_EXPORT_KEYS = frozenset(
         "window_open_detection_mode",
         "occupancy",
         "occupancy_mode",
+        "firmware_version",
+        "firmware_latest_version",
+        "firmware_update_available",
+        "firmware_update_status",
+        "node_connected",
+        "version",
         "electrical_endpoints",
     }
 )

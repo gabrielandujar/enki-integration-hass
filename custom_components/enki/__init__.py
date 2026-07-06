@@ -53,10 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnkiConfigEntry) -> bool
         notify_for_connection_error(notifier, err)
         raise ConfigEntryNotReady(f"Cannot reach Enki cloud: {err}") from err
 
-    mobile_settings = await coordinator.api.async_fetch_mobile_settings()
-    if mobile_settings.get("maintenance") is True:
-        notifier.notify_maintenance_mode()
-
     entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
 
