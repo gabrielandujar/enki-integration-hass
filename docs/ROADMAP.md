@@ -5,7 +5,7 @@ Short version: [README](../README.md) · detailed view below.
 | | |
 |---|---|
 | **Latest GitHub release** | [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
-| **Repository `manifest.json`** | 1.6.10 |
+| **Repository `manifest.json`** | 1.6.12 |
 
 ## Status by device
 

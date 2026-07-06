@@ -5,7 +5,7 @@ Detail by device type and Home Assistant entities created. The integration detec
 | | |
 |---|---|
 | **Latest GitHub release** | [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
-| **Repository `manifest.json`** | 1.6.11 |
+| **Repository `manifest.json`** | 1.6.12 |
 
 Summary: [ROADMAP.md](ROADMAP.md)
 
