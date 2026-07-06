@@ -17,7 +17,7 @@ from enki.domain.profile import build_discovery_record
 from enki.lib.capability_path import capability_to_path_segment
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-NOIROT_PROFILE = REPO_ROOT / "docs" / "devices" / "67a4b12bae1eca4709a45680.json"
+NOIROT_PROFILE = REPO_ROOT / "tests" / "fixtures" / "devices" / "67a4b12bae1eca4709a45680.json"
 ENKI_BASE = "https://enki.api.devportal.adeo.cloud"
 
 
