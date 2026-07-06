@@ -5,7 +5,7 @@ Short version: [README](../README.md) · detailed view below.
 | | |
 |---|---|
 | **Latest GitHub release** | [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
-| **Repository `manifest.json`** | 1.6.5 |
+| **Repository `manifest.json`** | 1.6.10 |
 
 ## Status by device
 
@@ -19,10 +19,10 @@ Short version: [README](../README.md) · detailed view below.
 | ✅ Supported | Enki thermometers (Sedea, …) | temperature, humidity, battery |
 | ✅ Supported | Lexman sirens | `switch` ON/OFF |
 | ✅ Supported | Equation ON/OFF relay | ON/OFF (like Edisio outlets) |
+| ✅ Supported | Equation pilot wire | `select` (comfort / eco / frost / off); stable since **v1.6.8** (`thermostat-prod`) |
+| ✅ Supported | Noirot radiator | `climate` + window / presence detection; stable since **v1.6.8** (`thermostat-prod` + `presence-detector-prod`) |
 | 🔬 Beta | Roller shutters (Evology, Nodon, …) | `cover` “Shutter (beta)” if active in the app; `ENKI_ACCESS_MOTORIZATION_API_KEY` (APK 2.25.1); limited real-world testing |
-| 🔬 Beta | Lexman water leak detector (v1.5.0+) | leak `binary_sensor` + battery `sensor`; `ENKI_WATER_SENSOR_API_KEY` and `ENKI_BATTERY_HEALTH_API_KEY` (APK 2.25.1) |
-| 🔬 Beta | Equation pilot wire (v1.5.0+) | `select` entity (comfort / eco / frost protection modes); `ENKI_HEATING_API_KEY` (APK 2.25.1) |
-| 🔬 Beta | Noirot radiator (v1.5.0+) | `climate` + window / presence detection; `ENKI_HEATING_API_KEY` (APK 2.25.1) |
+| 🔬 Beta | Lexman water leak detector | leak `binary_sensor` + battery `sensor`; reads OK remotely — on-site wet test pending ([#36](https://github.com/cyrilcolinet/enki-integration-hass/issues/36)) |
 | 🔜 Soon | ACOVA ARLAN radiators | manufacturer allowlist OK, no test hardware |
 | 🔬 Beta | Enki scenarios (“Open living room”, …) | `button` (v1.6.0+) |
 | ⏳ Not planned | Enki alarm | no API identified |

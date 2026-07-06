@@ -54,12 +54,12 @@ The **Enki** app controls hundreds of products (Lexman, Equation, Inspire, Edisi
 - **Solar** (Envertech-Lexman) — `sensor` (production W)
 - **Sensors** (Lexman, Sedea, …) — `binary_sensor`, `sensor`
 - **Siren** (Lexman) — `switch`
+- **Heating** (Noirot radiator, Equation pilot wire) — `climate`, `select` (stable since **v1.6.8**)
 
 ### Beta
 
 - **Covers** (Evology, Nodon, …) — `cover`
-- **Heating** (Noirot, Equation pilot wire) — `climate`, `select`
-- **Water leak** (Lexman) — `binary_sensor`, `sensor`
+- **Water leak** (Lexman) — `binary_sensor`, `sensor` (on-site leak test pending — [#36](https://github.com/cyrilcolinet/enki-integration-hass/issues/36))
 - **Scenarios** (Enki cloud) — `button`
 
 Per-device detail: [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) · History: [docs/ROADMAP.md](docs/ROADMAP.md)
