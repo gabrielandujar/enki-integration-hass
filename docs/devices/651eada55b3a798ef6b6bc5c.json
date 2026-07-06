@@ -6,6 +6,13 @@
   ],
   "deviceId": "651eada55b3a798ef6b6bc5c",
   "possibleValues": {
+    "check_water_sensor_state": {
+      "format": "VALUES",
+      "values": [
+        "WATER_DETECTED",
+        "NO_WATER_DETECTED"
+      ]
+    },
     "check_battery_health": {
       "format": "VALUES",
       "values": [
