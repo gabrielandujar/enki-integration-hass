@@ -119,6 +119,12 @@
       },
       "occupancy": {
         "name": "Présence"
+      },
+      "connectivity": {
+        "name": "Connectivité"
+      },
+      "firmware_update": {
+        "name": "Mise à jour firmware"
       }
     },
     "switch": {

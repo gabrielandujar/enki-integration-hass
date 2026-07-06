@@ -213,6 +213,31 @@ class EnkiDeviceState:
         return str(value) if isinstance(value, str) else None
 
     @property
+    def firmware_version(self) -> str | None:
+        value = self._data.get("firmware_version") or self._data.get("version")
+        return str(value) if isinstance(value, str) and value else None
+
+    @property
+    def firmware_latest_version(self) -> str | None:
+        value = self._data.get("firmware_latest_version")
+        return str(value) if isinstance(value, str) and value else None
+
+    @property
+    def firmware_update_available(self) -> bool | None:
+        value = self._data.get("firmware_update_available")
+        return value if isinstance(value, bool) else None
+
+    @property
+    def firmware_update_status(self) -> str | None:
+        value = self._data.get("firmware_update_status")
+        return str(value) if isinstance(value, str) else None
+
+    @property
+    def node_connected(self) -> bool | None:
+        value = self._data.get("node_connected")
+        return value if isinstance(value, bool) else None
+
+    @property
     def electrical_endpoints(self) -> list[dict[str, Any]]:
         endpoints = self._data.get("electrical_endpoints")
         if isinstance(endpoints, list):

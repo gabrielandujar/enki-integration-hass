@@ -5,7 +5,7 @@ Detail by device type and Home Assistant entities created. The integration detec
 | | |
 |---|---|
 | **Latest GitHub release** | [releases](https://github.com/cyrilcolinet/enki-integration-hass/releases/latest) |
-| **Repository `manifest.json`** | 1.6.10 |
+| **Repository `manifest.json`** | 1.6.11 |
 
 Summary: [ROADMAP.md](ROADMAP.md)
 
@@ -155,6 +155,18 @@ Contributor network feedback: [BETA_VOLETS_KEY.md](BETA_VOLETS_KEY.md).
 - **Opt-in telemetry** — notification for unknown profiles, pre-filled GitHub link (nothing sent without a click)
 - **Operational notifications** — login failure, gateway key 403, cloud unreachable ([API.md](API.md#operational-notifications))
 - **Diagnostics** — anonymized JSON export from Enki UI
+
+## Device info (firmware, connectivity)
+
+Since **1.6.11**, metadata from the Enki app device screen is exposed when the referentiel advertises the capability:
+
+| Info | Source API | HA surface |
+|------|------------|------------|
+| Firmware version | `ota/version/{nodeId}` when `check_current_firmware_version` | Device `sw_version`, diagnostics poll state |
+| Update available | `ota/check/{nodeId}` when `ota_inventory` | `binary_sensor` (update) |
+| ESDK fan online | `esdk/states/{nodeId}` for ceiling fans | `binary_sensor` (connectivity) |
+
+Reads are best-effort (404 skipped) and driven by referentiel capabilities, not hard-coded per model.
 
 ## In progress / not supported
 

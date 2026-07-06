@@ -185,10 +185,10 @@ ENKI_MICRO_SERVICES: tuple[EnkiMicroService, ...] = (
     EnkiMicroService(
         "api-enki-esdk-prod",
         "ENKI_ESDK_API_KEY",
-        "",
+        "esdk",
         "/api-enki-esdk-prod/v1/esdk",
-        wired=False,
-        notes="",
+        wired=True,
+        notes="ESDK fan connectivity (states/{nodeId})",
     ),
     EnkiMicroService(
         "api-enki-group-prod",
@@ -377,10 +377,10 @@ ENKI_MICRO_SERVICES: tuple[EnkiMicroService, ...] = (
     EnkiMicroService(
         "api-enki-ota-prod",
         "ENKI_OTA_API_KEY",
-        "",
+        "ota",
         "/api-enki-ota-prod/v1/ota",
-        wired=False,
-        notes="",
+        wired=True,
+        notes="Firmware version and OTA inventory",
     ),
     EnkiMicroService(
         "api-enki-payment-prod",
@@ -647,7 +647,7 @@ LEGACY_SLUG_ALIASES: dict[str, str] = {
     "api-enki-access-and-motorizations-prod": "api-enki-rolling-prod",
 }
 
-OPTIONAL_KEY_TRANSPORT_IDS = frozenset({"heating", "water_sensor", "motorization"})
+OPTIONAL_KEY_TRANSPORT_IDS = frozenset({"heating", "water_sensor", "motorization", "ota", "esdk"})
 
 WIRED_PATH_PREFIXES: dict[str, str] = {
     svc.transport_id: svc.path_prefix
