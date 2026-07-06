@@ -86,15 +86,15 @@ class EnkiAPI:
         http = await self._get_http()
         await self._auth.connect(http.session)
 
-    async def async_fetch_mobile_settings(self) -> dict[str, Any]:
+    async def async_fetch_mobile_settings(self) -> dict[str, Any] | None:
         """Fetch Enki app settings (maintenance flags, min app version, …)."""
         http = await self._get_http()
         try:
             payload = await fetch_mobile_config(http)
         except EnkiConnectionError as err:
             LOGGER.debug("Mobile-config settings skipped: %s", err)
-            return {}
-        return payload if isinstance(payload, dict) else {}
+            return None
+        return payload if isinstance(payload, dict) else None
 
     async def async_get_devices(self) -> list[EnkiDevice]:
         """Discover all nodes across every home on the account."""

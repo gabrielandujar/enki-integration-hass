@@ -44,6 +44,7 @@ class EnkiCoordinator(DataUpdateCoordinator[list[EnkiDevice]]):
         )
 
     async def _async_update_data(self) -> list[EnkiDevice]:
+        await self._async_sync_maintenance_notification()
         try:
             devices = await self.api.async_get_devices()
         except EnkiAuthError as err:
@@ -71,6 +72,19 @@ class EnkiCoordinator(DataUpdateCoordinator[list[EnkiDevice]]):
                     exc_info=LOGGER.isEnabledFor(logging.DEBUG),
                 )
             return devices
+
+    async def _async_sync_maintenance_notification(self) -> None:
+        """Re-check Enki maintenance flag each poll; dismiss when it clears."""
+        try:
+            settings = await self.api.async_fetch_mobile_settings()
+        except Exception as err:  # noqa: BLE001 — must not break polling
+            LOGGER.debug(
+                "Maintenance status check skipped: %s",
+                err,
+                exc_info=LOGGER.isEnabledFor(logging.DEBUG),
+            )
+            return
+        self._notifier.sync_maintenance_mode(settings)
 
     def get_device_by_node(self, node_id: str) -> EnkiDevice | None:
         if not self.data:

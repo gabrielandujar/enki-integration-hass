@@ -91,3 +91,43 @@ def test_french_auth_copy(mock_create: MagicMock) -> None:
     entry.entry_id = "abc"
     EnkiNotifier(hass, entry).notify_auth_failed()
     assert "connexion refusée" in mock_create.call_args.kwargs["title"].lower()
+
+
+@patch("enki.notifications.persistent_notification.async_dismiss")
+@patch("enki.notifications.persistent_notification.async_create")
+def test_sync_maintenance_mode_shows_notification(
+    mock_create: MagicMock,
+    mock_dismiss: MagicMock,
+    notifier: tuple[MagicMock, EnkiNotifier],
+) -> None:
+    _, n = notifier
+    n.sync_maintenance_mode({"maintenance": True})
+    mock_create.assert_called_once()
+    assert mock_create.call_args.kwargs["notification_id"] == "enki_maintenance_test-entry"
+    mock_dismiss.assert_not_called()
+
+
+@patch("enki.notifications.persistent_notification.async_dismiss")
+@patch("enki.notifications.persistent_notification.async_create")
+def test_sync_maintenance_mode_dismisses_when_clear(
+    mock_create: MagicMock,
+    mock_dismiss: MagicMock,
+    notifier: tuple[MagicMock, EnkiNotifier],
+) -> None:
+    hass, n = notifier
+    n.sync_maintenance_mode({"maintenance": False})
+    mock_create.assert_not_called()
+    mock_dismiss.assert_called_once_with(hass, "enki_maintenance_test-entry")
+
+
+@patch("enki.notifications.persistent_notification.async_dismiss")
+@patch("enki.notifications.persistent_notification.async_create")
+def test_sync_maintenance_mode_skips_when_settings_unavailable(
+    mock_create: MagicMock,
+    mock_dismiss: MagicMock,
+    notifier: tuple[MagicMock, EnkiNotifier],
+) -> None:
+    _, n = notifier
+    n.sync_maintenance_mode(None)
+    mock_create.assert_not_called()
+    mock_dismiss.assert_not_called()

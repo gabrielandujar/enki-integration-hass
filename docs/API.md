@@ -140,8 +140,9 @@ Home Assistant shows **persistent notifications** (French or English) when:
 | Invalid Enki credentials | Link to reconfigure the integration |
 | HTTP 403 (gateway key) | Hint to refresh keys from the APK |
 | Network / cloud unreachable | Check Internet and `enki` logs |
+| Enki cloud maintenance (`mobile-config`) | Shown while `maintenance: true`; cleared on the next poll when it ends |
 
-Notifications clear automatically after the next successful poll.
+Notifications clear automatically after the next successful poll (maintenance is re-checked every poll; auth/gateway/connection clear after a successful device poll).
 
 ## Scenarios (api-enki-scenario-prod)
 

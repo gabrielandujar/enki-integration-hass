@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -61,6 +63,19 @@ class EnkiNotifier:
         """Enki cloud reports active maintenance."""
         title, message = _maintenance_copy(self._hass)
         self._create(self._id("maintenance"), title, message)
+
+    def dismiss_maintenance_mode(self) -> None:
+        """Clear maintenance notification when Enki reports normal operations."""
+        self._dismiss(self._id("maintenance"))
+
+    def sync_maintenance_mode(self, settings: dict[str, Any] | None) -> None:
+        """Show or hide maintenance notification from mobile-config payload."""
+        if settings is None:
+            return
+        if settings.get("maintenance") is True:
+            self.notify_maintenance_mode()
+        else:
+            self.dismiss_maintenance_mode()
 
     def dismiss_operational_errors(self) -> None:
         """Clear auth / gateway / connection notifications after a successful poll."""
