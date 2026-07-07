@@ -8,6 +8,13 @@ from typing import Any
 from urllib.parse import quote
 
 from ..const import TELEMETRY_GITHUB_REPO, TELEMETRY_ISSUE_LABELS
+from ..lib.telemetry_labels import (
+    format_telemetry_issue_title,
+    format_telemetry_notification_summary,
+    resolve_display_value,
+    resolve_manufacturer_label,
+    resolve_model_label,
+)
 from .capabilities import device_is_supported
 from .models import EnkiDevice, EnkiDiscoveryRecord
 
@@ -147,6 +154,7 @@ def build_discovery_record(
     model: str | None,
     firmware_version: str | None,
     supported_by_integration: bool,
+    referentiel_device_id: str | None = None,
 ) -> EnkiDiscoveryRecord:
     return EnkiDiscoveryRecord(
         device_type=device_type,
@@ -157,6 +165,7 @@ def build_discovery_record(
         model=model,
         firmware_version=firmware_version,
         supported_by_integration=supported_by_integration,
+        referentiel_device_id=referentiel_device_id,
     )
 
 
@@ -172,6 +181,7 @@ def profile_to_export_dict(
         "manufacturer": record.manufacturer,
         "model": record.model,
         "firmware_version": record.firmware_version,
+        "referentiel_device_id": record.referentiel_device_id,
         "supported_by_integration": record.supported_by_integration,
         "capabilities": sorted(record.capabilities or []),
         "possible_values": record.possible_values,
@@ -207,16 +217,19 @@ def format_github_issue_body(export_dict: dict[str, Any], fingerprint: str) -> s
         "## Enki device profile (opt-in share)\n\n"
         "Anonymized data — no account or home identifiers. "
         "Issue opened manually from Home Assistant.\n\n"
-        f"- **Referentiel type:** `{export_dict.get('device_type', 'unknown')}`\n"
-        f"- **BFF type:** `{export_dict.get('bff_device_type', '')}`\n"
-        f"- **Manufacturer:** {export_dict.get('manufacturer') or 'unknown'}\n"
-        f"- **Model:** {export_dict.get('model') or 'unknown'}\n"
-        f"- **Firmware:** {export_dict.get('firmware_version') or 'unknown'}\n"
+        f"- **Referentiel type:** `{resolve_display_value(export_dict.get('device_type'))}`\n"
+        f"- **BFF type:** `{resolve_display_value(export_dict.get('bff_device_type'))}`\n"
+        f"- **Manufacturer:** {resolve_manufacturer_label(export_dict)}\n"
+        f"- **Model:** {resolve_model_label(export_dict)}\n"
+        f"- **Firmware:** {resolve_display_value(export_dict.get('firmware_version'), fallback='not reported')}\n"
         f"- **Supported by integration:** {supported}\n"
-        f"- **Integration version:** `{export_dict.get('integration_version', '')}`\n"
-        f"- **Home Assistant:** `{export_dict.get('ha_version', '')}`\n"
+        f"- **Integration version:** `{resolve_display_value(export_dict.get('integration_version'))}`\n"
+        f"- **Home Assistant:** `{resolve_display_value(export_dict.get('ha_version'), fallback='not available')}`\n"
         f"- **Fingerprint:** `{fingerprint[:16]}`\n"
     )
+
+    if referentiel_device_id := export_dict.get("referentiel_device_id"):
+        body += f"- **Referentiel device ID:** `{referentiel_device_id}`\n"
 
     if platforms := export_dict.get("ha_platforms"):
         platform_line = ", ".join(f"`{platform}`" for platform in platforms)
@@ -264,11 +277,7 @@ _TELEMETRY_REASON_LABELS = {
 
 
 def format_github_issue_title(export_dict: dict[str, Any]) -> str:
-    device_type = export_dict.get("device_type", "unknown")
-    model = export_dict.get("model") or "unknown"
-    if export_dict.get("supported_by_integration"):
-        return f"[telemetry] Profile {device_type} — {model}"
-    return f"[telemetry] Unsupported device — {device_type} ({model})"
+    return format_telemetry_issue_title(export_dict)
 
 
 _GITHUB_ISSUE_URL_MAX_LENGTH = 7500

@@ -61,6 +61,7 @@ class EnkiDiscoveryRecord:
     model: str | None
     firmware_version: str | None
     supported_by_integration: bool
+    referentiel_device_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

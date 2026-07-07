@@ -37,6 +37,15 @@ from .transport import EnkiHttpClient
 _DISCOVERY_CONCURRENCY = 8
 
 
+def _referentiel_model(node_info: dict[str, Any], device_info: dict[str, Any]) -> str | None:
+    for key in ("modelNumber", "commercialReference", "reference"):
+        for source in (node_info, device_info):
+            value = source.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return None
+
+
 class EnkiAPI:
     """Async facade over Enki REST micro-services.
 
@@ -293,7 +302,7 @@ class EnkiAPI:
         else:
             supported = integration_supports_device(skeleton)
 
-        model = node_info.get("modelNumber") or device_info.get("modelNumber")
+        model = _referentiel_model(node_info, device_info)
         preliminary_firmware = node_info.get("version") or device_info.get("version")
         record = build_discovery_record(
             device_type=device_type,
@@ -301,9 +310,10 @@ class EnkiAPI:
             capabilities=capabilities,
             possible_values=possible_values,
             manufacturer=manufacturer_str,
-            model=str(model) if model else None,
+            model=model,
             firmware_version=str(preliminary_firmware) if preliminary_firmware else None,
             supported_by_integration=supported,
+            referentiel_device_id=device_id,
         )
         self._register_node_profile(node_id, record)
 
@@ -332,9 +342,10 @@ class EnkiAPI:
                 capabilities=capabilities,
                 possible_values=possible_values,
                 manufacturer=manufacturer_str,
-                model=str(model) if model else None,
+                model=model,
                 firmware_version=str(last_reported["firmware_version"]),
                 supported_by_integration=supported,
+                referentiel_device_id=device_id,
             )
 
         self._register_poll_state(node_id, {**node_info, **last_reported})

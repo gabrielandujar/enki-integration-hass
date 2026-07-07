@@ -48,7 +48,11 @@ def test_profile_fingerprint_stable_across_versions() -> None:
 
 def test_format_github_issue_title_unsupported() -> None:
     export = profile_to_export_dict(_sample_record(), integration_version="1.0.7", ha_version="x")
-    assert "Unsupported device" in format_github_issue_title(export)
+    title = format_github_issue_title(export)
+    assert "[telemetry]" in title
+    assert "Equation" in title or "equation" in title.lower()
+    assert "neo_wifi" in title
+    assert "unknown" not in title.lower()
 
 
 def test_build_github_new_issue_url_contains_repo_and_body() -> None:
