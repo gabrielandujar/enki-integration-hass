@@ -64,8 +64,8 @@ def test_github_labels_for_unsupported_remote() -> None:
     labels = telemetry_github_labels(_lexman_remote_export())
     assert labels == (
         "device-telemetry",
-        "telemetry-unsupported",
-        "telemetry-control",
+        "unsupported",
+        "control",
     )
 
 
@@ -78,8 +78,8 @@ def test_github_labels_for_capability_gap_cover() -> None:
     labels = telemetry_github_labels(export)
     assert labels == (
         "device-telemetry",
-        "telemetry-capability-gap",
-        "telemetry-motorization",
+        "capability-gap",
+        "motorization",
     )
 
 
@@ -89,7 +89,7 @@ def test_issue_body_omits_unknown_placeholders() -> None:
     assert "**Referentiel device ID:** `f5fe071f734e21b8abcd1234`" in body
     assert "**Home Assistant:** `2025.1.0`" in body
     assert "**Suggested labels:**" in body
-    assert "`telemetry-unsupported`" in body
+    assert "`unsupported`" in body
 
 
 def test_model_label_prefers_referentiel_model_number() -> None:

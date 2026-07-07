@@ -114,7 +114,7 @@ Workflow triage labels (`next-release`, `beta`, `stale`, …) and telemetry labe
 | `regression` | Worked before, broken recently |
 | `breaking-change` | Intentional breaking change for users |
 
-Telemetry-specific labels (`device-telemetry`, `telemetry-*`) are pre-filled on opt-in device profile issues — see [TELEMETRY.md](TELEMETRY.md).
+Telemetry-specific labels (`device-telemetry`, `unsupported`, `motorization`, …) are pre-filled on opt-in device profile issues — see [TELEMETRY.md](TELEMETRY.md).
 
 ## Publishing a release
 

@@ -7,40 +7,49 @@ from typing import Any
 _MISSING = "—"
 
 _REASON_GITHUB_LABELS: dict[str, str] = {
-    "api_read_errors": "telemetry-api-error",
-    "uncovered_capabilities": "telemetry-capability-gap",
-    "unsupported_device": "telemetry-unsupported",
+    "api_read_errors": "api-error",
+    "uncovered_capabilities": "capability-gap",
+    "unsupported_device": "unsupported",
 }
 
 _DEVICE_FAMILY_GITHUB_LABELS: dict[str, str] = {
-    "access_and_motorizations": "telemetry-motorization",
-    "ceiling_fans": "telemetry-climate",
-    "heaters_and_pilot_wires": "telemetry-climate",
-    "inverters": "telemetry-energy",
-    "lights": "telemetry-lighting",
-    "modules": "telemetry-control",
-    "remote_controls_and_switches": "telemetry-control",
-    "sensors": "telemetry-sensor",
+    "access_and_motorizations": "motorization",
+    "ceiling_fans": "climate",
+    "heaters_and_pilot_wires": "climate",
+    "inverters": "energy",
+    "lights": "lighting",
+    "modules": "control",
+    "remote_controls_and_switches": "control",
+    "sensors": "sensor",
 }
 
 _TELEMETRY_BASE_LABEL = "device-telemetry"
 
-# Labels synced by scripts/sync_telemetry_labels.sh (base + reason + coarse device family).
+# Labels synced by scripts/sync_github_labels.sh (base + reason + coarse device family).
 TELEMETRY_GITHUB_LABEL_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
     ("device-telemetry", "6f42c1", "Opt-in anonymized device profile from Home Assistant"),
-    ("telemetry-unsupported", "d73a4a", "Device type not supported yet"),
-    ("telemetry-capability-gap", "fbca04", "Supported device with missing capabilities"),
-    ("telemetry-api-error", "b60205", "Cloud API read failures on supported device"),
-    ("telemetry-motorization", "1d76db", "Shutters, covers, and motorizations"),
-    ("telemetry-climate", "b60205", "Heating, pilot wire, ceiling fans"),
-    ("telemetry-lighting", "fef2c0", "Lights and dimmers"),
-    ("telemetry-sensor", "c5def5", "Environment and security sensors"),
-    ("telemetry-control", "0e8a16", "Remotes, switches, outlets, and relays"),
-    ("telemetry-energy", "006b75", "Solar inverters and production"),
+    ("unsupported", "d73a4a", "Device type not supported yet (telemetry)"),
+    ("capability-gap", "fbca04", "Supported device with missing capabilities (telemetry)"),
+    ("api-error", "b60205", "Cloud API read failures on supported device (telemetry)"),
+    ("motorization", "1d76db", "Shutters, covers, and motorizations (telemetry)"),
+    ("climate", "b60205", "Heating, pilot wire, ceiling fans (telemetry)"),
+    ("lighting", "fef2c0", "Lights and dimmers (telemetry)"),
+    ("sensor", "c5def5", "Environment and security sensors (telemetry)"),
+    ("control", "0e8a16", "Remotes, switches, outlets, and relays (telemetry)"),
+    ("energy", "006b75", "Solar inverters and production (telemetry)"),
 )
 
-# Removed from prefill; delete from repo via scripts/sync_telemetry_labels.sh.
+# Removed from prefill; delete from repo via scripts/sync_github_labels.sh.
 TELEMETRY_GITHUB_ORPHAN_LABELS: tuple[str, ...] = (
+    "telemetry-unsupported",
+    "telemetry-capability-gap",
+    "telemetry-api-error",
+    "telemetry-motorization",
+    "telemetry-climate",
+    "telemetry-lighting",
+    "telemetry-sensor",
+    "telemetry-control",
+    "telemetry-energy",
     "device-cover",
     "device-remote",
     "device-fan",
