@@ -10,7 +10,6 @@ from urllib.parse import quote
 from ..const import TELEMETRY_GITHUB_REPO
 from ..lib.telemetry_labels import (
     format_telemetry_issue_title,
-    format_telemetry_notification_summary,
     resolve_display_value,
     resolve_manufacturer_label,
     resolve_model_label,
@@ -214,6 +213,16 @@ def format_github_issue_body(export_dict: dict[str, Any], fingerprint: str) -> s
 
     cap_lines = "\n".join(f"- `{capability}`" for capability in capabilities) or "- _(none)_"
 
+    firmware = resolve_display_value(
+        export_dict.get("firmware_version"),
+        fallback="not reported",
+    )
+    integration_version = resolve_display_value(export_dict.get("integration_version"))
+    ha_version = resolve_display_value(
+        export_dict.get("ha_version"),
+        fallback="not available",
+    )
+
     body = (
         "## Enki device profile (opt-in share)\n\n"
         "Anonymized data — no account or home identifiers. "
@@ -222,10 +231,10 @@ def format_github_issue_body(export_dict: dict[str, Any], fingerprint: str) -> s
         f"- **BFF type:** `{resolve_display_value(export_dict.get('bff_device_type'))}`\n"
         f"- **Manufacturer:** {resolve_manufacturer_label(export_dict)}\n"
         f"- **Model:** {resolve_model_label(export_dict)}\n"
-        f"- **Firmware:** {resolve_display_value(export_dict.get('firmware_version'), fallback='not reported')}\n"
+        f"- **Firmware:** {firmware}\n"
         f"- **Supported by integration:** {supported}\n"
-        f"- **Integration version:** `{resolve_display_value(export_dict.get('integration_version'))}`\n"
-        f"- **Home Assistant:** `{resolve_display_value(export_dict.get('ha_version'), fallback='not available')}`\n"
+        f"- **Integration version:** `{integration_version}`\n"
+        f"- **Home Assistant:** `{ha_version}`\n"
         f"- **Fingerprint:** `{fingerprint[:16]}`\n"
     )
 

@@ -47,7 +47,7 @@ _TELEMETRY_BASE_LABEL = "device-telemetry"
 TELEMETRY_GITHUB_LABEL_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
     ("device-telemetry", "6f42c1", "Opt-in anonymized device profile from Home Assistant"),
     ("telemetry-unsupported", "d73a4a", "Device type not supported yet"),
-    ("telemetry-capability-gap", "fbca04", "Supported device with missing referentiel capabilities"),
+    ("telemetry-capability-gap", "fbca04", "Supported device with missing capabilities"),
     ("telemetry-api-error", "b60205", "Cloud API read failures on supported device"),
     ("device-cover", "1d76db", "Roller shutters and motorizations"),
     ("device-remote", "0e8a16", "Remotes, wall switches, and button triggers"),
@@ -106,11 +106,16 @@ def resolve_manufacturer_label(export: dict[str, Any]) -> str:
 
 def resolve_model_label(export: dict[str, Any]) -> str:
     model = export.get("model")
-    if isinstance(model, str) and model.strip() and model.strip().lower() not in {
-        "unknown",
-        "none",
-        "n/a",
-    }:
+    if (
+        isinstance(model, str)
+        and model.strip()
+        and model.strip().lower()
+        not in {
+            "unknown",
+            "none",
+            "n/a",
+        }
+    ):
         return model.strip()
 
     referentiel_device_id = export.get("referentiel_device_id")

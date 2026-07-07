@@ -36,9 +36,7 @@ def _lexman_remote_export(*, supported: bool = False) -> dict:
         integration_version="1.6.12",
         ha_version="2025.1.0",
     )
-    export["telemetry_reason"] = (
-        "uncovered_capabilities" if supported else "unsupported_device"
-    )
+    export["telemetry_reason"] = "uncovered_capabilities" if supported else "unsupported_device"
     return export
 
 

@@ -16,9 +16,9 @@ from ..domain.profile import (
     profile_fingerprint,
     profile_to_export_dict,
 )
-from ..lib.telemetry_labels import format_telemetry_notification_summary
 from ..domain.telemetry_coverage import discovery_record_needs_telemetry
 from ..domain.telemetry_enrichment import enrich_telemetry_export
+from ..lib.telemetry_labels import format_telemetry_notification_summary
 
 if TYPE_CHECKING:
     from ..coordinator import EnkiCoordinator
