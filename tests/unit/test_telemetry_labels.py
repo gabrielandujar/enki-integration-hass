@@ -62,7 +62,11 @@ def test_github_labels_for_unsupported_remote() -> None:
     from enki.lib.telemetry_labels import telemetry_github_labels
 
     labels = telemetry_github_labels(_lexman_remote_export())
-    assert labels == ("device-telemetry", "telemetry-unsupported")
+    assert labels == (
+        "device-telemetry",
+        "telemetry-unsupported",
+        "telemetry-control",
+    )
 
 
 def test_github_labels_for_capability_gap_cover() -> None:
@@ -72,7 +76,11 @@ def test_github_labels_for_capability_gap_cover() -> None:
     export["device_type"] = "access_and_motorizations"
     export["telemetry_reason"] = "uncovered_capabilities"
     labels = telemetry_github_labels(export)
-    assert labels == ("device-telemetry", "telemetry-capability-gap")
+    assert labels == (
+        "device-telemetry",
+        "telemetry-capability-gap",
+        "telemetry-motorization",
+    )
 
 
 def test_issue_body_omits_unknown_placeholders() -> None:

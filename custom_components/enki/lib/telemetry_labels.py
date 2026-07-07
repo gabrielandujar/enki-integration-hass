@@ -12,14 +12,54 @@ _REASON_GITHUB_LABELS: dict[str, str] = {
     "unsupported_device": "telemetry-unsupported",
 }
 
+_DEVICE_FAMILY_GITHUB_LABELS: dict[str, str] = {
+    "access_and_motorizations": "telemetry-motorization",
+    "ceiling_fans": "telemetry-climate",
+    "heaters_and_pilot_wires": "telemetry-climate",
+    "inverters": "telemetry-energy",
+    "lights": "telemetry-lighting",
+    "modules": "telemetry-control",
+    "remote_controls_and_switches": "telemetry-control",
+    "sensors": "telemetry-sensor",
+}
+
 _TELEMETRY_BASE_LABEL = "device-telemetry"
 
-# Labels synced by scripts/sync_telemetry_labels.sh (base + report reason only).
+# Labels synced by scripts/sync_telemetry_labels.sh (base + reason + coarse device family).
 TELEMETRY_GITHUB_LABEL_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
     ("device-telemetry", "6f42c1", "Opt-in anonymized device profile from Home Assistant"),
     ("telemetry-unsupported", "d73a4a", "Device type not supported yet"),
     ("telemetry-capability-gap", "fbca04", "Supported device with missing capabilities"),
     ("telemetry-api-error", "b60205", "Cloud API read failures on supported device"),
+    ("telemetry-motorization", "1d76db", "Shutters, covers, and motorizations"),
+    ("telemetry-climate", "b60205", "Heating, pilot wire, ceiling fans"),
+    ("telemetry-lighting", "fef2c0", "Lights and dimmers"),
+    ("telemetry-sensor", "c5def5", "Environment and security sensors"),
+    ("telemetry-control", "0e8a16", "Remotes, switches, outlets, and relays"),
+    ("telemetry-energy", "006b75", "Solar inverters and production"),
+)
+
+# Removed from prefill; delete from repo via scripts/sync_telemetry_labels.sh.
+TELEMETRY_GITHUB_ORPHAN_LABELS: tuple[str, ...] = (
+    "device-cover",
+    "device-remote",
+    "device-fan",
+    "device-heating",
+    "device-light",
+    "device-sensor",
+    "device-module",
+    "device-inverter",
+    "brand-lexman",
+    "brand-inspire",
+    "brand-equation",
+    "brand-noirot",
+    "brand-eglo",
+    "brand-edisio",
+    "brand-evology",
+    "brand-nodon",
+    "brand-sedea",
+    "brand-envertech",
+    "brand-acova",
 )
 
 _DEVICE_TYPE_LABELS: dict[str, str] = {
@@ -124,6 +164,13 @@ def format_telemetry_notification_summary(export: dict[str, Any]) -> str:
     return f"{manufacturer} {device_kind} · {detail}"
 
 
+def _device_family_github_label(device_type: object) -> str | None:
+    if not isinstance(device_type, str):
+        return None
+    normalized = device_type.strip().lower()
+    return _DEVICE_FAMILY_GITHUB_LABELS.get(normalized)
+
+
 def telemetry_github_labels(export: dict[str, Any]) -> tuple[str, ...]:
     """GitHub labels to pre-fill on a telemetry issue (labels must exist on the repo)."""
     reason_key = export.get("telemetry_reason")
@@ -134,4 +181,8 @@ def telemetry_github_labels(export: dict[str, Any]) -> tuple[str, ...]:
     else:
         reason_label = _REASON_GITHUB_LABELS["unsupported_device"]
 
-    return (_TELEMETRY_BASE_LABEL, reason_label)
+    labels: list[str] = [_TELEMETRY_BASE_LABEL, reason_label]
+    family_label = _device_family_github_label(export.get("device_type"))
+    if family_label is not None:
+        labels.append(family_label)
+    return tuple(labels)

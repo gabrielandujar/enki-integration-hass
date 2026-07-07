@@ -16,8 +16,10 @@ body:
         Prefer the HA notification link — titles, labels, and fields are filled from the
         anonymized profile (manufacturer, referentiel device ID, device kind, reason).
 
-        **Labels:** `device-telemetry` + one reason label (`telemetry-unsupported`,
-        `telemetry-capability-gap`, or `telemetry-api-error`).
+        **Labels:** `device-telemetry` + reason (`telemetry-unsupported`,
+        `telemetry-capability-gap`, or `telemetry-api-error`) + device family
+        (`telemetry-motorization`, `telemetry-climate`, `telemetry-lighting`, …).
+        Brand and model stay in the title/body.
   - type: input
     attributes:
       label: Manufacturer

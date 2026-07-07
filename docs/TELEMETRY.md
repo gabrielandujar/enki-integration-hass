@@ -55,5 +55,5 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for tests.
 
 - Deduplication by SHA256 fingerprint (local HA storage)
 - URL: `github.com/.../issues/new?title=...&body=...&labels=device-telemetry,telemetry-unsupported`
-- Two labels per issue: `device-telemetry` + reason (`telemetry-unsupported`, `telemetry-capability-gap`, or `telemetry-api-error`). Device kind and brand stay in the title/body. Sync repo labels with `scripts/sync_telemetry_labels.sh`.
+- Three labels per issue: `device-telemetry` + reason + coarse device family (`telemetry-motorization`, `telemetry-climate`, …). Brand and model stay in the title/body. Sync repo labels with `scripts/sync_telemetry_labels.sh` (also removes retired `device-*` / `brand-*` labels).
 - No token, no `repository_dispatch`
