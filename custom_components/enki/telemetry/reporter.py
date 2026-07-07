@@ -18,6 +18,7 @@ from ..domain.profile import (
 )
 from ..domain.telemetry_coverage import discovery_record_needs_telemetry
 from ..domain.telemetry_enrichment import enrich_telemetry_export
+from ..lib.telemetry_labels import format_telemetry_notification_summary
 
 if TYPE_CHECKING:
     from ..coordinator import EnkiCoordinator
@@ -116,14 +117,12 @@ class EnkiTelemetryReporter:
         )
 
     def _notify_new_profile(self, export_dict: dict[str, Any], fingerprint: str) -> None:
-        device_type = export_dict.get("device_type", "unknown")
-        model = export_dict.get("model") or "unknown"
+        summary = format_telemetry_notification_summary(export_dict)
         issue_url = build_github_new_issue_url(export_dict, fingerprint)
         supported = export_dict.get("supported_by_integration")
         title, message = _profile_notification_copy(
             self._hass,
-            device_type=str(device_type),
-            model=str(model),
+            summary=summary,
             issue_url=issue_url,
             supported=bool(supported),
         )
@@ -158,14 +157,20 @@ def _integration_version() -> str:
 
 def _ha_version(hass: HomeAssistant) -> str:
     version = getattr(hass.config, "version", None)
-    return str(version) if version is not None else "unknown"
+    if version:
+        return str(version)
+    try:
+        from homeassistant.const import __version__
+
+        return str(__version__)
+    except ImportError:
+        return "not available"
 
 
 def _profile_notification_copy(
     hass: HomeAssistant,
     *,
-    device_type: str,
-    model: str,
+    summary: str,
     issue_url: str,
     supported: bool,
 ) -> tuple[str, str]:
@@ -175,7 +180,7 @@ def _profile_notification_copy(
             return (
                 "Enki — nouveau profil d'appareil",
                 (
-                    f"Profil détecté : **{device_type}** ({model}).\n\n"
+                    f"Profil détecté : **{summary}**.\n\n"
                     "Données anonymisées — rien n'est envoyé sans votre action.\n\n"
                     f"[Ouvrir une issue GitHub pré-remplie]({issue_url})"
                 ),
@@ -183,7 +188,7 @@ def _profile_notification_copy(
         return (
             "Enki — appareil non supporté",
             (
-                f"Type **{device_type}** ({model}) n'est pas encore géré par l'intégration.\n\n"
+                f"Profil **{summary}** non géré par l'intégration.\n\n"
                 f"[Proposer le support sur GitHub]({issue_url})"
             ),
         )
@@ -192,7 +197,7 @@ def _profile_notification_copy(
         return (
             "Enki — new device profile",
             (
-                f"Profile detected: **{device_type}** ({model}).\n\n"
+                f"Profile detected: **{summary}**.\n\n"
                 "Anonymized data only — nothing is sent without your action.\n\n"
                 f"[Open a pre-filled GitHub issue]({issue_url})"
             ),
@@ -200,7 +205,7 @@ def _profile_notification_copy(
     return (
         "Enki — unsupported device",
         (
-            f"Type **{device_type}** ({model}) is not supported by the integration yet.\n\n"
+            f"Profile **{summary}** is not supported by the integration yet.\n\n"
             f"[Request support on GitHub]({issue_url})"
         ),
     )
