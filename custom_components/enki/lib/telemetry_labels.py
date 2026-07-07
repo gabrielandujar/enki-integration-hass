@@ -6,6 +6,70 @@ from typing import Any
 
 _MISSING = "—"
 
+# Referentiel device_type → GitHub label (must exist on the repository).
+_DEVICE_TYPE_GITHUB_LABELS: dict[str, str] = {
+    "access_and_motorizations": "device-cover",
+    "ceiling_fans": "device-fan",
+    "heaters_and_pilot_wires": "device-heating",
+    "inverters": "device-inverter",
+    "lights": "device-light",
+    "modules": "device-module",
+    "remote_controls_and_switches": "device-remote",
+    "sensors": "device-sensor",
+}
+
+_REASON_GITHUB_LABELS: dict[str, str] = {
+    "api_read_errors": "telemetry-api-error",
+    "uncovered_capabilities": "telemetry-capability-gap",
+    "unsupported_device": "telemetry-unsupported",
+}
+
+# Enki ecosystem manufacturers → brand-* label slug (must exist on the repository).
+_BRAND_GITHUB_LABELS: frozenset[str] = frozenset(
+    {
+        "brand-acova",
+        "brand-edisio",
+        "brand-eglo",
+        "brand-envertech",
+        "brand-equation",
+        "brand-evology",
+        "brand-inspire",
+        "brand-lexman",
+        "brand-nodon",
+        "brand-noirot",
+        "brand-sedea",
+    }
+)
+
+_TELEMETRY_BASE_LABEL = "device-telemetry"
+
+# All telemetry labels managed by scripts/sync_telemetry_labels.sh
+TELEMETRY_GITHUB_LABEL_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
+    ("device-telemetry", "6f42c1", "Opt-in anonymized device profile from Home Assistant"),
+    ("telemetry-unsupported", "d73a4a", "Device type not supported yet"),
+    ("telemetry-capability-gap", "fbca04", "Supported device with missing referentiel capabilities"),
+    ("telemetry-api-error", "b60205", "Cloud API read failures on supported device"),
+    ("device-cover", "1d76db", "Roller shutters and motorizations"),
+    ("device-remote", "0e8a16", "Remotes, wall switches, and button triggers"),
+    ("device-fan", "1d76db", "Ceiling fans and airflow"),
+    ("device-heating", "b60205", "Radiators, pilot wire, thermostats"),
+    ("device-light", "fef2c0", "Lights and dimmers"),
+    ("device-sensor", "c5def5", "Environment and security sensors"),
+    ("device-module", "bfdadc", "Outlets, relays, and power modules"),
+    ("device-inverter", "006b75", "Solar inverters and production"),
+    ("brand-lexman", "ededed", "Lexman hardware"),
+    ("brand-inspire", "ededed", "Inspire hardware"),
+    ("brand-equation", "ededed", "Equation hardware"),
+    ("brand-noirot", "ededed", "Noirot hardware"),
+    ("brand-eglo", "ededed", "Eglo hardware"),
+    ("brand-edisio", "ededed", "Edisio hardware"),
+    ("brand-evology", "ededed", "Evology hardware"),
+    ("brand-nodon", "ededed", "Nodon hardware"),
+    ("brand-sedea", "ededed", "Sedea hardware"),
+    ("brand-envertech", "ededed", "Envertech hardware"),
+    ("brand-acova", "ededed", "ACOVA hardware"),
+)
+
 _DEVICE_TYPE_LABELS: dict[str, str] = {
     "access_and_motorizations": "motorization",
     "ceiling_fans": "ceiling fan",
@@ -101,3 +165,35 @@ def format_telemetry_notification_summary(export: dict[str, Any]) -> str:
     if detail == device_kind:
         return f"{manufacturer} {device_kind}"
     return f"{manufacturer} {device_kind} · {detail}"
+
+
+def _brand_github_label(manufacturer: object) -> str | None:
+    if not isinstance(manufacturer, str) or not manufacturer.strip():
+        return None
+    slug = manufacturer.strip().lower().replace(" ", "-")
+    label = f"brand-{slug}"
+    if label in _BRAND_GITHUB_LABELS:
+        return label
+    return None
+
+
+def telemetry_github_labels(export: dict[str, Any]) -> tuple[str, ...]:
+    """GitHub labels to pre-fill on a telemetry issue (labels must exist on the repo)."""
+    labels: list[str] = [_TELEMETRY_BASE_LABEL]
+
+    reason_key = export.get("telemetry_reason")
+    if isinstance(reason_key, str) and reason_key in _REASON_GITHUB_LABELS:
+        labels.append(_REASON_GITHUB_LABELS[reason_key])
+    elif export.get("supported_by_integration"):
+        labels.append(_REASON_GITHUB_LABELS["uncovered_capabilities"])
+    else:
+        labels.append(_REASON_GITHUB_LABELS["unsupported_device"])
+
+    device_type = str(export.get("device_type") or "").strip().lower()
+    if platform_label := _DEVICE_TYPE_GITHUB_LABELS.get(device_type):
+        labels.append(platform_label)
+
+    if brand_label := _brand_github_label(export.get("manufacturer")):
+        labels.append(brand_label)
+
+    return tuple(dict.fromkeys(labels))

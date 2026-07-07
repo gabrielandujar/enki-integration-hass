@@ -4,6 +4,7 @@ description: Anonymized Enki hardware profile for support prioritization
 title: "[telemetry] Manufacturer device kind · detail — reason"
 labels:
   - device-telemetry
+  - telemetry-unsupported
 body:
   - type: markdown
     attributes:
@@ -13,8 +14,11 @@ body:
 
         Do **not** include home/node IDs, email, passwords, or room names.
 
-        Prefer the HA notification link — titles and fields are filled with manufacturer,
-        referentiel device ID, and capability context instead of `unknown`.
+        Prefer the HA notification link — titles, labels, and fields are filled from the
+        anonymized profile (manufacturer, referentiel device ID, device kind, reason).
+
+        **Common labels:** `device-telemetry` + one of `telemetry-unsupported`,
+        `telemetry-capability-gap`, `telemetry-api-error` + `device-*` + optional `brand-*`.
   - type: input
     attributes:
       label: Manufacturer

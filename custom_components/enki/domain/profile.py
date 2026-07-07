@@ -7,13 +7,14 @@ import json
 from typing import Any
 from urllib.parse import quote
 
-from ..const import TELEMETRY_GITHUB_REPO, TELEMETRY_ISSUE_LABELS
+from ..const import TELEMETRY_GITHUB_REPO
 from ..lib.telemetry_labels import (
     format_telemetry_issue_title,
     format_telemetry_notification_summary,
     resolve_display_value,
     resolve_manufacturer_label,
     resolve_model_label,
+    telemetry_github_labels,
 )
 from .capabilities import device_is_supported
 from .models import EnkiDevice, EnkiDiscoveryRecord
@@ -239,6 +240,11 @@ def format_github_issue_body(export_dict: dict[str, Any], fingerprint: str) -> s
         reason_text = _TELEMETRY_REASON_LABELS.get(reason, reason)
         body += f"- **Why this report:** {reason_text}\n"
 
+    suggested_labels = telemetry_github_labels(export_dict)
+    if suggested_labels:
+        label_list = ", ".join(f"`{label}`" for label in suggested_labels)
+        body += f"- **Suggested labels:** {label_list}\n"
+
     body += (
         "\n### Capabilities\n"
         f"{cap_lines}\n\n"
@@ -286,7 +292,7 @@ _GITHUB_ISSUE_URL_MAX_LENGTH = 7500
 def build_github_new_issue_url(export_dict: dict[str, Any], fingerprint: str) -> str:
     """Build a GitHub new-issue URL with title and body query parameters."""
     title = format_github_issue_title(export_dict)
-    labels = ",".join(TELEMETRY_ISSUE_LABELS)
+    labels = ",".join(telemetry_github_labels(export_dict))
     base = f"https://github.com/{TELEMETRY_GITHUB_REPO}/issues/new"
 
     payload = dict(export_dict)

@@ -54,5 +54,6 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for tests.
 ## Technical
 
 - Deduplication by SHA256 fingerprint (local HA storage)
-- URL: `github.com/.../issues/new?title=...&body=...&labels=device-telemetry`
+- URL: `github.com/.../issues/new?title=...&body=...&labels=device-telemetry,telemetry-unsupported,...`
+- Labels are chosen from the profile: reason (`telemetry-unsupported`, `telemetry-capability-gap`, `telemetry-api-error`), device kind (`device-cover`, `device-remote`, …), brand (`brand-lexman`, …). Sync repo labels with `scripts/sync_telemetry_labels.sh`.
 - No token, no `repository_dispatch`

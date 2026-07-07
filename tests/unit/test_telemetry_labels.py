@@ -60,11 +60,37 @@ def test_notification_summary_is_readable() -> None:
     assert summary == "Lexman remote control · ref f5fe071f734e"
 
 
+def test_github_labels_for_unsupported_remote() -> None:
+    from enki.lib.telemetry_labels import telemetry_github_labels
+
+    labels = telemetry_github_labels(_lexman_remote_export())
+    assert labels == (
+        "device-telemetry",
+        "telemetry-unsupported",
+        "device-remote",
+        "brand-lexman",
+    )
+
+
+def test_github_labels_for_capability_gap_cover() -> None:
+    from enki.lib.telemetry_labels import telemetry_github_labels
+
+    export = _lexman_remote_export(supported=True)
+    export["device_type"] = "access_and_motorizations"
+    export["telemetry_reason"] = "uncovered_capabilities"
+    labels = telemetry_github_labels(export)
+    assert "telemetry-capability-gap" in labels
+    assert "device-cover" in labels
+    assert "brand-lexman" in labels
+
+
 def test_issue_body_omits_unknown_placeholders() -> None:
     body = format_github_issue_body(_lexman_remote_export(), "abc123def456")
     assert "unknown" not in body.lower()
     assert "**Referentiel device ID:** `f5fe071f734e21b8abcd1234`" in body
     assert "**Home Assistant:** `2025.1.0`" in body
+    assert "**Suggested labels:**" in body
+    assert "`device-remote`" in body
 
 
 def test_model_label_prefers_referentiel_model_number() -> None:

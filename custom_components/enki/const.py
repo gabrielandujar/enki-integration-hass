@@ -62,4 +62,3 @@ ORDERED_FAN_SPEEDS = list(range(FAN_SPEED_MIN, FAN_SPEED_MAX + 1))
 
 # Device profile sharing (opt-in). See docs/TELEMETRY.md.
 TELEMETRY_GITHUB_REPO = "cyrilcolinet/enki-integration-hass"
-TELEMETRY_ISSUE_LABELS = ("device-telemetry", "enhancement")

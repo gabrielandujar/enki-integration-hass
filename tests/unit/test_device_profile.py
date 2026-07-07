@@ -66,4 +66,6 @@ def test_build_github_new_issue_url_contains_repo_and_body() -> None:
     assert "github.com/cyrilcolinet/enki-integration-hass/issues/new" in url
     assert "title=" in url
     assert "body=" in url
+    assert "labels=" in url
+    assert "device-telemetry" in url
     assert "equation_radiator" in url
