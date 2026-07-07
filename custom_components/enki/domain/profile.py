@@ -7,7 +7,14 @@ import json
 from typing import Any
 from urllib.parse import quote
 
-from ..const import TELEMETRY_GITHUB_REPO, TELEMETRY_ISSUE_LABELS
+from ..const import TELEMETRY_GITHUB_REPO
+from ..lib.telemetry_labels import (
+    format_telemetry_issue_title,
+    resolve_display_value,
+    resolve_manufacturer_label,
+    resolve_model_label,
+    telemetry_github_labels,
+)
 from .capabilities import device_is_supported
 from .models import EnkiDevice, EnkiDiscoveryRecord
 
@@ -149,6 +156,7 @@ def build_discovery_record(
     model: str | None,
     firmware_version: str | None,
     supported_by_integration: bool,
+    referentiel_device_id: str | None = None,
 ) -> EnkiDiscoveryRecord:
     return EnkiDiscoveryRecord(
         device_type=device_type,
@@ -159,6 +167,7 @@ def build_discovery_record(
         model=model,
         firmware_version=firmware_version,
         supported_by_integration=supported_by_integration,
+        referentiel_device_id=referentiel_device_id,
     )
 
 
@@ -174,6 +183,7 @@ def profile_to_export_dict(
         "manufacturer": record.manufacturer,
         "model": record.model,
         "firmware_version": record.firmware_version,
+        "referentiel_device_id": record.referentiel_device_id,
         "supported_by_integration": record.supported_by_integration,
         "capabilities": sorted(record.capabilities or []),
         "possible_values": record.possible_values,
@@ -205,20 +215,33 @@ def format_github_issue_body(export_dict: dict[str, Any], fingerprint: str) -> s
 
     cap_lines = "\n".join(f"- `{capability}`" for capability in capabilities) or "- _(none)_"
 
+    firmware = resolve_display_value(
+        export_dict.get("firmware_version"),
+        fallback="not reported",
+    )
+    integration_version = resolve_display_value(export_dict.get("integration_version"))
+    ha_version = resolve_display_value(
+        export_dict.get("ha_version"),
+        fallback="not available",
+    )
+
     body = (
         "## Enki device profile (opt-in share)\n\n"
         "Anonymized data — no account or home identifiers. "
         "Issue opened manually from Home Assistant.\n\n"
-        f"- **Referentiel type:** `{export_dict.get('device_type', 'unknown')}`\n"
-        f"- **BFF type:** `{export_dict.get('bff_device_type', '')}`\n"
-        f"- **Manufacturer:** {export_dict.get('manufacturer') or 'unknown'}\n"
-        f"- **Model:** {export_dict.get('model') or 'unknown'}\n"
-        f"- **Firmware:** {export_dict.get('firmware_version') or 'unknown'}\n"
+        f"- **Referentiel type:** `{resolve_display_value(export_dict.get('device_type'))}`\n"
+        f"- **BFF type:** `{resolve_display_value(export_dict.get('bff_device_type'))}`\n"
+        f"- **Manufacturer:** {resolve_manufacturer_label(export_dict)}\n"
+        f"- **Model:** {resolve_model_label(export_dict)}\n"
+        f"- **Firmware:** {firmware}\n"
         f"- **Supported by integration:** {supported}\n"
-        f"- **Integration version:** `{export_dict.get('integration_version', '')}`\n"
-        f"- **Home Assistant:** `{export_dict.get('ha_version', '')}`\n"
+        f"- **Integration version:** `{integration_version}`\n"
+        f"- **Home Assistant:** `{ha_version}`\n"
         f"- **Fingerprint:** `{fingerprint[:16]}`\n"
     )
+
+    if referentiel_device_id := export_dict.get("referentiel_device_id"):
+        body += f"- **Referentiel device ID:** `{referentiel_device_id}`\n"
 
     if platforms := export_dict.get("ha_platforms"):
         platform_line = ", ".join(f"`{platform}`" for platform in platforms)
@@ -227,6 +250,11 @@ def format_github_issue_body(export_dict: dict[str, Any], fingerprint: str) -> s
     if reason := export_dict.get("telemetry_reason"):
         reason_text = _TELEMETRY_REASON_LABELS.get(reason, reason)
         body += f"- **Why this report:** {reason_text}\n"
+
+    suggested_labels = telemetry_github_labels(export_dict)
+    if suggested_labels:
+        label_list = ", ".join(f"`{label}`" for label in suggested_labels)
+        body += f"- **Suggested labels:** {label_list}\n"
 
     body += (
         "\n### Capabilities\n"
@@ -266,11 +294,7 @@ _TELEMETRY_REASON_LABELS = {
 
 
 def format_github_issue_title(export_dict: dict[str, Any]) -> str:
-    device_type = export_dict.get("device_type", "unknown")
-    model = export_dict.get("model") or "unknown"
-    if export_dict.get("supported_by_integration"):
-        return f"[telemetry] Profile {device_type} — {model}"
-    return f"[telemetry] Unsupported device — {device_type} ({model})"
+    return format_telemetry_issue_title(export_dict)
 
 
 _GITHUB_ISSUE_URL_MAX_LENGTH = 7500
@@ -279,7 +303,7 @@ _GITHUB_ISSUE_URL_MAX_LENGTH = 7500
 def build_github_new_issue_url(export_dict: dict[str, Any], fingerprint: str) -> str:
     """Build a GitHub new-issue URL with title and body query parameters."""
     title = format_github_issue_title(export_dict)
-    labels = ",".join(TELEMETRY_ISSUE_LABELS)
+    labels = ",".join(telemetry_github_labels(export_dict))
     base = f"https://github.com/{TELEMETRY_GITHUB_REPO}/issues/new"
 
     payload = dict(export_dict)

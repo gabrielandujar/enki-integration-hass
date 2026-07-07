@@ -94,6 +94,28 @@ Triggered on every push to `main` and every pull request:
 
 Live tests: only via `workflow_dispatch` with `ENKI_*` secrets configured on the repo.
 
+## GitHub labels
+
+Workflow triage labels (`next-release`, `beta`, `stale`, …) and telemetry labels are defined in [`scripts/github_labels.py`](../scripts/github_labels.py). Sync them to the repository:
+
+```bash
+./scripts/sync_github_labels.sh
+```
+
+| Label | Use |
+|-------|-----|
+| `next-release` | Planned for the upcoming tag |
+| `release-blocker` | Must ship before the next release |
+| `beta` | Experimental feature or device; needs testers |
+| `stale` | No recent activity (also applied weekly by CI) |
+| `blocked` | Waiting on hardware, upstream API, or third party |
+| `needs-info` | Waiting on reporter feedback |
+| `confirmed` | Reproduced or accepted by a maintainer |
+| `regression` | Worked before, broken recently |
+| `breaking-change` | Intentional breaking change for users |
+
+Telemetry-specific labels (`device-telemetry`, `unsupported`, `motorization`, …) are pre-filled on opt-in device profile issues — see [TELEMETRY.md](TELEMETRY.md).
+
 ## Publishing a release
 
 1. Update `custom_components/enki/manifest.json` with the target version (e.g. `1.6.5`)
