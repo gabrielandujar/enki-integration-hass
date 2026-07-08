@@ -27,6 +27,7 @@ from ..lib.conversion import (
     normalize_power_state,
 )
 from ..lib.enki_scope import device_in_enki_scope
+from ..lib.production import parse_production_value
 from ..lib.shutter import normalize_shutter_position
 from .auth import EnkiAuthSession
 from .capability_routing import CAPABILITY_READS, CapabilityRead
@@ -253,9 +254,9 @@ class EnkiAPI:
         bff_type = metadata.get("deviceType", "")
         main_change_capability = metadata.get("mainChangeCapability") or {}
         main_change_endpoints = [
-            endpoint.get("id")
-            for endpoint in main_change_capability.get("endpoints", [])
-            if endpoint.get("id") is not None
+            endpoint
+            for endpoint in (main_change_capability.get("endpoints") or [])
+            if isinstance(endpoint, dict) and endpoint.get("id") is not None
         ]
 
         node_info = await http.get_node(home_id, node_id)
@@ -267,6 +268,7 @@ class EnkiAPI:
 
         title = item.get("title") or {}
         device_name = title.get("label") or node_id
+        model = _referentiel_model(node_info, device_info)
 
         skeleton = EnkiDevice(
             home_id=home_id,
@@ -282,6 +284,8 @@ class EnkiAPI:
             main_change_capability_id=metadata.get("mainChangeCapabilityId"),
             main_change_capability_endpoints=main_change_endpoints,
             power_production=power_production,
+            referentiel_i18n=str(device_info.get("i18n") or ""),
+            referentiel_model=str(model or ""),
         )
         manufacturer = (
             node_info.get("manufacturerId")
@@ -302,7 +306,6 @@ class EnkiAPI:
         else:
             supported = integration_supports_device(skeleton)
 
-        model = _referentiel_model(node_info, device_info)
         preliminary_firmware = node_info.get("version") or device_info.get("version")
         record = build_discovery_record(
             device_type=device_type,
@@ -374,6 +377,8 @@ class EnkiAPI:
                 main_change_capability_id=metadata.get("mainChangeCapabilityId"),
                 main_change_capability_endpoints=main_change_endpoints,
                 power_production=power_production,
+                referentiel_i18n=str(device_info.get("i18n") or ""),
+                referentiel_model=str(model or ""),
             ),
             record,
         )
@@ -471,8 +476,8 @@ class EnkiAPI:
                     err=err,
                 )
 
-        if profile.is_inverter:
-            state["power_production"] = device.power_production
+        if profile.is_inverter and device.power_production is not None:
+            state.setdefault("power_production", device.power_production)
 
         await self._append_capability_states(http, home_id, node_id, profile, state)
         return state
@@ -515,7 +520,12 @@ class EnkiAPI:
                 )
                 return None
             if data and "lastReportedValue" in data:
-                return read.state_key, data["lastReportedValue"]
+                value = data["lastReportedValue"]
+                if read.state_key in {"power_production", "energy_production"}:
+                    parsed = parse_production_value(value)
+                    if parsed is not None:
+                        return read.state_key, parsed
+                return read.state_key, value
             return None
 
         results = await asyncio.gather(*(read_one(read) for read in CAPABILITY_READS))

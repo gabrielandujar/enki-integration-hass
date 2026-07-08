@@ -1,6 +1,6 @@
 # Enki cloud API — engineering notes
 
-This integration talks to the **unofficial** Enki REST API used by the Leroy Merlin / Adeo mobile app. There is no public developer portal for end users; behaviour was inferred from network traffic and existing community work.
+This integration talks to the **unofficial** Enki REST API used by the Leroy Merlin / Adeo mobile app. There is no public developer portal for end users; behaviour was inferred from network traffic and [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component).
 
 ## Authentication
 
@@ -55,7 +55,7 @@ Detection is **capability-based** (referentiel metadata + BFF dashboard), not li
 | Heating / pilot wire / thermostat | `select`, `climate`, `switch`, `binary_sensor` | `api-enki-heating-prod` — `ENKI_HEATING_API_KEY` in `const.py` (APK 2.25.1); if cleared, reads are skipped silently and writes raise an error |
 | Water leak sensors | `binary_sensor`, `sensor` (battery) | `api-enki-water-leak-detector-prod` + `api-enki-battery-health-prod` — keys in `const.py` (APK 2.25.1); same fallback if a key is missing |
 
-Sensor capability paths follow the same pattern as [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki): `GET/POST …/v1/sensors/{node_id}/{kebab-case-capability}` (siren uses `/v1/siren/`).
+Sensor capability paths: `GET/POST …/v1/sensors/{node_id}/{kebab-case-capability}` (siren uses `/v1/siren/`).
 
 Multi-endpoint lights (several circuits on one node) create one HA light entity per BFF `mainChangeCapability` endpoint.
 
@@ -176,6 +176,5 @@ The Enki app also controls alarms via other microservices. Use `scripts/discover
 
 ## References
 
-- Fork base: [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component) (lights)
-- Fan / airflow research: community reverse engineering of ESDK ceiling fans
+- [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component) (lights)
 - Product docs: [Enki support — Inspire](https://support.enki-home.com/)

@@ -6,7 +6,6 @@ from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP_KELVIN
 
-from ...const import FAN_ENDPOINT
 from ...coordinator import EnkiCoordinator
 from ...entity import EnkiEntity
 
@@ -33,11 +32,12 @@ class EnkiLightBehaviorMixin:
 
     def _uses_endpoint_power(self: EnkiEntity, endpoint_id: int | None) -> bool:
         """True when simple on/off should use per-endpoint power API."""
-        if endpoint_id is None or endpoint_id == FAN_ENDPOINT:
+        if endpoint_id is None:
             return False
         profile = self._device.profile
         if profile.is_fan:
-            # Fan light kits are driven by api-enki-lighting-prod, not power-prod.
+            return False
+        if endpoint_id in profile.fan_motor_endpoints:
             return False
         return len(profile.power_switch_endpoints) > 1
 

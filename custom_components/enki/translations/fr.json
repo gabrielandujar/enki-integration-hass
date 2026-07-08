@@ -80,6 +80,9 @@
       "power_production": {
         "name": "Production"
       },
+      "energy_production": {
+        "name": "Énergie produite"
+      },
       "temperature": {
         "name": "Température"
       },

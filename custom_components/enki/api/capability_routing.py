@@ -65,4 +65,16 @@ CAPABILITY_READS: tuple[CapabilityRead, ...] = (
     ),
     CapabilityRead("presence_detector", "check_occupancy", "occupancy"),
     CapabilityRead("presence_detector", "check_occupancy_mode", "occupancy_mode"),
+    CapabilityRead(
+        "lexman_envertech",
+        "check_power_production",
+        "power_production",
+        skip=lambda profile: not profile.is_inverter,
+    ),
+    CapabilityRead(
+        "lexman_envertech",
+        "check_energy_production",
+        "energy_production",
+        skip=lambda profile: not profile.is_inverter,
+    ),
 )
