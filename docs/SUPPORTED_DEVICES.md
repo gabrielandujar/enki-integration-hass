@@ -71,7 +71,7 @@ Scenarios refresh on each coordinator poll. They appear under the virtual device
 
 ## Enki sensors (Lexman, Sedea, …)
 
-Micro-services aligned with [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki) (gateway keys already in `const.py`).
+Gateway keys in `gateway_keys_data.py` (APK 2.25.1).
 
 ### Motion / contact / vibration
 
