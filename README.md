@@ -113,14 +113,12 @@ Download a [release](https://github.com/cyrilcolinet/enki-integration-hass/relea
 - 🛠️ [Development & APK keys](docs/DEVELOPMENT.md)
 - 📡 [Opt-in telemetry](docs/TELEMETRY.md)
 - 🏠 [Enki support](https://support.enki-home.com/)
-- 🔗 [Original project — CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component)
+- 🔗 [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component)
 
 ## Credits & license
 
 **Community** integration, not affiliated with Leroy Merlin, Adeo, or Enki. Unofficial cloud API, subject to change.
 
-- Fork of [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component)
-- Sensors / siren: inspired by [StephaneBranly/ha-enki](https://github.com/StephaneBranly/ha-enki)
-- Icon: [MarioCadenas/hass-enki-component](https://github.com/MarioCadenas/hass-enki-component)
+- Based on [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component)
 
 [MIT](LICENSE) license

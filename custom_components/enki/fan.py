@@ -199,12 +199,14 @@ class EnkiFanEntity(EnkiEntity, FanEntity):
         self.coordinator.update_cached_value(node_id, "fan_speed", speed)
 
     async def _set_motor_power(self, power: str) -> None:
-        """ON/OFF fans without speed range — global power API (CyrilP/hass-enki-component)."""
+        """ON/OFF fans without speed range — per-endpoint or global power API."""
         node_id = self._device.node_id
+        motor_endpoint = self._device.profile.fan_motor_endpoint
         await self.coordinator.api.async_switch_electrical_power(
             self._device.home_id,
             node_id,
             power,
+            endpoint=motor_endpoint,
         )
         self.coordinator.update_cached_value(node_id, "electrical_power", power)
         self.coordinator.update_cached_value(node_id, "power", power)

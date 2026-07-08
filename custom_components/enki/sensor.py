@@ -47,6 +47,8 @@ def _build_sensor_entities(
 
     if _has_power_production_sensor(device):
         entities.append(EnkiPowerProductionSensor(coordinator, device))
+    if _has_energy_production_sensor(device):
+        entities.append(EnkiEnergyProductionSensor(coordinator, device))
     if profile.supports_current_temperature and not profile.is_climate:
         entities.append(EnkiTemperatureSensor(coordinator, device))
     if profile.supports_current_humidity:
@@ -63,13 +65,16 @@ def _build_sensor_entities(
 
 def _has_power_production_sensor(device: EnkiDevice) -> bool:
     profile = device.profile
-    if device.power_production is None:
-        return False
-    return profile.is_inverter or profile.supports_power_production
+    return profile.is_inverter and profile.supports_power_production
+
+
+def _has_energy_production_sensor(device: EnkiDevice) -> bool:
+    profile = device.profile
+    return profile.is_inverter and profile.supports_energy_production
 
 
 class EnkiPowerProductionSensor(EnkiEntity, SensorEntity):
-    """Live solar production from the Enki BFF dashboard."""
+    """Live solar production (W) from BFF dashboard or Envertech API."""
 
     _attr_translation_key = "power_production"
     _attr_device_class = SensorDeviceClass.POWER
@@ -82,15 +87,32 @@ class EnkiPowerProductionSensor(EnkiEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        value = self._device.power_production
+        value = self._device.reported.power_production
         if value is None:
-            value = self._device.reported.power_production
+            value = self._device.power_production
         if value is None:
             return None
         try:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+
+class EnkiEnergyProductionSensor(EnkiEntity, SensorEntity):
+    """Cumulative solar energy (kWh) from api-enki-lexman-envertech-prod."""
+
+    _attr_translation_key = "energy_production"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, coordinator: EnkiCoordinator, device: EnkiDevice) -> None:
+        super().__init__(coordinator, device)
+        self._attr_unique_id = f"{DOMAIN}-{device.node_id}-energy-production"
+
+    @property
+    def native_value(self) -> float | None:
+        return self._device.reported.energy_production
 
 
 class EnkiTemperatureSensor(EnkiEntity, SensorEntity):
