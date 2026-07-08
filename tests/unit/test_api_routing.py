@@ -110,7 +110,7 @@ async def test_fan_turn_off_uses_airflow_when_speed_state_missing() -> None:
 
 @pytest.mark.asyncio
 async def test_fan_turn_on_uses_power_when_only_check_fan_speed() -> None:
-    """Ae Toit-style fans: check_fan_speed without writable range → power-prod."""
+    """Fans with check_fan_speed but no writable range fall back to power-prod."""
     device = EnkiDevice(
         home_id="home-1",
         device_id="AE_TOIT_1",
@@ -141,6 +141,7 @@ async def test_fan_turn_on_uses_power_when_only_check_fan_speed() -> None:
         "home-1",
         "6a1468f4045591224e5f1686",
         "ON",
+        endpoint=1,
     )
     coordinator.api.async_set_fan_speed.assert_not_called()
 
@@ -174,5 +175,6 @@ async def test_fan_turn_on_falls_back_to_power_without_fan_speed_capability() ->
         "home-1",
         "node-1",
         "ON",
+        endpoint=None,
     )
     coordinator.api.async_set_fan_speed.assert_not_called()

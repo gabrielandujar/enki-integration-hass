@@ -56,7 +56,7 @@ def percentage_to_fan_speed(percentage: int, max_speed: int) -> int:
 
 
 def fan_speed_to_percentage(speed: int, max_speed: int) -> int:
-    """Map Enki fan speed to HA percentage (linear, matches CyrilP/hass-enki-component)."""
+    """Map Enki fan speed to HA percentage (linear 1…max)."""
     if speed <= 0 or max_speed <= 0:
         return 0
     return int(round(speed * 100 / max_speed))

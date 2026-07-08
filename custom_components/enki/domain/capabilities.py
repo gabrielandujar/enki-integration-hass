@@ -10,7 +10,11 @@ from ..const import (
     DEVICE_TYPE_FANS,
     DEVICE_TYPE_INVERTERS,
     DEVICE_TYPE_LIGHTS,
-    FAN_ENDPOINT,
+)
+from ..lib.fan_endpoints import (
+    endpoint_id_from_entry,
+    fan_light_endpoints_from_motor,
+    infer_fan_motor_endpoints,
 )
 from .models import EnkiDevice
 
@@ -49,19 +53,21 @@ class EnkiCapabilityProfile:
     bff_device_type: str = ""
     main_change_capability_id: str | None = None
     main_change_capability_endpoints: tuple[int, ...] = ()
+    endpoint_entries: tuple[int | dict[str, Any], ...] = ()
+    device_name: str = ""
+    referentiel_i18n: str = ""
+    referentiel_model: str = ""
     power_production: float | None = None
 
     @classmethod
     def from_device(cls, device: EnkiDevice) -> EnkiCapabilityProfile:
         """Build a profile snapshot from a discovered device."""
+        endpoint_entries = tuple(device.main_change_capability_endpoints)
         endpoints: list[int] = []
-        for endpoint in device.main_change_capability_endpoints:
-            if isinstance(endpoint, int):
-                endpoints.append(endpoint)
-            elif isinstance(endpoint, dict):
-                endpoint_id = endpoint.get("id")
-                if isinstance(endpoint_id, int):
-                    endpoints.append(endpoint_id)
+        for entry in endpoint_entries:
+            endpoint_id = endpoint_id_from_entry(entry)
+            if endpoint_id is not None:
+                endpoints.append(endpoint_id)
         return cls(
             device_type=device.device_type,
             capabilities=frozenset(capabilities_set(device.capabilities)),
@@ -69,6 +75,10 @@ class EnkiCapabilityProfile:
             bff_device_type=device.bff_device_type,
             main_change_capability_id=device.main_change_capability_id,
             main_change_capability_endpoints=tuple(sorted(set(endpoints))),
+            endpoint_entries=endpoint_entries,
+            device_name=device.device_name,
+            referentiel_i18n=device.referentiel_i18n,
+            referentiel_model=device.referentiel_model,
             power_production=device.power_production,
         )
 
@@ -112,7 +122,7 @@ class EnkiCapabilityProfile:
 
     @property
     def supports_fan_speed_control(self) -> bool:
-        """True when referentiel defines a fan speed range (CyrilP/hass-enki-component)."""
+        """True when referentiel defines a writable fan speed range."""
         return self.supports_fan_speed and self.fan_max_speed is not None
 
     @property
@@ -136,6 +146,10 @@ class EnkiCapabilityProfile:
     @property
     def supports_power_production(self) -> bool:
         return "check_power_production" in self.capabilities
+
+    @property
+    def supports_energy_production(self) -> bool:
+        return "check_energy_production" in self.capabilities
 
     @property
     def supports_shutter_position(self) -> bool:
@@ -376,10 +390,10 @@ class EnkiCapabilityProfile:
 
     @property
     def is_inverter(self) -> bool:
-        """Solar inverters with live production on the BFF dashboard."""
+        """Solar inverters (Lexman Envertech, …)."""
         if self.device_type in {DEVICE_TYPE_INVERTERS, "inverters"}:
-            return self.power_production is not None
-        return self.supports_power_production and self.power_production is not None
+            return self.supports_power_production or self.supports_energy_production
+        return self.supports_power_production or self.supports_energy_production
 
     @property
     def is_cover(self) -> bool:
@@ -485,21 +499,38 @@ class EnkiCapabilityProfile:
         return list(self.main_change_capability_endpoints)
 
     @property
+    def _fan_motor_endpoint_ids(self) -> frozenset[int]:
+        if self.device_type != DEVICE_TYPE_FANS and not self.is_fan:
+            return frozenset()
+        if self.main_change_capability_id != "switch_electrical_power":
+            return frozenset()
+        return infer_fan_motor_endpoints(
+            power_endpoints=list(self.main_change_capability_endpoints),
+            endpoint_entries=self.endpoint_entries,
+            supports_light_state=self.supports_light_state,
+            supports_fan_speed=self.supports_fan_speed,
+            device_name=self.device_name,
+            referentiel_i18n=self.referentiel_i18n,
+            referentiel_model=self.referentiel_model,
+        )
+
+    @property
     def fan_light_endpoints(self) -> list[int]:
         """Light kit endpoints on ceiling fans (excludes the motor endpoint)."""
         if self.device_type != DEVICE_TYPE_FANS and not self.is_fan:
             return []
-        return [endpoint for endpoint in self.power_switch_endpoints if endpoint != FAN_ENDPOINT]
+        return fan_light_endpoints_from_motor(
+            list(self.power_switch_endpoints),
+            self._fan_motor_endpoint_ids,
+        )
 
     @property
     def fan_motor_endpoints(self) -> list[int]:
         """Power-prod endpoints that are not light kit circuits."""
         if self.main_change_capability_id != "switch_electrical_power":
             return []
-        light_endpoints = set(self.fan_light_endpoints)
-        return [
-            endpoint for endpoint in self.power_switch_endpoints if endpoint not in light_endpoints
-        ]
+        motor_ids = self._fan_motor_endpoint_ids
+        return [endpoint for endpoint in self.power_switch_endpoints if endpoint in motor_ids]
 
     @property
     def fan_motor_endpoint(self) -> int | None:
