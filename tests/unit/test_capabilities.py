@@ -52,6 +52,16 @@ def test_is_inverter_device() -> None:
     assert device_is_supported(device) is True
 
 
+def test_is_inverter_without_bff_power() -> None:
+    device = _device(
+        device_type="inverters",
+        capabilities=["check_power_production", "check_energy_production"],
+        power_production=None,
+    )
+    assert is_inverter_device(device) is True
+    assert device.profile.supports_energy_production is True
+
+
 def test_device_uses_power_api_only() -> None:
     device = _device(
         capabilities=["switch_electrical_power", "check_electrical_power"],
@@ -80,6 +90,20 @@ def test_fan_light_endpoints_excludes_motor() -> None:
         main_change_capability_endpoints=[1, 2, 3],
     )
     assert fan_light_endpoints(device) == [2, 3]
+
+
+def test_fan_light_endpoints_radix_motor_on_middle_endpoint() -> None:
+    from enki.domain.capabilities import fan_light_endpoints
+
+    device = _device(
+        device_type="ceiling_fans",
+        device_name="Inspire Radix",
+        capabilities=["change_fan_speed", "change_light_state"],
+        main_change_capability_id="switch_electrical_power",
+        main_change_capability_endpoints=[1, 2, 3],
+    )
+    assert fan_light_endpoints(device) == [1, 3]
+    assert device.profile.fan_motor_endpoints == [2]
 
 
 def test_fan_max_speed_from_metadata() -> None:

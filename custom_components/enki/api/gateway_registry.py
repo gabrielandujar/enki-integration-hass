@@ -289,10 +289,10 @@ ENKI_MICRO_SERVICES: tuple[EnkiMicroService, ...] = (
     EnkiMicroService(
         "api-enki-lexman-envertech-prod",
         "ENKI_LEXMAN_ENVERTECH_API_KEY",
-        "",
+        "lexman_envertech",
         "/api-enki-lexman-envertech-prod/v1/energy-production",
-        wired=False,
-        notes="",
+        wired=True,
+        notes="Lexman solar inverters (check-power/energy-production)",
     ),
     EnkiMicroService(
         "api-enki-lighting-prod",
@@ -647,7 +647,9 @@ LEGACY_SLUG_ALIASES: dict[str, str] = {
     "api-enki-access-and-motorizations-prod": "api-enki-rolling-prod",
 }
 
-OPTIONAL_KEY_TRANSPORT_IDS = frozenset({"heating", "water_sensor", "motorization", "ota", "esdk"})
+OPTIONAL_KEY_TRANSPORT_IDS = frozenset(
+    {"heating", "water_sensor", "motorization", "ota", "esdk", "lexman_envertech"}
+)
 
 WIRED_PATH_PREFIXES: dict[str, str] = {
     svc.transport_id: svc.path_prefix
