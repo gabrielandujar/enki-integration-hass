@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from enki.domain.capabilities import EnkiCapabilityProfile
 from enki.domain.profile import (
     build_discovery_record,
     format_github_issue_body,
     profile_to_export_dict,
 )
 from enki.domain.telemetry_coverage import discovery_record_needs_telemetry
-from enki.domain.telemetry_enrichment import enrich_telemetry_export
+from enki.domain.telemetry_enrichment import enrich_telemetry_export, ha_platforms_for_profile
 
 
 def _noirot_record():
@@ -112,3 +113,20 @@ def test_github_issue_body_is_english_and_includes_api_errors() -> None:
     assert "API read errors (last poll)" in body
     assert "HTTP 500" in body
     assert "Profil appareil" not in body
+
+
+def test_ha_platforms_include_button_for_shutter_presets() -> None:
+    profile = EnkiCapabilityProfile(
+        device_type="access_and_motorizations",
+        capabilities=frozenset(
+            [
+                "change_shutter_position",
+                "check_shutter_position",
+                "execute_preset",
+            ]
+        ),
+        possible_values={"execute_preset": {"values": ["MORNING"]}},
+        bff_device_type="access_and_motorizations",
+    )
+
+    assert ha_platforms_for_profile(profile) == ["button", "cover"]
