@@ -28,6 +28,8 @@ class EnkiDevice:
     main_change_capability_id: str | None = None
     main_change_capability_endpoints: list[int | dict[str, Any]] = field(default_factory=list)
     power_production: float | None = None
+    referentiel_i18n: str = ""
+    referentiel_model: str = ""
 
     @property
     def is_active(self) -> bool:

@@ -112,6 +112,10 @@ class EnkiDeviceState:
         return None
 
     @property
+    def energy_production(self) -> float | None:
+        return _as_float(self._data.get("energy_production"))
+
+    @property
     def shutter_position(self) -> int | None:
         from ..lib.shutter import normalize_shutter_position
 

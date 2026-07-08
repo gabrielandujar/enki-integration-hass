@@ -55,6 +55,7 @@ _CAPABILITY_PROBES: dict[str, str] = {
     "check_motion_detection": "supports_motion_detection",
     "check_motion_detector_state": "supports_motion_detection",
     "check_power_production": "supports_power_production",
+    "check_energy_production": "supports_energy_production",
     "check_shutter_opening": "supports_shutter_opening",
     "check_shutter_position": "supports_shutter_position",
     "check_siren_global_state": "supports_siren",
