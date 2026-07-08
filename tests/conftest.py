@@ -48,6 +48,8 @@ _HA_STUBS = [
     "homeassistant.components.diagnostics",
     "homeassistant.components.persistent_notification",
     "homeassistant.components.sensor",
+    "homeassistant.components.cover",
+    "homeassistant.components.button",
     "homeassistant.util",
 ]
 
@@ -58,10 +60,16 @@ for module_name in _HA_STUBS:
 class _HaEntity:
     """Minimal HA Entity stand-in for unit tests."""
 
+    def async_write_ha_state(self) -> None:
+        return None
+
 
 class _CoordinatorEntity(_HaEntity):
     def __init__(self, coordinator):
         self.coordinator = coordinator
+
+    def _handle_coordinator_update(self) -> None:
+        self.async_write_ha_state()
 
     def __class_getitem__(cls, _item):
         return cls
@@ -116,3 +124,24 @@ _percentage = MagicMock()
 _percentage.ordered_list_item_to_percentage = _ordered_list_item_to_percentage
 _percentage.percentage_to_ordered_list_item = _percentage_to_ordered_list_item
 sys.modules["homeassistant.util.percentage"] = _percentage
+
+_cover = sys.modules["homeassistant.components.cover"]
+
+
+class _CoverEntityFeature:
+    OPEN = 1
+    CLOSE = 2
+    SET_POSITION = 4
+    STOP = 8
+
+
+class _CoverDeviceClass:
+    SHUTTER = "shutter"
+
+
+_cover.CoverEntity = _HaEntity
+_cover.CoverEntityFeature = _CoverEntityFeature
+_cover.CoverDeviceClass = _CoverDeviceClass
+
+_button = sys.modules["homeassistant.components.button"]
+_button.ButtonEntity = _HaEntity

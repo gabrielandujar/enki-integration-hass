@@ -28,6 +28,8 @@ def ha_platforms_for_profile(profile: EnkiCapabilityProfile) -> list[str]:
         platforms.append("sensor")
     if profile.is_cover:
         platforms.append("cover")
+    if profile.supports_shutter_preset:
+        platforms.append("button")
     if profile.is_climate:
         platforms.append("climate")
     if profile.is_pilot_wire:
