@@ -530,11 +530,7 @@ class EnkiCapabilityProfile:
         if self.main_change_capability_id != "switch_electrical_power":
             return []
         motor_ids = self._fan_motor_endpoint_ids
-        return [
-            endpoint
-            for endpoint in self.power_switch_endpoints
-            if endpoint in motor_ids
-        ]
+        return [endpoint for endpoint in self.power_switch_endpoints if endpoint in motor_ids]
 
     @property
     def fan_motor_endpoint(self) -> int | None:
