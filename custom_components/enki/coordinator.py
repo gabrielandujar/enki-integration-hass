@@ -12,9 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import EnkiAPI
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .domain.models import EnkiDevice
 from .exceptions import EnkiAuthError, EnkiConnectionError
+from .migration import resolve_scan_interval
 from .notifications import EnkiNotifier, notify_for_connection_error
 from .telemetry import EnkiTelemetryReporter
 
@@ -32,10 +33,7 @@ class EnkiCoordinator(DataUpdateCoordinator[list[EnkiDevice]]):
         )
         self._notifier = EnkiNotifier(hass, config_entry)
         self._telemetry = EnkiTelemetryReporter(hass, config_entry, self)
-        scan_interval = config_entry.options.get(
-            CONF_SCAN_INTERVAL,
-            DEFAULT_SCAN_INTERVAL,
-        )
+        scan_interval = resolve_scan_interval(config_entry)
         super().__init__(
             hass,
             LOGGER,
