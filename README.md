@@ -60,6 +60,7 @@ The **Enki** app controls hundreds of products (Lexman, Equation, Inspire, Edisi
 ### Beta
 
 - **Covers** (Evology, Nodon, …) — `cover`
+- **Gate / garage dry contact** (Lexman 83424576, Nodon SIN-4-1-20) — `button` impulse ([#56](https://github.com/cyrilcolinet/enki-integration-hass/issues/56))
 - **Water leak** (Lexman) — `binary_sensor`, `sensor` (on-site leak test pending — [#36](https://github.com/cyrilcolinet/enki-integration-hass/issues/36))
 - **Scenarios** (Enki cloud) — `button`
 
