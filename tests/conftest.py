@@ -37,6 +37,7 @@ _HA_STUBS = [
     "homeassistant.exceptions",
     "homeassistant.helpers",
     "homeassistant.helpers.device_registry",
+    "homeassistant.helpers.entity_registry",
     "homeassistant.helpers.entity_platform",
     "homeassistant.helpers.update_coordinator",
     "homeassistant.helpers.selector",
@@ -55,6 +56,11 @@ _HA_STUBS = [
 
 for module_name in _HA_STUBS:
     sys.modules.setdefault(module_name, MagicMock())
+
+_ha_const = sys.modules["homeassistant.const"]
+_ha_const.CONF_USERNAME = "username"
+_ha_const.CONF_PASSWORD = "password"
+_ha_const.CONF_SCAN_INTERVAL = "scan_interval"
 
 
 class _HaEntity:

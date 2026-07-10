@@ -83,6 +83,8 @@ Per-device detail: [docs/SUPPORTED_DEVICES.md](docs/SUPPORTED_DEVICES.md) · His
 
 Default HACS store (goal): [docs/HACS.md](docs/HACS.md#default-hacs-store)
 
+Upgrading from [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component)? See [docs/MIGRATION.md](docs/MIGRATION.md).
+
 ### Add the integration
 
 1. In the **Enki app**, finish pairing and configuration for every device you want in Home Assistant
