@@ -41,7 +41,19 @@ async def _validate_credentials(hass: HomeAssistant, data: dict[str, Any]) -> No
 class EnkiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle Enki config and reconfigure flows."""
 
-    VERSION = 1
+    VERSION = 2
+
+    @staticmethod
+    async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+        """Migrate legacy CyrilP/hass-enki-component config entries."""
+        from .migration import async_migrate_legacy_entry
+
+        if config_entry.version >= 2:
+            return True
+
+        await async_migrate_legacy_entry(hass, config_entry)
+        hass.config_entries.async_update_entry(config_entry, version=2)
+        return True
 
     async def async_step_user(
         self,
