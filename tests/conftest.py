@@ -57,6 +57,33 @@ _HA_STUBS = [
 for module_name in _HA_STUBS:
     sys.modules.setdefault(module_name, MagicMock())
 
+_config_entries = sys.modules["homeassistant.config_entries"]
+
+
+class _ConfigFlow:
+    """Minimal ConfigFlow stand-in so EnkiConfigFlow is a real class in tests."""
+
+    VERSION = 1
+    domain: str | None = None
+
+    def __init_subclass__(cls, domain: str | None = None, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        if domain is not None:
+            cls.domain = domain
+
+    @staticmethod
+    async def async_migrate_entry(hass, config_entry):
+        return True
+
+
+class _OptionsFlow:
+    """Minimal OptionsFlow stand-in for config_flow imports."""
+
+
+_config_entries.ConfigFlow = _ConfigFlow
+_config_entries.OptionsFlow = _OptionsFlow
+_config_entries.ConfigFlowResult = dict
+
 _ha_const = sys.modules["homeassistant.const"]
 _ha_const.CONF_USERNAME = "username"
 _ha_const.CONF_PASSWORD = "password"
