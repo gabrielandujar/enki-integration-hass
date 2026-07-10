@@ -33,13 +33,14 @@
 
 ---
 
-The **Enki** app controls hundreds of products (Lexman, Equation, Inspire, Edisio, Evology, Noirot, Envertech, …) through the **Leroy Merlin cloud**. This integration exposes those devices in Home Assistant using Enki **API capabilities** from the referentiel — like the mobile app — rather than a fixed model list.
+The **Enki** app controls hundreds of products (Lexman, Equation, Inspire, Edisio, Evology, Noirot, Envertech, …) through the **Leroy Merlin cloud**. This integration exposes in Home Assistant **everything visible in the Enki app** — using Enki **API capabilities** from the referentiel, like the mobile app, rather than a fixed model list.
 
 ## Why this integration?
 
 - **Connection** — Enki email + password (OAuth Keycloak)
-- **Requirements** — Working Enki hub, devices visible in the app
-- **Architecture** — Cloud hub (`iot_class: cloud_polling`), Enki micro-services
+- **Requirements** — Enki account; devices **already set up and visible in the Enki app** (Wi‑Fi or via the Enki hub — the hub is not mandatory for all devices)
+- **Before Home Assistant** — Pair and configure devices in the **Enki app first**; this integration does not replace Enki pairing or device setup
+- **Architecture** — Cloud polling (`iot_class: cloud_polling`), Enki micro-services
 - **Detection** — Capability-first: new API-compatible devices without forced updates
 
 > **Out of scope:** third-party Zigbee paired on the hub (Sonoff, Tuya, Aqara, …) → use [Zigbee2MQTT](https://www.zigbee2mqtt.io/) or ZHA. Only Enki / Leroy Merlin brands listed in [`lib/enki_scope.py`](custom_components/enki/lib/enki_scope.py) are imported.
@@ -59,6 +60,7 @@ The **Enki** app controls hundreds of products (Lexman, Equation, Inspire, Edisi
 ### Beta
 
 - **Covers** (Evology, Nodon, …) — `cover`
+- **Gate / garage dry contact** (Lexman 83424576, Nodon SIN-4-1-20) — `button` impulse ([#56](https://github.com/cyrilcolinet/enki-integration-hass/issues/56))
 - **Water leak** (Lexman) — `binary_sensor`, `sensor` (on-site leak test pending — [#36](https://github.com/cyrilcolinet/enki-integration-hass/issues/36))
 - **Scenarios** (Enki cloud) — `button`
 
@@ -85,9 +87,10 @@ Upgrading from [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-
 
 ### Add the integration
 
-1. **Settings** → **Devices & services** → **Add integration**
-2. Search for **Enki** — enter Enki email and password
-3. Entities appear after the first poll (~30 s)
+1. In the **Enki app**, finish pairing and configuration for every device you want in Home Assistant
+2. **Settings** → **Devices & services** → **Add integration**
+3. Search for **Enki** — enter Enki email and password
+4. Entities appear after the first poll (~30 s)
 
 ### Manual install
 
