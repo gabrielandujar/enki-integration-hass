@@ -282,9 +282,11 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
 
         if self._device.profile.is_gdansk_ble:
             hs_color = kwargs.get(ATTR_HS_COLOR)
+            wants_state_change = bool(kwargs)
+            power = True if (not self.is_on or not wants_state_change) else None
             state = await self.coordinator.api.async_apply_gdansk_light_state(
                 self._device,
-                power=True,
+                power=power,
                 brightness=kwargs.get("brightness"),
                 color_temp_kelvin=kwargs.get("color_temp_kelvin"),
                 hs_color=hs_color,
