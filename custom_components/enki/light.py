@@ -191,7 +191,7 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             else:
                 self._attr_min_color_temp_kelvin = 2700
                 self._attr_max_color_temp_kelvin = 6500
-            self._brightness_max = self._parse_brightness_max(possible)
+            self._brightness_max = 100
         elif "change_color_temperature" in caps:
             modes.add(ColorMode.COLOR_TEMP)
             self._color_temp_values = self._parse_color_temp_values(possible)

@@ -68,6 +68,7 @@ class EnkiAPI:
         self._profile_read_errors: dict[str, dict[str, str]] = {}
         self._profile_poll_state: dict[str, dict[str, Any]] = {}
         self._gdansk_ble_backends: dict[str, GdanskBleBackend] = {}
+        self._gdansk_state_cache: dict[str, dict[str, Any]] = {}
 
     async def async_close(self) -> None:
         """Close the underlying HTTP session."""
@@ -650,8 +651,16 @@ class EnkiAPI:
         return backend
 
     async def _async_fetch_gdansk_ble_state(self, device: EnkiDevice) -> dict[str, Any]:
-        current = await self._gdansk_ble_backend(device).async_fetch_state()
-        return self._merge_gdansk_cached_state(device, current)
+        cached = self._gdansk_state_cache.get(device.node_id, {})
+        try:
+            current = await self._gdansk_ble_backend(device).async_fetch_state()
+        except EnkiConnectionError:
+            if cached:
+                return dict(cached)
+            raise
+        merged = self._merge_gdansk_cached_state(device, cached, current)
+        self._gdansk_state_cache[device.node_id] = dict(merged)
+        return merged
 
     async def _async_apply_gdansk_ble_state(
         self,
@@ -662,16 +671,28 @@ class EnkiAPI:
         color_temp_kelvin: int | None,
         hs_color: tuple[float, float] | None,
     ) -> dict[str, Any]:
-        return await self._gdansk_ble_backend(device).async_apply(
+        current = await self._gdansk_ble_backend(device).async_apply(
             power=power,
             brightness_pct=brightness_pct,
             color_temp_kelvin=color_temp_kelvin,
             hs_color=hs_color,
         )
+        merged = self._merge_gdansk_cached_state(
+            device,
+            self._gdansk_state_cache.get(device.node_id, {}),
+            current,
+        )
+        self._gdansk_state_cache[device.node_id] = dict(merged)
+        return merged
 
     @staticmethod
-    def _merge_gdansk_cached_state(device: EnkiDevice, current: dict[str, Any]) -> dict[str, Any]:
+    def _merge_gdansk_cached_state(
+        device: EnkiDevice,
+        cached: dict[str, Any],
+        current: dict[str, Any],
+    ) -> dict[str, Any]:
         merged = dict(device.last_reported_value)
+        merged.update(cached)
         merged.update(current)
         if "brightness" in merged:
             try:
