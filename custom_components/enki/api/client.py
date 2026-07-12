@@ -650,7 +650,8 @@ class EnkiAPI:
         return backend
 
     async def _async_fetch_gdansk_ble_state(self, device: EnkiDevice) -> dict[str, Any]:
-        return await self._gdansk_ble_backend(device).async_fetch_state()
+        current = await self._gdansk_ble_backend(device).async_fetch_state()
+        return self._merge_gdansk_cached_state(device, current)
 
     async def _async_apply_gdansk_ble_state(
         self,
@@ -667,6 +668,20 @@ class EnkiAPI:
             color_temp_kelvin=color_temp_kelvin,
             hs_color=hs_color,
         )
+
+    @staticmethod
+    def _merge_gdansk_cached_state(device: EnkiDevice, current: dict[str, Any]) -> dict[str, Any]:
+        merged = dict(device.last_reported_value)
+        merged.update(current)
+        if "brightness" in merged:
+            try:
+                brightness = float(merged["brightness"])
+            except (TypeError, ValueError):
+                brightness = None
+            if brightness is not None and brightness > 0:
+                merged["power"] = "ON"
+                merged["light_power"] = "ON"
+        return merged
 
     async def _read_shutter_state(
         self,
