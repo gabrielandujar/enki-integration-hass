@@ -43,6 +43,35 @@ def test_profile_detects_gdansk_ble() -> None:
     assert _gdansk_device(referentiel_model="OTHER").profile.is_gdansk_ble is False
 
 
+def test_profile_detects_gdansk_ble_from_model_number() -> None:
+    device = _gdansk_device(
+        referentiel_model="OTHER",
+        last_reported_value={
+            "modelNumber": "60Afab582985C158F8A946D0",
+            "power": "OFF",
+        },
+    )
+    assert device.profile.is_gdansk_ble is True
+
+
+def test_gdansk_entity_forces_full_light_modes() -> None:
+    coordinator = MagicMock()
+    entity = EnkiLightEntity(
+        coordinator,
+        _gdansk_device(
+            referentiel_model="OTHER",
+            capabilities=["change_light_state", "check_light_state"],
+            possible_values={},
+            last_reported_value={
+                "modelNumber": "60Afab582985C158F8A946D0",
+                "power": "OFF",
+            },
+        ),
+        suffix="light",
+    )
+    assert entity._attr_supported_color_modes == {"hs", "color_temp"}
+
+
 @pytest.mark.asyncio
 async def test_api_reads_gdansk_state_via_ble() -> None:
     api = EnkiAPI("user", "pass")
