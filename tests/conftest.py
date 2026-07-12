@@ -45,6 +45,7 @@ _HA_STUBS = [
     "homeassistant.helpers.device_registry",
     "homeassistant.helpers.entity_registry",
     "homeassistant.helpers.entity_platform",
+    "homeassistant.helpers.restore_state",
     "homeassistant.helpers.update_coordinator",
     "homeassistant.helpers.selector",
     "homeassistant.helpers.storage",
@@ -117,6 +118,7 @@ _ha_const.UnitOfTemperature = MagicMock()
 _ha_const.UnitOfTemperature.CELSIUS = "°C"
 _ha_const.UnitOfPower.WATT = "W"
 _ha_const.UnitOfEnergy.KILO_WATT_HOUR = "kWh"
+_ha_const.STATE_ON = "on"
 
 
 class _HaEntity:
@@ -176,6 +178,19 @@ _update_coordinator = sys.modules["homeassistant.helpers.update_coordinator"]
 _update_coordinator.CoordinatorEntity = _CoordinatorEntity
 _update_coordinator.DataUpdateCoordinator = _DataUpdateCoordinator
 _update_coordinator.UpdateFailed = _UpdateFailed
+
+_restore_state = sys.modules["homeassistant.helpers.restore_state"]
+
+
+class _RestoreEntity(_HaEntity):
+    async def async_added_to_hass(self) -> None:
+        return None
+
+    async def async_get_last_state(self):
+        return None
+
+
+_restore_state.RestoreEntity = _RestoreEntity
 
 _fan = sys.modules["homeassistant.components.fan"]
 _fan.FanEntity = _FanEntity

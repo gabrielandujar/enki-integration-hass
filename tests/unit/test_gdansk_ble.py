@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enki.api.ble_gdansk import (
+    GdanskBleBackend,
     GdanskBleState,
     build_brightness_frame,
     build_color_temp_frame,
@@ -90,3 +91,9 @@ def test_extract_ble_address_prefers_explicit_mac() -> None:
 
 def test_extract_ble_address_falls_back_to_eui64() -> None:
     assert extract_ble_address({"eui64": "f082c049d7d2"}) == "F0:82:C0:49:D7:D2"
+
+
+def test_incomplete_state_detection_matches_startup_probe() -> None:
+    assert GdanskBleBackend._state_is_incomplete({"power": "OFF"}) is True
+    assert GdanskBleBackend._state_is_incomplete({"power": "OFF", "brightness": 20.0}) is False
+    assert GdanskBleBackend._state_is_incomplete({"power": "ON"}) is False
