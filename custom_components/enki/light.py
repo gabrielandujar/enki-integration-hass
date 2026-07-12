@@ -11,8 +11,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.light.const import DEFAULT_MAX_KELVIN, DEFAULT_MIN_KELVIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .coordinator import EnkiCoordinator
@@ -155,7 +157,7 @@ class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
         self._update_light_endpoint_cache("OFF", self._endpoint_id)
 
 
-class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
+class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity, RestoreEntity):
     """Standard Enki light or dimmer node."""
 
     _attr_translation_key = "light"
@@ -207,7 +209,8 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
 
         if "change_brightness" in caps:
             modes.add(ColorMode.BRIGHTNESS)
-            self._brightness_max = self._parse_brightness_max(possible)
+            if not profile.is_gdansk_ble:
+                self._brightness_max = self._parse_brightness_max(possible)
 
         if not modes and profile.supports_electrical_power:
             modes.add(ColorMode.ONOFF)
@@ -223,6 +226,20 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
         self._attr_supported_color_modes = supported or {ColorMode.ONOFF}
         if len(self._attr_supported_color_modes) == 1:
             self._attr_color_mode = next(iter(self._attr_supported_color_modes))
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if not self._device.profile.is_gdansk_ble:
+            return
+        last_state = await self.async_get_last_state()
+        if last_state is None:
+            return
+        restored = self._restore_gdansk_state_from_last_state(
+            last_state.state,
+            last_state.attributes,
+        )
+        if restored:
+            self.coordinator.update_cached_values(self._device.node_id, restored)
 
     @property
     def is_on(self) -> bool:
@@ -418,4 +435,36 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
                 "entity_id": self.entity_id,
             },
             blocking=False,
+            context=self._context,
         )
+
+    def _restore_gdansk_state_from_last_state(
+        self,
+        state: str,
+        attributes: dict[str, Any],
+    ) -> dict[str, Any]:
+        restored: dict[str, Any] = {
+            "power": "ON" if state == STATE_ON else "OFF",
+            "light_power": "ON" if state == STATE_ON else "OFF",
+        }
+        brightness = attributes.get("brightness")
+        if isinstance(brightness, (int, float)):
+            restored["brightness"] = round(max(0, min(255, float(brightness))) * 100 / 255)
+        color_temp_kelvin = attributes.get("color_temp_kelvin")
+        if isinstance(color_temp_kelvin, (int, float)):
+            restored["colorTemperature"] = f"T{round(color_temp_kelvin)}K"
+            restored["colorMode"] = "ct"
+        hs_color = attributes.get("hs_color")
+        if (
+            isinstance(hs_color, (list, tuple))
+            and len(hs_color) == 2
+            and all(isinstance(value, (int, float)) for value in hs_color)
+        ):
+            hue, saturation = hs_to_enki(float(hs_color[0]), float(hs_color[1]))
+            restored["hue"] = hue
+            restored["saturation"] = saturation
+            restored["colorMode"] = "hs"
+        color_mode = attributes.get("color_mode")
+        if isinstance(color_mode, str) and color_mode in {"hs", "color_temp"}:
+            restored["colorMode"] = "hs" if color_mode == "hs" else "ct"
+        return restored

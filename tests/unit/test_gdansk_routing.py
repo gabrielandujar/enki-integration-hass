@@ -81,6 +81,46 @@ def test_gdansk_entity_forces_full_light_modes() -> None:
     assert entity._attr_supported_color_modes == {"hs", "color_temp"}
 
 
+def test_gdansk_entity_keeps_ble_brightness_scale() -> None:
+    coordinator = MagicMock()
+    entity = EnkiLightEntity(
+        coordinator,
+        _gdansk_device(
+            possible_values={"change_brightness": {"range": {"min": 1, "max": 1}}},
+            last_reported_value={
+                "modelNumber": "60Afab582985C158F8A946D0",
+                "power": "ON",
+                "brightness": 20.0,
+            },
+        ),
+        suffix="light",
+    )
+    assert entity.brightness == 51
+
+
+def test_gdansk_restore_maps_ha_state_to_ble_payload() -> None:
+    coordinator = MagicMock()
+    entity = EnkiLightEntity(coordinator, _gdansk_device(), suffix="light")
+
+    restored = entity._restore_gdansk_state_from_last_state(
+        "on",
+        {
+            "brightness": 51,
+            "color_temp_kelvin": 4000,
+            "hs_color": (210.0, 80.0),
+            "color_mode": "hs",
+        },
+    )
+
+    assert restored["power"] == "ON"
+    assert restored["light_power"] == "ON"
+    assert restored["brightness"] == 20
+    assert restored["colorTemperature"] == "T4000K"
+    assert restored["colorMode"] == "hs"
+    assert restored["hue"] == 0.58
+    assert restored["saturation"] == 0.8
+
+
 @pytest.mark.asyncio
 async def test_api_reads_gdansk_state_via_ble() -> None:
     api = EnkiAPI("user", "pass")

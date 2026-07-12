@@ -44,6 +44,7 @@ _HA_STUBS = [
     "homeassistant.helpers.device_registry",
     "homeassistant.helpers.entity_registry",
     "homeassistant.helpers.entity_platform",
+    "homeassistant.helpers.restore_state",
     "homeassistant.helpers.update_coordinator",
     "homeassistant.helpers.selector",
     "homeassistant.helpers.storage",
@@ -93,6 +94,7 @@ _ha_const = sys.modules["homeassistant.const"]
 _ha_const.CONF_USERNAME = "username"
 _ha_const.CONF_PASSWORD = "password"
 _ha_const.CONF_SCAN_INTERVAL = "scan_interval"
+_ha_const.STATE_ON = "on"
 
 
 class _HaEntity:
@@ -127,6 +129,19 @@ class _FanEntityFeature:
 
 _update_coordinator = sys.modules["homeassistant.helpers.update_coordinator"]
 _update_coordinator.CoordinatorEntity = _CoordinatorEntity
+
+_restore_state = sys.modules["homeassistant.helpers.restore_state"]
+
+
+class _RestoreEntity(_HaEntity):
+    async def async_added_to_hass(self) -> None:
+        return None
+
+    async def async_get_last_state(self):
+        return None
+
+
+_restore_state.RestoreEntity = _RestoreEntity
 
 _fan = sys.modules["homeassistant.components.fan"]
 _fan.FanEntity = _FanEntity
