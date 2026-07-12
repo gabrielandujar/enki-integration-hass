@@ -27,6 +27,7 @@ _HANDSHAKE_DELAY = 0.2
 _COMMAND_TIMEOUT = 4.0
 _QUERY_SETTLE_DELAY = 0.2
 _WRITE_SETTLE_DELAY = 0.6
+_QUERY_WRITE_DELAY = 0.5
 _MAC_RE = re.compile(r"^[0-9A-F]{12}$")
 
 
@@ -182,7 +183,7 @@ class GdanskBleBackend:
     async def async_fetch_state(self) -> dict[str, Any]:
         """Read the current GDANSK state via local BLE."""
         async with self._lock:
-            return await self._with_client(self._async_query_state)
+            return await self._with_client(self._async_query_state_with_retry)
 
     async def async_apply(
         self,
@@ -206,7 +207,7 @@ class GdanskBleBackend:
         client = self._make_client()
         try:
             async with client:
-                LOGGER.debug("GDANSK BLE connected to %s", self._address)
+                LOGGER.info("GDANSK BLE connected to %s", self._address)
                 await client.start_notify(GDANSK_NOTIFY_UUID, self._handle_notification)
                 try:
                     await self._async_handshake(client)
@@ -246,10 +247,23 @@ class GdanskBleBackend:
         )
         await asyncio.sleep(_HANDSHAKE_DELAY)
 
+    async def _async_query_state_with_retry(self, client: Any) -> dict[str, Any]:
+        state = await self._async_query_state(client)
+        if state.get("power") == "OFF" and "brightness" not in state:
+            LOGGER.info(
+                "GDANSK BLE state probe for %s returned incomplete state; retrying once",
+                self._address,
+            )
+            await asyncio.sleep(_QUERY_WRITE_DELAY)
+            state = await self._async_query_state(client)
+        LOGGER.info("GDANSK BLE state for %s: %s", self._address, state)
+        return state
+
     async def _async_query_state(self, client: Any) -> dict[str, Any]:
         for expected_opcode, frame in query_frames():
             LOGGER.debug("GDANSK BLE query opcode=0x%04x frame=%s", expected_opcode, frame.hex())
             await self._write_and_wait_for_opcode(client, frame, expected_opcode)
+            await asyncio.sleep(_QUERY_WRITE_DELAY)
             if expected_opcode == 0x130E:
                 await asyncio.sleep(_QUERY_SETTLE_DELAY)
         return gdansk_state_to_enki_payload(self._state)
@@ -265,26 +279,30 @@ class GdanskBleBackend:
     ) -> dict[str, Any]:
         if power is not None:
             frame = build_power_frame(power)
-            LOGGER.debug("GDANSK BLE power frame=%s", frame.hex())
+            LOGGER.info("GDANSK BLE power request %s frame=%s", power, frame.hex())
             await self._write_and_pause(client, frame)
             self._state.power = power
 
         if brightness_pct is not None:
             frame = build_brightness_frame(brightness_pct)
-            LOGGER.debug("GDANSK BLE brightness frame=%s", frame.hex())
+            LOGGER.info("GDANSK BLE brightness request %s%% frame=%s", brightness_pct, frame.hex())
             await self._write_and_pause(client, frame)
             self._state.brightness_pct = brightness_pct
 
         if color_temp_kelvin is not None:
             frame = build_color_temp_frame(color_temp_kelvin)
-            LOGGER.debug("GDANSK BLE color-temp frame=%s", frame.hex())
+            LOGGER.info(
+                "GDANSK BLE color-temp request %sK frame=%s",
+                color_temp_kelvin,
+                frame.hex(),
+            )
             await self._write_and_pause(client, frame)
             self._state.color_temp_kelvin = color_temp_kelvin
             self._state.color_mode = "ct"
 
         if hs_color is not None:
             frame = build_hs_frame(*hs_color)
-            LOGGER.debug("GDANSK BLE hs frame=%s", frame.hex())
+            LOGGER.info("GDANSK BLE hs request %s frame=%s", hs_color, frame.hex())
             await self._write_and_pause(client, frame)
             self._state.hue = hs_color[0]
             self._state.saturation = hs_color[1]
@@ -305,6 +323,7 @@ class GdanskBleBackend:
             refreshed.setdefault("hue", round(hs_color[0] / 360, 2))
             refreshed.setdefault("saturation", round(hs_color[1] / 100, 2))
             refreshed.setdefault("colorMode", "hs")
+        LOGGER.info("GDANSK BLE optimistic state for %s: %s", self._address, refreshed)
         return refreshed
 
     async def _write_and_pause(self, client: Any, frame: bytes) -> None:
