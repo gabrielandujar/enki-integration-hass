@@ -182,7 +182,17 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
         self._supports_light_state = profile.supports_light_state
         modes: set[ColorMode] = set()
 
-        if "change_color_temperature" in caps:
+        if profile.is_gdansk_ble:
+            modes.update({ColorMode.COLOR_TEMP, ColorMode.HS, ColorMode.BRIGHTNESS})
+            self._color_temp_values = self._parse_color_temp_values(possible)
+            if self._color_temp_values:
+                self._attr_min_color_temp_kelvin = min(self._color_temp_values)
+                self._attr_max_color_temp_kelvin = max(self._color_temp_values)
+            else:
+                self._attr_min_color_temp_kelvin = 2700
+                self._attr_max_color_temp_kelvin = 6500
+            self._brightness_max = self._parse_brightness_max(possible)
+        elif "change_color_temperature" in caps:
             modes.add(ColorMode.COLOR_TEMP)
             self._color_temp_values = self._parse_color_temp_values(possible)
             if self._color_temp_values:

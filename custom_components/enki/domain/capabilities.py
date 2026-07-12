@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from ..api.ble_gdansk import GDANSK_REFERENTIEL_MODEL
+from ..api.ble_gdansk import GDANSK_MODEL_NUMBERS
 from ..const import (
     DEVICE_TYPE_ACCESS_MOTORIZATION,
     DEVICE_TYPE_FANS,
@@ -58,6 +58,7 @@ class EnkiCapabilityProfile:
     device_name: str = ""
     referentiel_i18n: str = ""
     referentiel_model: str = ""
+    model_number: str = ""
     power_production: float | None = None
 
     @classmethod
@@ -80,6 +81,7 @@ class EnkiCapabilityProfile:
             device_name=device.device_name,
             referentiel_i18n=device.referentiel_i18n,
             referentiel_model=device.referentiel_model,
+            model_number=str(device.last_reported_value.get("modelNumber") or ""),
             power_production=device.power_production,
         )
 
@@ -87,6 +89,8 @@ class EnkiCapabilityProfile:
 
     @property
     def supports_light_state(self) -> bool:
+        if self.is_gdansk_ble:
+            return True
         return _supports(
             self.capabilities,
             self.possible_values,
@@ -349,6 +353,8 @@ class EnkiCapabilityProfile:
 
     @property
     def supports_color_temperature(self) -> bool:
+        if self.is_gdansk_ble:
+            return True
         return _supports(
             self.capabilities,
             self.possible_values,
@@ -358,6 +364,8 @@ class EnkiCapabilityProfile:
 
     @property
     def supports_brightness_control(self) -> bool:
+        if self.is_gdansk_ble:
+            return True
         return (
             _supports(
                 self.capabilities,
@@ -370,7 +378,11 @@ class EnkiCapabilityProfile:
 
     @property
     def is_gdansk_ble(self) -> bool:
-        return self.referentiel_model.strip().upper() == GDANSK_REFERENTIEL_MODEL
+        return any(
+            candidate.strip().upper() in GDANSK_MODEL_NUMBERS
+            for candidate in (self.referentiel_model, self.model_number)
+            if candidate
+        )
 
     # --- HA platform classification ----------------------------------------
 
