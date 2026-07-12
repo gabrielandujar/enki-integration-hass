@@ -26,6 +26,7 @@ GDANSK_NOTIFY_UUID = "0000a102-1115-1000-0001-617573746f6d"
 _HANDSHAKE_DELAY = 0.2
 _COMMAND_TIMEOUT = 4.0
 _QUERY_SETTLE_DELAY = 0.2
+_WRITE_SETTLE_DELAY = 0.6
 _MAC_RE = re.compile(r"^[0-9A-F]{12}$")
 
 
@@ -262,27 +263,50 @@ class GdanskBleBackend:
         if power is not None:
             frame = build_power_frame(power)
             LOGGER.debug("GDANSK BLE power frame=%s", frame.hex())
-            await self._write_and_wait_for_opcode(client, frame, 0x1003)
+            await self._write_and_pause(client, frame)
             self._state.power = power
 
         if brightness_pct is not None:
             frame = build_brightness_frame(brightness_pct)
             LOGGER.debug("GDANSK BLE brightness frame=%s", frame.hex())
-            await self._write_and_wait_for_opcode(client, frame, 0x1103)
+            await self._write_and_pause(client, frame)
+            self._state.brightness_pct = brightness_pct
 
         if color_temp_kelvin is not None:
             frame = build_color_temp_frame(color_temp_kelvin)
             LOGGER.debug("GDANSK BLE color-temp frame=%s", frame.hex())
-            await self._write_and_wait_for_opcode(client, frame, 0x1203)
+            await self._write_and_pause(client, frame)
+            self._state.color_temp_kelvin = color_temp_kelvin
             self._state.color_mode = "ct"
 
         if hs_color is not None:
             frame = build_hs_frame(*hs_color)
             LOGGER.debug("GDANSK BLE hs frame=%s", frame.hex())
-            await self._write_and_wait_for_opcode(client, frame, 0x1309)
+            await self._write_and_pause(client, frame)
+            self._state.hue = hs_color[0]
+            self._state.saturation = hs_color[1]
             self._state.color_mode = "hs"
 
-        return await self._async_query_state(client)
+        refreshed = await self._async_query_state(client)
+        # The panel does not consistently emit write acknowledgements for all commands.
+        # Preserve the requested values when the follow-up query omits them.
+        if power is not None:
+            refreshed["power"] = "ON" if power else "OFF"
+            refreshed["light_power"] = refreshed["power"]
+        if brightness_pct is not None:
+            refreshed.setdefault("brightness", float(brightness_pct))
+        if color_temp_kelvin is not None:
+            refreshed.setdefault("colorTemperature", f"T{color_temp_kelvin}K")
+            refreshed.setdefault("colorMode", "ct")
+        if hs_color is not None:
+            refreshed.setdefault("hue", round(hs_color[0] / 360, 2))
+            refreshed.setdefault("saturation", round(hs_color[1] / 100, 2))
+            refreshed.setdefault("colorMode", "hs")
+        return refreshed
+
+    async def _write_and_pause(self, client: Any, frame: bytes) -> None:
+        await client.write_gatt_char(GDANSK_WRITE_UUID, frame, response=True)
+        await asyncio.sleep(_WRITE_SETTLE_DELAY)
 
     async def _write_and_wait_for_opcode(
         self,
