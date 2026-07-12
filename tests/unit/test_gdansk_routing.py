@@ -54,6 +54,15 @@ def test_profile_detects_gdansk_ble_from_model_number() -> None:
     assert device.profile.is_gdansk_ble is True
 
 
+def test_profile_detects_gdansk_ble_from_device_id() -> None:
+    device = _gdansk_device(
+        device_id="60Afab582985C158F8A946D0",
+        referentiel_model="OTHER",
+        last_reported_value={"power": "OFF"},
+    )
+    assert device.profile.is_gdansk_ble is True
+
+
 def test_gdansk_entity_forces_full_light_modes() -> None:
     coordinator = MagicMock()
     entity = EnkiLightEntity(

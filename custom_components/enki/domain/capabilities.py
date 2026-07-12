@@ -51,6 +51,7 @@ class EnkiCapabilityProfile:
     device_type: str
     capabilities: frozenset[str]
     possible_values: dict[str, Any]
+    device_id: str = ""
     bff_device_type: str = ""
     main_change_capability_id: str | None = None
     main_change_capability_endpoints: tuple[int, ...] = ()
@@ -72,6 +73,7 @@ class EnkiCapabilityProfile:
                 endpoints.append(endpoint_id)
         return cls(
             device_type=device.device_type,
+            device_id=device.device_id,
             capabilities=frozenset(capabilities_set(device.capabilities)),
             possible_values=possible_values_dict(device.possible_values),
             bff_device_type=device.bff_device_type,
@@ -380,7 +382,7 @@ class EnkiCapabilityProfile:
     def is_gdansk_ble(self) -> bool:
         return any(
             candidate.strip().upper() in GDANSK_MODEL_NUMBERS
-            for candidate in (self.referentiel_model, self.model_number)
+            for candidate in (self.referentiel_model, self.model_number, self.device_id)
             if candidate
         )
 
