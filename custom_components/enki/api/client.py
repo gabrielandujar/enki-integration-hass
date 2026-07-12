@@ -30,6 +30,7 @@ from ..lib.enki_scope import device_in_enki_scope
 from ..lib.production import parse_production_value
 from ..lib.shutter import normalize_shutter_position
 from .auth import EnkiAuthSession
+from .ble_gdansk import GdanskBleBackend, extract_ble_address
 from .capability_routing import CAPABILITY_READS, CapabilityRead
 from .device_metadata import refresh_device_metadata
 from .gateway_keys import GatewayKeyStore, fetch_mobile_config
@@ -66,6 +67,7 @@ class EnkiAPI:
         self._node_fingerprints: dict[str, str] = {}
         self._profile_read_errors: dict[str, dict[str, str]] = {}
         self._profile_poll_state: dict[str, dict[str, Any]] = {}
+        self._gdansk_ble_backends: dict[str, GdanskBleBackend] = {}
 
     async def async_close(self) -> None:
         """Close the underlying HTTP session."""
@@ -404,7 +406,7 @@ class EnkiAPI:
 
         if profile.supports_light_state or device.device_type == DEVICE_TYPE_LIGHTS:
             try:
-                light_state = await self._read_light_payload(http, home_id, node_id)
+                light_state = await self._read_light_payload(http, device)
                 state.update(light_state)
                 if light_state.get("power"):
                     state["light_power"] = light_state["power"]
@@ -624,11 +626,47 @@ class EnkiAPI:
     async def _read_light_payload(
         self,
         http: EnkiHttpClient,
-        home_id: str,
-        node_id: str,
+        device: EnkiDevice,
     ) -> dict[str, Any]:
+        if device.profile.is_gdansk_ble:
+            return await self._async_fetch_gdansk_ble_state(device)
+        home_id = device.home_id
+        node_id = device.node_id
         state = await http.get_light_state(home_id, node_id)
         return state.get("lastReportedValue", {})
+
+    def _gdansk_ble_backend(self, device: EnkiDevice) -> GdanskBleBackend:
+        address = extract_ble_address(device.last_reported_value)
+        if address is None:
+            raise EnkiConnectionError(
+                "GDANSK device "
+                f"{device.device_name} does not expose a BLE address in discovery metadata",
+                service="bluetooth",
+            )
+        backend = self._gdansk_ble_backends.get(address)
+        if backend is None:
+            backend = GdanskBleBackend(address)
+            self._gdansk_ble_backends[address] = backend
+        return backend
+
+    async def _async_fetch_gdansk_ble_state(self, device: EnkiDevice) -> dict[str, Any]:
+        return await self._gdansk_ble_backend(device).async_fetch_state()
+
+    async def _async_apply_gdansk_ble_state(
+        self,
+        device: EnkiDevice,
+        *,
+        power: bool | None,
+        brightness_pct: int | None,
+        color_temp_kelvin: int | None,
+        hs_color: tuple[float, float] | None,
+    ) -> dict[str, Any]:
+        return await self._gdansk_ble_backend(device).async_apply(
+            power=power,
+            brightness_pct=brightness_pct,
+            color_temp_kelvin=color_temp_kelvin,
+            hs_color=hs_color,
+        )
 
     async def _read_shutter_state(
         self,
@@ -906,6 +944,27 @@ class EnkiAPI:
     ) -> None:
         """Backward-compatible wrapper for single-field lighting updates."""
         await self.async_change_light_state(home_id, node_id, {parameter: value})
+
+    async def async_apply_gdansk_light_state(
+        self,
+        device: EnkiDevice,
+        *,
+        power: bool | None = None,
+        brightness: int | None = None,
+        color_temp_kelvin: int | None = None,
+        hs_color: tuple[float, float] | None = None,
+    ) -> dict[str, Any]:
+        """Apply Home Assistant light kwargs to a GDANSK BLE panel."""
+        brightness_pct = None
+        if brightness is not None:
+            brightness_pct = round(max(0, min(255, brightness)) * 100 / 255)
+        return await self._async_apply_gdansk_ble_state(
+            device,
+            power=power,
+            brightness_pct=brightness_pct,
+            color_temp_kelvin=color_temp_kelvin,
+            hs_color=hs_color,
+        )
 
     async def _get_power_state(self, home_id: str, node_id: str, endpoint: int) -> str:
         """Read one endpoint power state (used by integration tests)."""

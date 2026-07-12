@@ -8,6 +8,6 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/cyrilcolinet/enki-integration-hass/issues",
   "loggers": ["enki"],
-  "requirements": ["aiohttp>=3.9"],
+  "requirements": ["aiohttp>=3.9", "bleak>=0.22"],
   "version": "1.6.19"
 }

@@ -134,6 +134,33 @@ _fan.FanEntityFeature = _FanEntityFeature
 _fan.DIRECTION_FORWARD = "forward"
 _fan.DIRECTION_REVERSE = "reverse"
 
+_light = sys.modules["homeassistant.components.light"]
+
+
+class _LightEntity(_HaEntity):
+    pass
+
+
+class _ColorMode:
+    ONOFF = "onoff"
+    BRIGHTNESS = "brightness"
+    COLOR_TEMP = "color_temp"
+    HS = "hs"
+
+    def __new__(cls, value):
+        return value
+
+
+_light.LightEntity = _LightEntity
+_light.ColorMode = _ColorMode
+_light.ATTR_HS_COLOR = "hs_color"
+_light.ATTR_BRIGHTNESS = "brightness"
+_light.ATTR_COLOR_TEMP_KELVIN = "color_temp_kelvin"
+
+_light_const = sys.modules["homeassistant.components.light.const"]
+_light_const.DEFAULT_MIN_KELVIN = 2000
+_light_const.DEFAULT_MAX_KELVIN = 6500
+
 _core = sys.modules["homeassistant.core"]
 _core.callback = lambda fn: fn
 

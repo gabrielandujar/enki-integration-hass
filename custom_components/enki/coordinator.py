@@ -107,6 +107,14 @@ class EnkiCoordinator(DataUpdateCoordinator[list[EnkiDevice]]):
             parent[key] = value
         self.async_set_updated_data(self.data)
 
+    def update_cached_values(self, node_id: str, values: dict[str, Any]) -> None:
+        """Optimistically patch several top-level cached fields at once."""
+        device = self.get_device_by_node(node_id)
+        if device is None or self.data is None:
+            return
+        device.last_reported_value.update(values)
+        self.async_set_updated_data(self.data)
+
     def update_endpoint_power(self, node_id: str, endpoint_id: int, power: str) -> None:
         """Optimistically update power for one electricalEndpoints entry."""
         device = self.get_device_by_node(node_id)
