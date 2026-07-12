@@ -77,6 +77,33 @@ def query_frames() -> tuple[tuple[int, bytes], ...]:
     )
 
 
+def query_frames_for_apply(
+    *,
+    power: bool | None,
+    brightness_pct: int | None,
+    color_temp_kelvin: int | None,
+    hs_color: tuple[float, float] | None,
+) -> tuple[tuple[int, bytes], ...]:
+    """Return only the follow-up queries needed after a write sequence."""
+    frames: list[tuple[int, bytes]] = []
+    if power is not None:
+        frames.append((0x1003, build_frame(0x1002)))
+    if brightness_pct is not None:
+        frames.append((0x1103, build_frame(0x1102)))
+    if hs_color is not None:
+        frames.extend(((0x130E, build_frame(0x130D)),))
+    elif color_temp_kelvin is not None:
+        frames.extend(
+            (
+                (0x130E, build_frame(0x130D)),
+                (0x1203, build_frame(0x1202)),
+            )
+        )
+    if not frames:
+        return query_frames()
+    return tuple(frames)
+
+
 @dataclass(slots=True)
 class GdanskBleState:
     """Mutable GDANSK state mirrored from BLE notifications."""
@@ -120,8 +147,11 @@ def parse_notification(data: bytes, state: GdanskBleState) -> int | None:
 def gdansk_state_to_enki_payload(state: GdanskBleState) -> dict[str, Any]:
     """Translate BLE cache fields to the cloud-style keys used by entities."""
     payload: dict[str, Any] = {}
-    if state.power is not None:
-        payload["power"] = "ON" if state.power else "OFF"
+    effective_power = state.power
+    if state.brightness_pct is not None and state.brightness_pct > 0:
+        effective_power = True
+    if effective_power is not None:
+        payload["power"] = "ON" if effective_power else "OFF"
         payload["light_power"] = payload["power"]
     if state.brightness_pct is not None:
         payload["brightness"] = float(state.brightness_pct)
@@ -287,7 +317,13 @@ class GdanskBleBackend:
             self._state.saturation = hs_color[1]
             self._state.color_mode = "hs"
 
-        refreshed = await self._async_query_state(client)
+        refreshed = await self._async_query_state_after_apply(
+            client,
+            power=power,
+            brightness_pct=brightness_pct,
+            color_temp_kelvin=color_temp_kelvin,
+            hs_color=hs_color,
+        )
         # The panel does not consistently emit write acknowledgements for all commands.
         # Preserve the requested values when the follow-up query omits them.
         if power is not None:
@@ -303,6 +339,31 @@ class GdanskBleBackend:
             refreshed.setdefault("saturation", round(hs_color[1] / 100, 2))
             refreshed.setdefault("colorMode", "hs")
         return refreshed
+
+    async def _async_query_state_after_apply(
+        self,
+        client: Any,
+        *,
+        power: bool | None,
+        brightness_pct: int | None,
+        color_temp_kelvin: int | None,
+        hs_color: tuple[float, float] | None,
+    ) -> dict[str, Any]:
+        for expected_opcode, frame in query_frames_for_apply(
+            power=power,
+            brightness_pct=brightness_pct,
+            color_temp_kelvin=color_temp_kelvin,
+            hs_color=hs_color,
+        ):
+            LOGGER.debug(
+                "GDANSK BLE post-write query opcode=0x%04x frame=%s",
+                expected_opcode,
+                frame.hex(),
+            )
+            await self._write_and_wait_for_opcode(client, frame, expected_opcode)
+            if expected_opcode == 0x130E:
+                await asyncio.sleep(_QUERY_SETTLE_DELAY)
+        return gdansk_state_to_enki_payload(self._state)
 
     async def _write_and_pause(self, client: Any, frame: bytes) -> None:
         await client.write_gatt_char(GDANSK_WRITE_UUID, frame, response=True)
