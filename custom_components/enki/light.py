@@ -293,6 +293,7 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             )
             self.coordinator.update_cached_values(node_id, state)
             self._update_light_endpoint_cache("ON", self._endpoint_id)
+            await self._async_log_gdansk_activity(kwargs, power=True)
             return
 
         if not self._supports_light_state:
@@ -354,6 +355,7 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             )
             self.coordinator.update_cached_values(node_id, state)
             self._update_light_endpoint_cache("OFF", self._endpoint_id)
+            await self._async_log_gdansk_activity({}, power=False)
             return
 
         if not self._supports_light_state:
@@ -385,3 +387,35 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             return
         self.coordinator.update_cached_value(node_id, "electrical_power", power)
         self.coordinator.update_cached_value(node_id, "power", power)
+
+    async def _async_log_gdansk_activity(
+        self,
+        kwargs: dict[str, Any],
+        *,
+        power: bool,
+    ) -> None:
+        hass = getattr(self, "hass", None)
+        if hass is None:
+            return
+        if not power:
+            message = "Turned off via local BLE"
+        elif ATTR_HS_COLOR in kwargs:
+            hue, sat = kwargs[ATTR_HS_COLOR]
+            message = f"Set color to {round(hue)}°, {round(sat)}%"
+        elif "color_temp_kelvin" in kwargs:
+            message = f"Set color temperature to {kwargs['color_temp_kelvin']}K"
+        elif "brightness" in kwargs:
+            percent = round(int(kwargs["brightness"]) * 100 / 255)
+            message = f"Set brightness to {percent}%"
+        else:
+            message = "Turned on via local BLE"
+        await hass.services.async_call(
+            "logbook",
+            "log",
+            {
+                "name": self.name or self.entity_id,
+                "message": message,
+                "entity_id": self.entity_id,
+            },
+            blocking=False,
+        )
