@@ -345,6 +345,19 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
         home_id = self._device.home_id
         node_id = self._device.node_id
 
+        if self._device.profile.is_gdansk_ble:
+            hs_color = kwargs.get(ATTR_HS_COLOR)
+            state = await self.coordinator.api.async_apply_gdansk_light_state(
+                self._device,
+                power=True,
+                brightness=kwargs.get("brightness"),
+                color_temp_kelvin=kwargs.get("color_temp_kelvin"),
+                hs_color=hs_color,
+            )
+            self.coordinator.update_cached_values(node_id, state)
+            self._update_light_endpoint_cache("ON", self._endpoint_id)
+            return
+
         if not self._supports_light_state:
             with self.coordinator.optimistic(node_id):
                 self._cache_electrical_power("ON")
@@ -401,6 +414,15 @@ class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         home_id = self._device.home_id
         node_id = self._device.node_id
+
+        if self._device.profile.is_gdansk_ble:
+            state = await self.coordinator.api.async_apply_gdansk_light_state(
+                self._device,
+                power=False,
+            )
+            self.coordinator.update_cached_values(node_id, state)
+            self._update_light_endpoint_cache("OFF", self._endpoint_id)
+            return
 
         if not self._supports_light_state:
             with self.coordinator.optimistic(node_id):

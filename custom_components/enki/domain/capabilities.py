@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from ..api.ble_gdansk import GDANSK_REFERENTIEL_MODEL
 from ..const import (
     DEVICE_TYPE_ACCESS_MOTORIZATION,
     DEVICE_TYPE_BOILER,
@@ -497,6 +498,10 @@ class EnkiCapabilityProfile:
             )
             or self.supports_light_state
         )
+
+    @property
+    def is_gdansk_ble(self) -> bool:
+        return self.referentiel_model.strip().upper() == GDANSK_REFERENTIEL_MODEL
 
     # --- HA platform classification ----------------------------------------
 

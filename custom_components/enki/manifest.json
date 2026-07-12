@@ -15,6 +15,6 @@
   "loggers": [
     "enki"
   ],
-  "requirements": [],
+  "requirements": ["bleak>=0.22"],
   "version": "1.32.0"
 }
