@@ -294,8 +294,8 @@ _button = sys.modules["homeassistant.components.button"]
 _button.ButtonEntity = _HaEntity
 
 _light = sys.modules["homeassistant.components.light"]
-_light.LightEntity = _HaEntity
-_light.ColorMode = MagicMock()
+_light.LightEntity = _LightEntity
+_light.ColorMode = _ColorMode
 _light.ATTR_HS_COLOR = "hs_color"
 _light.ATTR_BRIGHTNESS = "brightness"
 _light.ATTR_COLOR_TEMP_KELVIN = "color_temp_kelvin"

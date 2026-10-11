@@ -1357,6 +1357,7 @@ class EnkiAPI:
             color_temp_kelvin=color_temp_kelvin,
             hs_color=hs_color,
         )
+
     async def async_activate_scenario(self, home_id: str, scenario_id: str) -> None:
         """Trigger an Enki cloud scenario."""
         http = await self._get_http()

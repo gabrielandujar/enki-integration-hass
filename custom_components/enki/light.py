@@ -232,7 +232,7 @@ class EnkiFanLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity):
             )
 
 
-class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, LightEntity, RestoreEntity):
+class EnkiLightEntity(EnkiLightBehaviorMixin, EnkiEntity, RestoreEntity, LightEntity):
     """Standard Enki light or dimmer node."""
 
     _attr_translation_key = "light"

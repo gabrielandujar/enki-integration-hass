@@ -99,4 +99,3 @@ It intentionally adds a focused support path for:
 - Unit tests added for BLE frame building and notification parsing
 - Unit tests added for GDANSK routing
 - Full unit test suite passes locally
-
